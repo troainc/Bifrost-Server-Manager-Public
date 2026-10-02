@@ -6,20 +6,102 @@ INSTALL_DIR="${BIFROST_INSTALL_DIR:-$HOME/.local/share/bifrost}"
 fail() { printf '\nBifrost: %s\n' "$*" >&2; exit 1; }
 fetch() {
   if command -v curl >/dev/null; then curl -fSL --retry 3 "$1" -o "$2";
-  elif command -v wget >/dev/null; then (cd "$(dirname "$2")" && wget "$1") && test -s "$2";
+  elif command -v wget >/dev/null; then wget --output-document="$2" "$1";
   else fail 'This VM needs wget or curl.'; fi
 }
-[[ "${1:-}" != --help ]] || { echo 'Run bash install.sh as a regular Linux user. Requires rootless Docker and Compose v2.'; exit 0; }
+bootstrap_prerequisites() {
+  export PATH="$HOME/.local/bin:$HOME/bin:$PATH:/usr/sbin:/sbin"
+  local account uid tool file missing=()
+  account=$(id -un); uid=$(id -u)
+  for tool in newuidmap newgidmap; do command -v "$tool" >/dev/null || missing+=("$tool (host uidmap package)"); done
+  for file in /etc/subuid /etc/subgid; do
+    awk -F: -v name="$account" -v uid="$uid" '($1==name || $1==uid) && $3>=65536 {found=1} END {exit !found}' "$file" 2>/dev/null || missing+=("$file: at least 65536 subordinate IDs for $account")
+  done
+  if [[ -r /proc/sys/kernel/unprivileged_userns_clone && $(cat /proc/sys/kernel/unprivileged_userns_clone) != 1 ]]; then missing+=('unprivileged user namespaces enabled in the VM'); fi
+  if ((${#missing[@]})); then
+    printf '\nThis VM is missing host-level rootless prerequisites:\n' >&2
+    printf '  - %s\n' "${missing[@]}" >&2
+    fail 'These permissions must be provisioned in the VM image by its administrator. Bifrost cannot create them as a non-root user. Docker and Compose will be installed automatically once these are available.'
+  fi
+  local runtime="$HOME/.local/share/bifrost-prerequisites" packages=()
+  command -v python3 >/dev/null || packages+=(python3)
+  command -v openssl >/dev/null || packages+=(openssl)
+  command -v iptables >/dev/null || packages+=(iptables)
+  if ((${#packages[@]})); then
+    command -v apt-get >/dev/null && command -v dpkg-deb >/dev/null || fail 'Automatic user-local prerequisites currently require Debian or Ubuntu.'
+    mkdir -p "$runtime/packages" "$runtime/root" "$HOME/.local/bin"
+    # Download distribution dependencies without installing system packages or elevating privileges.
+    local dependencies=()
+    mapfile -t dependencies < <(apt-cache depends --recurse --no-recommends --no-suggests --no-conflicts --no-breaks --no-replaces --no-enhances "${packages[@]}" | sed -n '/^[a-zA-Z0-9][a-zA-Z0-9+.:_-]*$/p' | sort -u)
+    ((${#dependencies[@]})) || fail 'No package metadata. The VM image needs populated APT package indexes.'
+    (cd "$runtime/packages" && apt-get download "${dependencies[@]}") || fail 'Could not download user-local prerequisites from the VM package sources.'
+    for file in "$runtime/packages"/*.deb; do dpkg-deb -x "$file" "$runtime/root"; done
+    for tool in python3 openssl; do
+      if ! command -v "$tool" >/dev/null; then
+        printf '#!/usr/bin/env bash\nexport LD_LIBRARY_PATH=%q\n' "$runtime/root/usr/lib/x86_64-linux-gnu:$runtime/root/lib/x86_64-linux-gnu" > "$HOME/.local/bin/$tool"
+        [[ "$tool" != python3 ]] || printf 'export PYTHONHOME=%q\n' "$runtime/root/usr" >> "$HOME/.local/bin/$tool"
+        printf 'exec %q "$@"\n' "$runtime/root/usr/bin/$tool" >> "$HOME/.local/bin/$tool"
+        chmod 0700 "$HOME/.local/bin/$tool"
+      fi
+    done
+    if ! command -v iptables >/dev/null; then
+      for tool in iptables ip6tables; do
+        printf '#!/usr/bin/env bash\nexport LD_LIBRARY_PATH=%q\nexec -a %q %q "$@"\n' "$runtime/root/usr/lib/x86_64-linux-gnu:$runtime/root/lib/x86_64-linux-gnu" "$tool-nft" "$runtime/root/usr/sbin/xtables-nft-multi" > "$HOME/.local/bin/$tool"
+        chmod 0700 "$HOME/.local/bin/$tool"
+      done
+    fi
+    hash -r
+  fi
+  python3 --version >/dev/null && openssl version >/dev/null && iptables --version >/dev/null || fail 'User-local prerequisite startup failed.'
+  command -v systemctl >/dev/null && systemctl --user show-environment >/dev/null 2>&1 || fail 'Log in directly via SSH or the VM console as your user; a user systemd session is required.'
+  export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$uid}"
+  [[ -d "$XDG_RUNTIME_DIR" && -w "$XDG_RUNTIME_DIR" ]] || fail 'Your login session has no writable runtime directory. Log out and log in directly.'
+  if ! command -v dockerd-rootless-setuptool.sh >/dev/null; then
+    local version=29.8.2 stage
+    stage=$(mktemp -d)
+    fetch "https://download.docker.com/linux/static/stable/x86_64/docker-$version.tgz" "$stage/docker.tgz"
+    fetch "https://download.docker.com/linux/static/stable/x86_64/docker-rootless-extras-$version.tgz" "$stage/rootless.tgz"
+    mkdir -p "$HOME/bin"
+    tar -xzf "$stage/docker.tgz" --strip-components=1 -C "$HOME/bin"
+    tar -xzf "$stage/rootless.tgz" --strip-components=1 -C "$HOME/bin"
+    rm -f "$stage/docker.tgz" "$stage/rootless.tgz"; rmdir "$stage"
+    hash -r
+  fi
+  export DOCKER_HOST="unix://$XDG_RUNTIME_DIR/docker.sock"
+  if ! docker info >/dev/null 2>&1; then
+    dockerd-rootless-setuptool.sh install
+    systemctl --user start docker
+  fi
+  for attempt in {1..30}; do docker info >/dev/null 2>&1 && break; sleep 1; done
+  docker info --format '{{json .SecurityOptions}}' | grep -qi rootless || fail 'Docker is not running rootless.'
+  if ! docker compose version >/dev/null 2>&1; then
+    local compose_version=v2.39.4 compose_dir="$HOME/.docker/cli-plugins" stage
+    mkdir -p "$compose_dir"; stage=$(mktemp -d)
+    fetch "https://github.com/docker/compose/releases/download/$compose_version/docker-compose-linux-x86_64" "$stage/docker-compose-linux-x86_64"
+    fetch "https://github.com/docker/compose/releases/download/$compose_version/docker-compose-linux-x86_64.sha256" "$stage/docker-compose-linux-x86_64.sha256"
+    (cd "$stage" && sha256sum --check docker-compose-linux-x86_64.sha256) || fail 'Compose checksum failed.'
+    install -m 0700 "$stage/docker-compose-linux-x86_64" "$compose_dir/docker-compose"
+    rm -f "$stage/docker-compose-linux-x86_64" "$stage/docker-compose-linux-x86_64.sha256"; rmdir "$stage"
+  fi
+  mkdir -p "$HOME/.config/bifrost"
+  printf 'export PATH="$HOME/.local/bin:$HOME/bin:$PATH"\nexport DOCKER_HOST="unix:///run/user/%s/docker.sock"\n' "$uid" > "$HOME/.config/bifrost/environment.sh"
+  grep -qF '.config/bifrost/environment.sh' "$HOME/.profile" 2>/dev/null || printf '\n. "$HOME/.config/bifrost/environment.sh"\n' >> "$HOME/.profile"
+  printf 'Prerequisites ready: user-local tools, rootless Docker and Compose.\n'
+  if [[ $(loginctl show-user "$uid" -p Linger --value 2>/dev/null || true) != yes ]]; then
+    printf '\nNote: this VM does not enable user lingering. The panel may stop after logout and will start at your next login. Provision user lingering in the VM image for unattended operation.\n'
+  fi
+}
+
+[[ "${1:-}" != --help ]] || { echo 'Run bash install.sh as a regular Linux user. Automatically installs user-local prerequisites, rootless Docker and Compose.'; exit 0; }
 [[ $# -eq 0 ]] || fail 'Unknown argument.'
 [[ $(id -u) -ne 0 ]] || fail 'Sign in as a regular user. Do not run with sudo or as root.'
 [[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || fail 'Linux x86_64 is required.'
 [[ "$INSTALL_DIR" == /* && "$INSTALL_DIR" != / && "$INSTALL_DIR" != "$HOME" ]] || fail 'Invalid installation directory.'
 [[ ! -e "$INSTALL_DIR" ]] || fail "Existing installation preserved: $INSTALL_DIR"
 [[ -r /dev/tty ]] || fail 'Run from an interactive terminal.'
-printf '\nBIFROST SERVER MANAGER — Linux QuickStart\n\n[1/5] Checking your account\n'
-for tool in python3 openssl sha256sum tar docker; do command -v "$tool" >/dev/null || fail "Missing $tool. See the README prerequisites."; done
-docker compose version >/dev/null || fail 'Docker Compose v2 is required.'
-docker info --format '{{json .SecurityOptions}}' 2>/dev/null | grep -qi rootless || fail "Start this user's rootless Docker daemon."
+printf '\nThank you for downloading the TROA Bifrost Server Manager\n\nWe hope you enjoy! Please report any issues in our support Discord: discord.gg/troainc\nLearn more about our projects on therelamsofasgard.com\n\n[1/5] Preparing your account and prerequisites\n'
+for tool in sha256sum tar awk sed sort; do command -v "$tool" >/dev/null || fail "Missing base OS tool: $tool"; done
+bootstrap_prerequisites
 printf '\n[2/5] Panel setup\n'
 default_address=$(hostname -I 2>/dev/null | awk '{print $1}')
 read -r -p "VM IP or hostname [${default_address:-localhost}]: " address </dev/tty

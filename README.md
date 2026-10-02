@@ -10,7 +10,7 @@ wget --output-document=install.sh https://github.com/troainc/Bifrost-Server-Mana
 
 The wizard asks for the VM IP/hostname and HTTPS port, downloads the application, checks its checksum, generates configuration and credentials, and starts the panel. Default port: **8443**. Create your administrator in the browser.
 
-Use a Debian/Ubuntu x86_64 VM with **rootless Docker Engine and Compose v2**, Python 3.12+, OpenSSL, and wget or curl available. Bifrost refuses root and never invokes sudo. Rootless Docker must already be provisioned for your account.
+Use Debian/Ubuntu x86_64 with wget or curl. The installer sets up Docker, Compose and missing Python/OpenSSL/iptables tools in your user account. The VM image must provide uidmap helpers, subordinate UID/GID ranges, enabled user namespaces and an active user systemd session. Bifrost refuses root and never invokes sudo.
 
 The application is delivered as compiled container images inside a GitHub Release asset. No private registry login, private application source, or master licensing service is distributed. The repository-root `install.sh` is the bootstrap; GitHub's `releases/latest/download/install.sh` is a release asset, not a folder in the repository.
 
@@ -30,3 +30,8 @@ docker compose up -d
 ```
 
 The installer follows the single-command shell wizard pattern described by [CubeCoders AMP](https://cubecoders.com/AMP/Install); it contains original Bifrost code.
+
+## 2026-10-02 — Automatic non-root prerequisites
+install.sh now downloads rootless Docker 29.8.2 and Compose v2.39.4 automatically, starts the user service, and downloads/extracts missing Python, OpenSSL and iptables packages under the user's home using Debian/Ubuntu package sources without APT installation or sudo. It saves the Docker environment for subsequent logins and includes the TROA welcome/support/project message. System UID mapping helpers, assigned subordinate ID ranges, enabled user namespaces, package indexes and an active user systemd login must exist in the VM image; missing requirements are listed precisely. Unattended operation requires user lingering provisioned in that image. This is not a claim of zero host prerequisites or completed clean-VM acceptance.
+
+
