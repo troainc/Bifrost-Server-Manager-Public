@@ -15,7 +15,7 @@ curl --fail --silent --show-error --location https://github.com/troainc/Bifrost-
 If the VM image has `wget` but not `curl`, use:
 
 ```bash
-wget -qO- https://github.com/troainc/Bifrost-Server-Manager-Public/releases/latest/download/install.sh | bash
+wget https://github.com/troainc/Bifrost-Server-Manager-Public/releases/latest/download/install.sh && bash install.sh
 ```
 
 Run the command as the regular Linux account that will own and operate Bifrost. Never prefix it with `sudo` and do not run it from a root shell. The installer refuses UID 0 and refuses a rootful Docker daemon. It requires rootless Docker Engine and Compose v2, plus either `curl` or `wget`, `python3`, `openssl`, `awk`, `grep`, and `sha256sum` already available to that account; it does not use `apt`, install host packages, or modify system files.

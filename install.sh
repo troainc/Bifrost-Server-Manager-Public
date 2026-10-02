@@ -15,7 +15,8 @@ download() {
   if command -v curl >/dev/null 2>&1; then
     curl --fail --silent --show-error --location --max-filesize 104857600 "$url" -o "$destination"
   elif command -v wget >/dev/null 2>&1; then
-    wget --quiet --max-redirect=20 --timeout=30 --tries=3 --output-document="$destination" "$url"
+    (cd "$(dirname "$destination")" && wget "$url")
+    [[ -f "$destination" ]] || fail "wget did not save the expected file: $(basename "$destination")."
     [[ "$(wc -c < "$destination")" -le 104857600 ]] || fail "Downloaded file exceeds the 100 MiB limit."
   else
     fail "Install curl or wget in the VM image before running this installer; Bifrost will not use root access to install packages."

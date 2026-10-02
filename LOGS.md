@@ -5,6 +5,7 @@
 - Confirmed GitHub has no published release, so `/releases/latest/download/install.sh` currently returns 404; the script is only present on the repository branch until a release workflow publishes it as an asset.
 - Fixed the bootstrap bundle filename to match the amd64 tarball emitted by the release workflow.
 - Added a `wget` path because the reported Debian VM does not have `curl` installed; either downloader must be present in the base image.
+- Removed `wget -O` options after the VM's wget rejected them; use plain `wget URL` followed by `bash install.sh` for the bootstrap.
 - A tagged private image build and successful public bundle release are still required before the one-line install URL becomes available.
 
 ## 2026-10-01 — Require non-root and rootless Docker

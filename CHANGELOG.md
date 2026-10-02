@@ -12,6 +12,7 @@
 - Matched the installer's downloaded tarball name to the amd64 asset produced by the release workflow.
 - Clarified that the `/releases/latest/download/install.sh` URL is unavailable until a deployment-test release is successfully published.
 - Added `wget` as an alternative to `curl` for retrieving the installer and release bundle.
+- Changed the `wget` instructions to plain file download because the deployment VM's wget rejects output options.
 
 ## 2026-10-01 — Linux Controller installer preparation
 

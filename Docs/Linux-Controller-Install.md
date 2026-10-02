@@ -30,7 +30,7 @@ curl --fail --silent --show-error --location https://github.com/troainc/Bifrost-
 If the VM image has `wget` but not `curl`, use:
 
 ```bash
-wget -qO- https://github.com/troainc/Bifrost-Server-Manager-Public/releases/latest/download/install.sh | bash
+wget https://github.com/troainc/Bifrost-Server-Manager-Public/releases/latest/download/install.sh && bash install.sh
 ```
 
 This command will work after the first public deployment-test release is published. The release's script embeds its fixed version, reads interactive answers from the terminal, and downloads the matching digest-pinned bundle. It asks where the vendor-provided public license key PEM is stored. For a controlled rollout, replace `latest` with the exact release tag in the download URL.
