@@ -18,7 +18,7 @@ The installer stores the deployment under `${XDG_DATA_HOME:-$HOME/.local/share}/
 
 For change-controlled deployment, replace `latest` with an exact release tag in the URL. The installer refuses an existing install directory and does not delete volumes or existing container packages.
 
-**There is not a published deployment-test release yet.** The one-line command will become usable after the private source image workflow publishes both versioned customer images, an administrator makes both GHCR packages public, and this repository's matching release workflow verifies anonymous image pulls and publishes the bundle. The workflow pins image digests in the released Compose bundle. Do not run an unpublished version or substitute `main` / `latest` images.
+**There is not a published deployment-test release yet.** Until one is published, GitHub's `/releases/latest/download/install.sh` URL returns 404 even though `install.sh` exists on the `main` branch. The one-line command will become usable after the private source image workflow publishes both versioned customer images, an administrator makes both GHCR packages public, and this repository's matching release workflow verifies anonymous image pulls and publishes the bundle. The workflow pins image digests in the released Compose bundle. Do not run an unpublished version or substitute `main` / `latest` images.
 
 ## Deployment-test scope
 

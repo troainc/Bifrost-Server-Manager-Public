@@ -85,7 +85,7 @@ done
 TMP="$(mktemp -d /tmp/bifrost-install.XXXXXX)"
 trap 'rm -rf -- "$TMP"' EXIT
 BASE="https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION"
-BUNDLE="bifrost-controller-linux-$VERSION.tar.gz"
+BUNDLE="bifrost-controller-linux-amd64-$VERSION.tar.gz"
 curl --fail --silent --show-error --location --max-filesize 104857600 "$BASE/$BUNDLE" -o "$TMP/$BUNDLE" || fail "Could not download the fixed-version Controller bundle (maximum size 100 MiB). Confirm that this public release exists."
 curl --fail --silent --show-error --location "$BASE/SHA256SUMS" -o "$TMP/SHA256SUMS" || fail "Could not download the release checksum file."
 (cd "$TMP" && grep -F "  $BUNDLE" SHA256SUMS | sha256sum --check --status) || fail "Bundle checksum validation failed."

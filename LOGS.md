@@ -1,5 +1,11 @@
 # Work log
 
+## 2026-10-01 — Release asset URL diagnosis
+
+- Confirmed GitHub has no published release, so `/releases/latest/download/install.sh` currently returns 404; the script is only present on the repository branch until a release workflow publishes it as an asset.
+- Fixed the bootstrap bundle filename to match the amd64 tarball emitted by the release workflow.
+- A tagged private image build and successful public bundle release are still required before the one-line install URL becomes available.
+
 ## 2026-10-01 — Require non-root and rootless Docker
 
 - Changed `install.sh` to refuse UID 0, require Docker Compose v2 connected to a rootless daemon, and use a user-owned install directory under XDG data home by default.

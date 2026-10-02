@@ -7,6 +7,11 @@
 - Updated the one-line install command, deployment guide, and VM test plan to use the non-root account. Added rootless reboot recovery expectations.
 - Linux VM acceptance is still required; the installer has not yet been validated against a real rootless Docker host.
 
+## 2026-10-01 — Correct release bundle asset name
+
+- Matched the installer's downloaded tarball name to the amd64 asset produced by the release workflow.
+- Clarified that the `/releases/latest/download/install.sh` URL is unavailable until a deployment-test release is successfully published.
+
 ## 2026-10-01 — Linux Controller installer preparation
 
 - Added a release-versioned `install.sh` bootstrap for a one-line Linux install.
