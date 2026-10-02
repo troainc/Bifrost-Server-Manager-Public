@@ -33,6 +33,7 @@ jobs:
           stage="$RUNNER_TEMP/bifrost-controller-$VERSION"
           mkdir -p "$stage/config" "$stage/secrets"
           cp install.sh "$stage/install.sh"
+          chmod 0755 "$stage/install.sh"
           cp .env.example "$stage/.env.example"
           cp deployment/compose.yaml "$stage/compose.yaml"
           cp deployment/config/* "$stage/config/"
