@@ -35,3 +35,5 @@ Run the normal one-line installer as the current VM user. It requests administra
 2026-10-02: Fresh install/reinstall completion URL always ends in /install and opens the existing first-run onboarding route.
 
 2026-10-02: Corrected the installer welcome-banner project URL to therealmsofasgard.com. Bash syntax passed.
+
+2026-10-02: v0.1.0-installtest.4 customer UI includes five-step onboarding and redesigned License & privacy activation/disclosure/status panel with explicit connection and MFA errors. Licensing/consent gates preserved. No master configuration UI is distributed. Existing data preserved with --update; --reinstall requires typed WIPE and resets test data.
