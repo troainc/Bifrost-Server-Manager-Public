@@ -5,7 +5,7 @@
 Run this as your regular Linux user:
 
 ```bash
-wget https://raw.githubusercontent.com/troainc/Bifrost-Server-Manager-Public/main/install.sh && bash install.sh
+wget --output-document=install.sh https://github.com/troainc/Bifrost-Server-Manager-Public/releases/latest/download/install.sh && bash install.sh
 ```
 
 The wizard asks for the VM IP/hostname and HTTPS port, downloads the application, checks its checksum, generates configuration and credentials, and starts the panel. Default port: **8443**. Create your administrator in the browser.
