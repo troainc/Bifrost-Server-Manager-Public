@@ -56,6 +56,7 @@ services:
       TRUSTED_PROXIES: ${BIFROST_TRUSTED_PROXIES:?Set the TLS proxy and Controller network addresses}
       RATE_LIMIT_PEPPER_FILE: /run/secrets/rate_limit_pepper
       BIFROST_LICENSE_URL: ${BIFROST_LICENSE_URL:-}
+      BIFROST_LICENSE_PUBLIC_KEY_FILE: /run/bifrost/license-signing-public.pem
       BIFROST_PRIVACY_CONTROLLER_NAME: ${BIFROST_PRIVACY_CONTROLLER_NAME:-}
       BIFROST_PRIVACY_CONTACT: ${BIFROST_PRIVACY_CONTACT:-}
       BIFROST_PRIVACY_JURISDICTIONS: ${BIFROST_PRIVACY_JURISDICTIONS:-}
@@ -75,6 +76,7 @@ services:
     networks: [private, control-plane-egress]
     volumes:
       - branding_data:/var/lib/bifrost/branding
+      - ./config/license-signing-public.pem:/run/bifrost/license-signing-public.pem:ro
       - ./config/runtime-profile-catalog.example.json:/run/bifrost/runtime-profiles.json:ro
       - ./config/runtime-profile-trust.example.json:/run/bifrost/runtime-profile-trust.json:ro
       - ./config/migration-target-policies.example.json:/run/bifrost/migration-target-policies.json:ro
@@ -166,3 +168,4 @@ secrets:
     file: ./secrets/mfa_encryption_key.txt
   agent_job_signing_private:
     file: ./secrets/agent-job-signing-private.pem
+

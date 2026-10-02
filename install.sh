@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.1
+VERSION=v0.1.0-installtest.2
 INSTALL_DIR="${BIFROST_INSTALL_DIR:-$HOME/.local/share/bifrost}"
 fail() { printf '\nBifrost: %s\n' "$*" >&2; exit 1; }
 fetch() {
