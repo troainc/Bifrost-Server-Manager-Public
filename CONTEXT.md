@@ -16,6 +16,7 @@ The customer web image must be compiled with `VITE_BIFROST_OWNER_PANEL=false`; i
 - Initial Controller test support is Debian/Ubuntu amd64. Host Agent is separate and is not included until a separate package is published and reviewed.
 - A TLS proxy, vendor public license verification key, and organization-reviewed privacy notice inputs are operator prerequisites.
 - Install and operate the Controller only as a regular non-root account with rootless Docker Engine and Compose v2. The installer refuses UID 0 and rootful Docker and never installs system packages or uses `sudo`.
+- The one-line bootstrap needs either `curl` or `wget` in the VM image; its own bundle downloads support both. It does not install either utility.
 - Default install path is `${XDG_DATA_HOME:-$HOME/.local/share}/bifrost`; `BIFROST_INSTALL_DIR` can select another user-writable absolute path. Configuration and secrets belong to the operator account.
 - Automatic restart after host reboot depends on the operator's rootless Docker user service being enabled. The installer does not configure system-wide lingering or require root.
 

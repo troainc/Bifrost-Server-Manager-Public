@@ -10,6 +10,17 @@ LICENSE_URL=""
 
 fail() { printf 'Bifrost installer: %s\n' "$*" >&2; exit 1; }
 log() { printf 'Bifrost installer: %s\n' "$*"; }
+download() {
+  local url="$1" destination="$2"
+  if command -v curl >/dev/null 2>&1; then
+    curl --fail --silent --show-error --location --max-filesize 104857600 "$url" -o "$destination"
+  elif command -v wget >/dev/null 2>&1; then
+    wget --quiet --max-redirect=20 --timeout=30 --tries=3 --output-document="$destination" "$url"
+    [[ "$(wc -c < "$destination")" -le 104857600 ]] || fail "Downloaded file exceeds the 100 MiB limit."
+  else
+    fail "Install curl or wget in the VM image before running this installer; Bifrost will not use root access to install packages."
+  fi
+}
 usage() {
   cat <<'EOF'
 Usage: bash install.sh [--version vX.Y.Z] [--license-public-key FILE]
@@ -38,9 +49,10 @@ done
 [[ -n "${HOME:-}" && "$HOME" != "/root" ]] || fail "A regular user home directory is required."
 [[ "$INSTALL_DIR" == /* ]] || fail "Install directory must be an absolute path."
 [[ -r /dev/tty ]] || fail "Interactive setup needs a terminal. Run this installer from a terminal."
-for tool in curl python3 openssl awk grep sha256sum; do
-  command -v "$tool" >/dev/null 2>&1 || fail "A required command is missing. Have curl, python3, openssl, awk, grep, and sha256sum provisioned before installation; this installer will not use root access to install packages."
+for tool in python3 openssl awk grep sha256sum wc; do
+  command -v "$tool" >/dev/null 2>&1 || fail "A required command is missing. Have python3, openssl, awk, grep, sha256sum, and wc provisioned before installation; this installer will not use root access to install packages."
 done
+command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || fail "Install curl or wget in the VM image before running this installer; Bifrost will not use root access to install packages."
 command -v docker >/dev/null 2>&1 || fail "Rootless Docker Engine is required for this account. Have it provisioned before installation; this installer will not install system packages or use a root-owned Docker daemon."
 docker compose version >/dev/null 2>&1 || fail "Docker Compose v2 is required for this account."
 docker info >/dev/null 2>&1 || fail "Docker is not available to this user. Configure and start rootless Docker for this account."
@@ -86,8 +98,8 @@ TMP="$(mktemp -d /tmp/bifrost-install.XXXXXX)"
 trap 'rm -rf -- "$TMP"' EXIT
 BASE="https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION"
 BUNDLE="bifrost-controller-linux-amd64-$VERSION.tar.gz"
-curl --fail --silent --show-error --location --max-filesize 104857600 "$BASE/$BUNDLE" -o "$TMP/$BUNDLE" || fail "Could not download the fixed-version Controller bundle (maximum size 100 MiB). Confirm that this public release exists."
-curl --fail --silent --show-error --location "$BASE/SHA256SUMS" -o "$TMP/SHA256SUMS" || fail "Could not download the release checksum file."
+download "$BASE/$BUNDLE" "$TMP/$BUNDLE" || fail "Could not download the fixed-version Controller bundle (maximum size 100 MiB). Confirm that this public release exists."
+download "$BASE/SHA256SUMS" "$TMP/SHA256SUMS" || fail "Could not download the release checksum file."
 (cd "$TMP" && grep -F "  $BUNDLE" SHA256SUMS | sha256sum --check --status) || fail "Bundle checksum validation failed."
 
 python3 - "$TMP/$BUNDLE" "$TMP/unpacked" <<'PY'

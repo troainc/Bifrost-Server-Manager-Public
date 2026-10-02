@@ -12,7 +12,13 @@ After a deployment-test release is published, install the latest published relea
 curl --fail --silent --show-error --location https://github.com/troainc/Bifrost-Server-Manager-Public/releases/latest/download/install.sh | bash
 ```
 
-Run the command as the regular Linux account that will own and operate Bifrost. Never prefix it with `sudo` and do not run it from a root shell. The installer refuses UID 0 and refuses a rootful Docker daemon. It requires rootless Docker Engine and Compose v2, plus `curl`, `python3`, `openssl`, `awk`, `grep`, and `sha256sum` already available to that account; it does not use `apt`, install host packages, or modify system files.
+If the VM image has `wget` but not `curl`, use:
+
+```bash
+wget -qO- https://github.com/troainc/Bifrost-Server-Manager-Public/releases/latest/download/install.sh | bash
+```
+
+Run the command as the regular Linux account that will own and operate Bifrost. Never prefix it with `sudo` and do not run it from a root shell. The installer refuses UID 0 and refuses a rootful Docker daemon. It requires rootless Docker Engine and Compose v2, plus either `curl` or `wget`, `python3`, `openssl`, `awk`, `grep`, and `sha256sum` already available to that account; it does not use `apt`, install host packages, or modify system files.
 
 The installer stores the deployment under `${XDG_DATA_HOME:-$HOME/.local/share}/bifrost` (or `BIFROST_INSTALL_DIR`), owned by your account with private configuration and secrets. It asks for the vendor-issued license verification **public** PEM path, HTTPS panel and licensing URLs, and organization-reviewed privacy notice values. Then it downloads the fixed-version bundle, checks its SHA-256, chooses a non-overlapping Docker network, generates secrets, validates Compose, and asks before starting containers as your user. Have a system administrator provision rootless Docker and required host packages before installation; no root access is needed to install or operate Bifrost itself.
 

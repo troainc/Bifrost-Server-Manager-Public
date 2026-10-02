@@ -27,9 +27,15 @@ The one-line install command is:
 curl --fail --silent --show-error --location https://github.com/troainc/Bifrost-Server-Manager-Public/releases/latest/download/install.sh | bash
 ```
 
+If the VM image has `wget` but not `curl`, use:
+
+```bash
+wget -qO- https://github.com/troainc/Bifrost-Server-Manager-Public/releases/latest/download/install.sh | bash
+```
+
 This command will work after the first public deployment-test release is published. The release's script embeds its fixed version, reads interactive answers from the terminal, and downloads the matching digest-pinned bundle. It asks where the vendor-provided public license key PEM is stored. For a controlled rollout, replace `latest` with the exact release tag in the download URL.
 
-The installer supports Debian/Ubuntu amd64 only for this first deployment-test package. Run it as the regular account that will own and operate Bifrost; do not use `sudo` or a root shell. It does not install host packages, configure system Docker, modify system directories, or use a rootful Docker daemon. Required tools and rootless Docker/Compose must already be available to the operator account. Installation defaults to `${XDG_DATA_HOME:-$HOME/.local/share}/bifrost`, or uses `BIFROST_INSTALL_DIR` if set. Files and secrets are created under the current user with private permissions. The installer refuses an existing install path and does not reset volumes.
+The installer supports Debian/Ubuntu amd64 only for this first deployment-test package. Run it as the regular account that will own and operate Bifrost; do not use `sudo` or a root shell. It does not install host packages, configure system Docker, modify system directories, or use a rootful Docker daemon. Either `curl` or `wget`, the required utilities, and rootless Docker/Compose must already be available to the operator account. Installation defaults to `${XDG_DATA_HOME:-$HOME/.local/share}/bifrost`, or uses `BIFROST_INSTALL_DIR` if set. Files and secrets are created under the current user with private permissions. The installer refuses an existing install path and does not reset volumes.
 
 It downloads the fixed-version release bundle and verifies its SHA-256 checksum before extracting regular files. The bundle's `.env.example` contains the two images pinned by digest. The installer asks for the external HTTPS URL, license service URL, and reviewed privacy values, generates fresh protected secrets, chooses a non-overlapping Docker subnet, validates Compose, and asks before starting containers.
 
