@@ -144,6 +144,7 @@ automated_bootstrap() {
   fi
   [[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || fail 'Linux x86_64 is required.'
   [[ -r /etc/os-release ]] || fail 'Cannot identify the VM operating system.'
+  export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
   . /etc/os-release
   case "${ID:-}" in debian|ubuntu) ;; *) fail 'Automatic VM preparation currently supports Debian and Ubuntu.';; esac
   printf '\nPreparing VM prerequisites (the Bifrost application will run only as bifrost).\n'
