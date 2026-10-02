@@ -104,8 +104,22 @@ prepare_account() {
   for group in $(id -nG bifrost); do
     case "$group" in sudo|wheel|docker|lxd|incus-admin) fail "Existing bifrost account belongs to privileged group $group. Remove that membership before continuing.";; esac
   done
-  if command -v sudo >/dev/null && sudo -l -U bifrost >/dev/null 2>&1; then
-    fail 'The bifrost account has a sudo policy grant. Remove that grant before continuing.'
+  if command -v sudo >/dev/null; then
+    command -v visudo >/dev/null || fail 'sudo is present but visudo is missing; cannot validate the service account policy.'
+    [[ -d /etc/sudoers.d ]] || fail 'sudo policy include directory is missing.'
+    local policy_tmp policy_listing
+    policy_tmp=$(mktemp /etc/sudoers.d/.bifrost-policy.XXXXXX)
+    printf 'bifrost ALL=(ALL:ALL) !ALL\n' > "$policy_tmp"
+    chmod 0440 "$policy_tmp"
+    visudo -cf "$policy_tmp" >/dev/null || { rm -f "$policy_tmp"; fail 'Invalid bifrost sudo denial policy.'; }
+    [[ ! -L /etc/sudoers.d/zz-bifrost-deny ]] || { rm -f "$policy_tmp"; fail 'Refusing a symlink at the bifrost sudo policy path.'; }
+    mv -f "$policy_tmp" /etc/sudoers.d/zz-bifrost-deny
+    visudo -c >/dev/null || fail 'The VM sudo configuration did not validate.'
+    policy_listing=$(LC_ALL=C sudo -l -U bifrost 2>&1 || true)
+    # sudo -l can succeed for a denied account. Inspect command entries, not its exit code.
+    if printf '%s\n' "$policy_listing" | awk '/^[[:space:]]*\(/ {sub(/^[[:space:]]*\([^)]*\)[[:space:]]*/, ""); if ($0 != "!ALL") grant=1} END {exit !grant}'; then
+      fail 'Another sudo policy entry grants bifrost commands. Remove that conflicting grant before continuing.'
+    fi
   fi
   local account_home
   account_home=$(getent passwd bifrost | cut -d: -f6)
@@ -121,8 +135,12 @@ assert_service_account() {
   for group in $(id -nG); do
     case "$group" in sudo|wheel|docker|lxd|incus-admin) fail "bifrost has privileged group membership: $group. Remove it before installing.";; esac
   done
-  if command -v sudo >/dev/null && sudo -n -l >/dev/null 2>&1; then
-    fail 'bifrost has a sudo policy grant. Remove it before installing.'
+  if command -v sudo >/dev/null; then
+    local policy_listing
+    policy_listing=$(LC_ALL=C sudo -n -l 2>&1 || true)
+    if printf '%s\n' "$policy_listing" | awk '/^[[:space:]]*\(/ {sub(/^[[:space:]]*\([^)]*\)[[:space:]]*/, ""); if ($0 != "!ALL") grant=1} END {exit !grant}'; then
+      fail 'bifrost has a sudo policy grant. Remove it before installing.'
+    fi
   fi
 }
 
