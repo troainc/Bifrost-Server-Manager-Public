@@ -113,7 +113,7 @@ prepare_account() {
   chmod 0700 "$account_home"
   command -v loginctl >/dev/null && loginctl enable-linger bifrost || fail 'Could not enable the bifrost user service at boot.'
   printf '\nAccount ready: bifrost. No sudo/wheel membership or sudo policy grant found.\n'
-  printf 'Set its login password with: passwd bifrost\nThen log in directly via SSH as bifrost and run: bash install.sh\nThe application installer must never run as root.\n'
+  printf 'The application runs as bifrost; no password or SSH login is needed for this service account.\n'
 }
 assert_service_account() {
   [[ $(id -un) == bifrost && $(id -u) -ne 0 ]] || fail 'Run the application installer as bifrost. A VM administrator first runs bash install.sh --prepare-account, then sets its password with passwd bifrost. Log in directly as bifrost.'
@@ -126,9 +126,50 @@ assert_service_account() {
   fi
 }
 
-[[ "${1:-}" != --prepare-account ]] || { [[ $# -eq 1 ]] || fail "Unexpected arguments."; prepare_account; exit 0; }
-[[ "${1:-}" != --help ]] || { echo 'An administrator runs bash install.sh --prepare-account once. Then log in as bifrost and run bash install.sh. Automatically installs user-local prerequisites, rootless Docker and Compose.'; exit 0; }
-[[ $# -eq 0 ]] || fail 'Unknown argument.'
+automated_bootstrap() {
+  local script
+  script=$(readlink -f "${BASH_SOURCE[0]}")
+  if [[ $(id -u) -ne 0 ]]; then
+    printf '\nAdministrator authentication is needed once to prepare the VM and create bifrost.\n'
+    if command -v sudo >/dev/null && sudo -v; then
+      exec sudo -- bash "$script" --bootstrap
+    elif command -v su >/dev/null; then
+      local command_line
+      printf -v command_line 'exec bash %q --bootstrap' "$script"
+      printf 'Enter the VM root password at the following prompt.\n'
+      exec su -s /bin/bash -c "$command_line" root
+    else
+      fail 'This VM provides neither sudo nor su for administrator authentication.'
+    fi
+  fi
+  [[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || fail 'Linux x86_64 is required.'
+  [[ -r /etc/os-release ]] || fail 'Cannot identify the VM operating system.'
+  . /etc/os-release
+  case "${ID:-}" in debian|ubuntu) ;; *) fail 'Automatic VM preparation currently supports Debian and Ubuntu.';; esac
+  printf '\nPreparing VM prerequisites (the Bifrost application will run only as bifrost).\n'
+  apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y uidmap kmod dbus-user-session iptables python3 openssl ca-certificates curl tar
+  modprobe nf_tables
+  printf 'nf_tables\n' > /etc/modules-load.d/bifrost-rootless.conf
+  prepare_account
+  local uid account_home copied
+  uid=$(id -u bifrost); account_home=$(getent passwd bifrost | cut -d: -f6)
+  # Start the user manager independently of an SSH login; no account password is required.
+  systemctl start "user@$uid.service"
+  [[ -S "/run/user/$uid/bus" ]] || fail 'The bifrost user session bus did not start.'
+  install -d -m 0700 -o bifrost -g "$(id -gn bifrost)" "$account_home/.local" "$account_home/.local/share" "$account_home/.local/share/bifrost-bootstrap"
+  copied="$account_home/.local/share/bifrost-bootstrap/install.sh"
+  [[ "$script" == "$copied" ]] || install -m 0700 -o bifrost -g "$(id -gn bifrost)" "$script" "$copied"
+  printf '\nVM preparation complete. Continuing installation as bifrost (UID %s).\n' "$uid"
+  exec runuser -u bifrost -- env -i HOME="$account_home" USER=bifrost LOGNAME=bifrost PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin XDG_RUNTIME_DIR="/run/user/$uid" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" TERM="${TERM:-xterm}" bash "$copied"
+}
+
+[[ "${1:-}" != --help ]] || { echo 'Run bash install.sh. The wizard authenticates the VM administrator once, prepares prerequisites and a non-privileged bifrost account, then installs and runs Bifrost as bifrost.'; exit 0; }
+case "${1:-}" in
+  --prepare-account|--bootstrap) [[ $# -eq 1 ]] || fail 'Unexpected arguments.'; automated_bootstrap;;
+  '') [[ $# -eq 0 ]] || fail 'Unexpected arguments.'; [[ $(id -un) == bifrost && $(id -u) -ne 0 ]] || automated_bootstrap;;
+  *) fail 'Unknown argument.';;
+esac
 assert_service_account
 [[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || fail 'Linux x86_64 is required.'
 [[ "$INSTALL_DIR" == /* && "$INSTALL_DIR" != / && "$INSTALL_DIR" != "$HOME" ]] || fail 'Invalid installation directory.'
