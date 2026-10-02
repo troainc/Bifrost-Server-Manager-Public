@@ -150,10 +150,10 @@ automated_bootstrap() {
   if [[ $(id -u) -ne 0 ]]; then
     printf '\nAdministrator authentication is needed once to prepare the VM and create bifrost.\n'
     if command -v sudo >/dev/null && sudo -v; then
-      exec sudo -- bash "$script" --bootstrap
+      exec sudo -- env BIFROST_RESUME="${BIFROST_RESUME:-0}" bash "$script" --bootstrap
     elif command -v su >/dev/null; then
       local command_line
-      printf -v command_line 'exec bash %q --bootstrap' "$script"
+      printf -v command_line 'exec env BIFROST_RESUME=%q bash %q --bootstrap' "${BIFROST_RESUME:-0}" "$script"
       printf 'Enter the VM root password at the following prompt.\n'
       exec su -s /bin/bash -c "$command_line" root
     else
@@ -180,10 +180,11 @@ automated_bootstrap() {
   copied="$account_home/.local/share/bifrost-bootstrap/install.sh"
   [[ "$script" == "$copied" ]] || install -m 0700 -o bifrost -g "$(id -gn bifrost)" "$script" "$copied"
   printf '\nVM preparation complete. Continuing installation as bifrost (UID %s).\n' "$uid"
-  exec runuser -u bifrost -- env -i HOME="$account_home" USER=bifrost LOGNAME=bifrost PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin XDG_RUNTIME_DIR="/run/user/$uid" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" TERM="${TERM:-xterm}" bash "$copied"
+  exec runuser -u bifrost -- env -i HOME="$account_home" USER=bifrost LOGNAME=bifrost PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin XDG_RUNTIME_DIR="/run/user/$uid" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" TERM="${TERM:-xterm}" BIFROST_RESUME="${BIFROST_RESUME:-0}" bash "$copied"
 }
 
 [[ "${1:-}" != --help ]] || { echo 'Run bash install.sh. The wizard authenticates the VM administrator once, prepares prerequisites and a non-privileged bifrost account, then installs and runs Bifrost as bifrost.'; exit 0; }
+if [[ "${1:-}" == --resume ]]; then export BIFROST_RESUME=1; shift; fi
 case "${1:-}" in
   --prepare-account|--bootstrap) [[ $# -eq 1 ]] || fail 'Unexpected arguments.'; automated_bootstrap;;
   '') [[ $# -eq 0 ]] || fail 'Unexpected arguments.'; [[ $(id -un) == bifrost && $(id -u) -ne 0 ]] || automated_bootstrap;;
@@ -192,7 +193,15 @@ esac
 assert_service_account
 [[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || fail 'Linux x86_64 is required.'
 [[ "$INSTALL_DIR" == /* && "$INSTALL_DIR" != / && "$INSTALL_DIR" != "$HOME" ]] || fail 'Invalid installation directory.'
-[[ ! -e "$INSTALL_DIR" ]] || fail "Existing installation preserved: $INSTALL_DIR"
+if [[ -e "$INSTALL_DIR" ]]; then
+  [[ "${BIFROST_RESUME:-0}" == 1 && -d "$INSTALL_DIR" && ! -L "$INSTALL_DIR" && ! -e "$INSTALL_DIR/.env" && -f "$INSTALL_DIR/customer-images.tar" && -f "$INSTALL_DIR/IMAGE-LOCK.json" && -f "$INSTALL_DIR/.env.example" && -d "$INSTALL_DIR/secrets" ]] || fail "Existing installation preserved: $INSTALL_DIR. For an interrupted pre-configuration install only, use bash install.sh --resume."
+  [[ $(stat -c %u "$INSTALL_DIR") -eq $(id -u) ]] || fail 'Installation is owned by another account.'
+  for name in postgres_owner_password.txt bifrost_app_password.txt rate_limit_pepper.txt mfa_encryption_key.txt agent-job-signing-private.pem agent-job-signing-public.pem panel-key.pem panel-cert.pem; do
+    [[ -s "$INSTALL_DIR/secrets/$name" && ! -L "$INSTALL_DIR/secrets/$name" ]] || fail "Cannot resume: missing or unsafe credential $name."
+  done
+else
+  [[ "${BIFROST_RESUME:-0}" != 1 ]] || fail 'No interrupted installation exists to resume.'
+fi
 [[ -r /dev/tty ]] || fail 'Run from an interactive terminal.'
 printf '\nThank you for downloading the TROA Bifrost Server Manager\n\nWe hope you enjoy! Please report any issues in our support Discord: discord.gg/troainc\nLearn more about our projects on therelamsofasgard.com\n\n[1/5] Preparing your account and prerequisites\n'
 for tool in sha256sum tar awk sed sort; do command -v "$tool" >/dev/null || fail "Missing base OS tool: $tool"; done
@@ -207,9 +216,10 @@ port=${port:-8443}
 [[ "$port" =~ ^[0-9]{4,5}$ && "$port" -ge 1024 && "$port" -le 65535 ]] || fail 'Choose a port from 1024 to 65535.'
 read -r -p "Install at $INSTALL_DIR? [Y/n]: " answer </dev/tty
 [[ "$answer" != [Nn]* ]] || exit 0
-printf '\n[3/5] Downloading Bifrost\n'
 scratch=$(mktemp -d)
 trap 'rm -rf -- "$scratch"' EXIT
+if [[ "${BIFROST_RESUME:-0}" != 1 ]]; then
+printf '\n[3/5] Downloading Bifrost\n'
 bundle="bifrost-linux-amd64-$VERSION.tar.gz"
 base="https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION"
 fetch "$base/$bundle" "$scratch/$bundle" || fail 'Application download failed.'
@@ -241,13 +251,16 @@ san="DNS:$address"
 openssl req -x509 -newkey rsa:3072 -nodes -days 365 -subj "/CN=$address" -addext "subjectAltName=$san" -keyout "$INSTALL_DIR/secrets/panel-key.pem" -out "$INSTALL_DIR/secrets/panel-cert.pem" >/dev/null 2>&1
 # The 0700 parent protects these files on the host; service-specific read-only mounts allow non-root container identities to read them.
 chmod 0644 "$INSTALL_DIR"/secrets/*
+else
+  printf '\nResuming configuration with existing package and credentials.\n'
+fi
 network_ids=$(docker network ls -q)
 if [[ -n "$network_ids" ]]; then docker network inspect $network_ids > "$scratch/networks.json"; else echo '[]' > "$scratch/networks.json"; fi
 python3 - "$INSTALL_DIR" "$address" "$port" "$scratch/networks.json" <<'PY'
 import ipaddress,json,pathlib,sys
 root=pathlib.Path(sys.argv[1]);used=[]
 for network in json.loads(pathlib.Path(sys.argv[4]).read_text()):
-    for item in network.get('IPAM',{}).get('Config',[]):
+    for item in (network.get('IPAM') or {}).get('Config') or []:
         if item.get('Subnet'):used.append(ipaddress.ip_network(item['Subnet'],strict=False))
 for index in range(256):
     subnet=ipaddress.ip_network(f'10.240.{index}.0/24')
