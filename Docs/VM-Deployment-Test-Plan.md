@@ -1,57 +1,63 @@
 # Disposable Linux VM deployment test plan
 
-**Status: preparation only. No downloadable public deployment bundle or container images are available yet.**
+**Status: installer and release workflow prepared; no versioned release or Linux VM acceptance recorded.**
+
+## Release gate
+
+Before installing, verify that this repository has a matching deployment-test release containing:
+
+- `install.sh`, the source-free Controller tarball, `SHA256SUMS`, and `IMAGE-LOCK.txt`.
+- The release version and the two exact GHCR image digests.
+- A public anonymous pull for both images.
+- A supported target: Debian/Ubuntu amd64 for this first test build.
+
+The private source repository publishes images from a version tag after its image build, owner-panel exclusion check, and high/critical vulnerability scan. GitHub initially creates packages private. An authorized administrator must set both `bifrost-control-plane` and `bifrost-web` packages to public. The public deployment release refuses to proceed while unauthenticated pulls fail.
+
+SHA-256 detects accidental transfer changes but is not a publisher signature. Do not install a moving source branch, private source checkout, local QA build, or unversioned image tag.
 
 ## Test topology
 
-Use two disposable VMs for the first end-to-end pass:
+1. **Controller VM:** disposable Debian/Ubuntu amd64, systemd, outbound HTTPS, Docker Engine/Compose v2. Use a dedicated VM and test hostname.
+2. **Instance Host VM:** separate disposable Linux machine. The Host Agent package is a separate artifact and must be published before this part of the test can run.
+3. Configure a separate TLS reverse proxy to reach the Controller's loopback web port. Use test-only credentials and license data.
 
-1. **Controller VM:** Debian or Ubuntu, amd64/arm64, systemd, outbound HTTPS, Docker Engine and Compose v2.
-2. **Instance Host VM:** Debian or Ubuntu, amd64/arm64, systemd, outbound HTTPS, rootless Podman and Node.js 24 installed by the separate Host Agent package.
+Record distro/version, architecture, kernel, Docker/Compose versions, VM provider, release tag, image digests, date, operator, and sanitized outcomes.
 
-Keep these machines isolated from production accounts, game data, and production secrets. Record distro/version, architecture, kernel, Docker/Compose versions, and package source.
+## One-line install
 
-## Before a test release is available
+After a public release is available, run this from a terminal:
 
-Do not copy the private application source checkout or master Compose overlays to the VM. Wait for a tagged release in this repository that lists:
+```bash
+curl --fail --silent --show-error --location https://github.com/troainc/Bifrost-Server-Manager-Public/releases/latest/download/install.sh | sudo bash
+```
 
-- Controller bundle version and immutable image tags.
-- SHA-256 files for the bundle and each image digest.
-- Supported OS/architecture.
-- License public-key provisioning instructions.
-- TLS reverse-proxy requirements.
-- Upgrade and rollback notes.
-
-SHA-256 detects transfer corruption but does not authenticate the publisher. Production use additionally requires signed provenance, independent review, recovery evidence, and owner acceptance.
+Use a fixed tagged release URL instead of `latest` for controlled testing. Keep the vendor-issued license verification **public** key available on the VM. The installer asks for its path, external HTTPS URL, license-service URL, and operator-reviewed privacy values.
 
 ## Controller test cases
 
-For a published deployment-test version:
-
-- Verify the release version and checksums before installation.
-- Install on a clean disposable VM and confirm generated secret files are mode 0600 and the data volume persists.
-- Confirm the web listener is bound to loopback and PostgreSQL is not exposed publicly.
-- Configure a TLS reverse proxy and complete first-administrator setup.
-- Confirm the standard build has no Connected installations owner section or owner-service configuration.
-- Confirm the required license disclosure appears and activation works only with the owner-provided public verification key and configured HTTPS license URL.
-- Restart the VM and verify the service and database recover with state intact.
-- Review bounded service logs and confirm secrets are not printed.
-- Simulate a failed startup using a disposable copy, verify recovery instructions, then restore the successful test state.
-- Remove only the disposable VM and its test data after recording evidence.
+- Confirm the fixed version and bundle checksum before install.
+- Install on a clean VM; record created secret-file modes and verify the listener is bound only to loopback.
+- Confirm PostgreSQL has no host-published port and web/API/database use the expected network boundaries.
+- Configure TLS reverse proxy, complete first-admin setup, enroll MFA, and confirm the privacy notice reflects the operator's input.
+- Confirm the customer UI contains no Connected installations owner section and customer Compose contains no owner service URL/key.
+- Test license activation only with the supplied public verification key and configured HTTPS licensing service.
+- Reboot; confirm containers start and database state remains intact.
+- Review bounded logs and verify no secrets appear.
+- In a disposable copy only, simulate a startup failure and document recovery without deleting volumes.
+- Record each case pass/fail and sanitized evidence. Remove only the disposable VM after review.
 
 ## Host test cases
 
-After Controller acceptance, use the separate Host Agent package:
+When a separate public Host Agent package becomes available:
 
-- Verify package integrity before installing.
-- Enroll through a fresh one-time code over HTTPS.
-- Confirm the bifrost-host account is locked, has no Docker socket access, and runs the user-level service.
-- Reboot and verify reconnect/heartbeat without inbound management ports.
-- Verify revocation prevents further authenticated work.
-- Do not treat provider cards as game lifecycle acceptance. A supported game profile requires its own signed-profile, lifecycle, update, backup/restore, and failure-recovery evidence.
+- Verify its checksum and exact version.
+- Enroll with a fresh one-time code over HTTPS.
+- Confirm the locked `bifrost-host` identity, no Docker-socket access, and user-level service.
+- Reboot and check reconnect/heartbeat and revocation handling.
+- Treat host connectivity separately from game provider/runtime lifecycle acceptance.
 
-## Evidence record
+## Recovery and limits
 
-For each run, capture test date, operator, VM provider, distro/version, architecture, exact release tag and image digests, sanitized commands and results, failures, recovery steps, and a final pass/fail per case. Never attach secrets, one-time codes, private keys, raw environment files, or unsanitized logs.
+The first Controller installer deliberately refuses an existing installation. It does not implement an upgrade/rollback workflow; preserve the complete `/opt/bifrost` configuration, secrets, and Docker volumes. Do not use production data during deployment testing.
 
-This test plan does not establish production readiness or a security certification.
+Capture sanitized commands and results only. Never attach secrets, one-time codes, private keys, raw environment files, or unsanitized logs. A passing VM rehearsal is not independent security review, publisher signature, production readiness, or game-host lifecycle acceptance.
