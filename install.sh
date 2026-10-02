@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 DEFAULT_VERSION="SET_BY_PUBLIC_RELEASE_WORKFLOW"
 VERSION="${BIFROST_VERSION:-$DEFAULT_VERSION}"
-INSTALL_DIR="/opt/bifrost"
+INSTALL_DIR="${BIFROST_INSTALL_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/bifrost}"
 LICENSE_PUBLIC_KEY=""
 PUBLIC_URL=""
 LICENSE_URL=""
@@ -12,12 +12,13 @@ fail() { printf 'Bifrost installer: %s\n' "$*" >&2; exit 1; }
 log() { printf 'Bifrost installer: %s\n' "$*"; }
 usage() {
   cat <<'EOF'
-Usage: sudo bash install.sh [--version vX.Y.Z] [--license-public-key FILE]
+Usage: bash install.sh [--version vX.Y.Z] [--license-public-key FILE]
        [--install-dir DIR]
 
 Installs the source-free Linux Controller bundle from the matching public
-GitHub release. Debian/Ubuntu amd64 only for this deployment test. A separate TLS reverse proxy
-and the vendor-provided public license verification key are required.
+GitHub release as the current non-root user. Requires Debian/Ubuntu amd64,
+rootless Docker Engine with Compose v2, a separate TLS reverse proxy, and the
+vendor-provided public license verification key. This installer never uses sudo.
 EOF
 }
 
@@ -33,8 +34,18 @@ while (($#)); do
   esac
 done
 
-[[ "${EUID:-$(id -u)}" -eq 0 ]] || fail "Run with sudo/root."
+[[ "${EUID:-$(id -u)}" -ne 0 ]] || fail "Do not run as root or with sudo. Sign in as the regular account that will own and run Bifrost, then run bash install.sh."
+[[ -n "${HOME:-}" && "$HOME" != "/root" ]] || fail "A regular user home directory is required."
+[[ "$INSTALL_DIR" == /* ]] || fail "Install directory must be an absolute path."
 [[ -r /dev/tty ]] || fail "Interactive setup needs a terminal. Run this installer from a terminal."
+for tool in curl python3 openssl awk grep sha256sum; do
+  command -v "$tool" >/dev/null 2>&1 || fail "A required command is missing. Have curl, python3, openssl, awk, grep, and sha256sum provisioned before installation; this installer will not use root access to install packages."
+done
+command -v docker >/dev/null 2>&1 || fail "Rootless Docker Engine is required for this account. Have it provisioned before installation; this installer will not install system packages or use a root-owned Docker daemon."
+docker compose version >/dev/null 2>&1 || fail "Docker Compose v2 is required for this account."
+docker info >/dev/null 2>&1 || fail "Docker is not available to this user. Configure and start rootless Docker for this account."
+security_options="$(docker info --format '{{json .SecurityOptions}}' 2>/dev/null || true)"
+grep -qi 'rootless' <<< "$security_options" || fail "This account is connected to a rootful Docker daemon. Configure rootless Docker for this account; Bifrost requires a rootless daemon."
 [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][A-Za-z0-9.-]+)?$ ]] || fail "Provide a fixed version tag such as v0.1.0-preview.1; floating tags are not accepted."
 if [[ -z "$LICENSE_PUBLIC_KEY" ]]; then
   read -r -p 'Path to the vendor-issued public license verification PEM file: ' LICENSE_PUBLIC_KEY </dev/tty
@@ -48,41 +59,6 @@ grep -q -- 'BEGIN PUBLIC KEY' "$LICENSE_PUBLIC_KEY" || fail "The license key mus
 case "${ID:-}" in debian|ubuntu) DISTRO_ID="$ID" ;; *) fail "Only Debian and Ubuntu are supported; detected ${ID:-unknown}." ;; esac
 ARCH="$(dpkg --print-architecture 2>/dev/null || true)"
 [[ "$ARCH" == amd64 ]] || fail "This initial deployment-test release supports Debian/Ubuntu amd64 only; detected ${ARCH:-unknown}."
-apt-get update
-DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates curl gnupg python3 openssl
-
-if ! command -v docker >/dev/null 2>&1 || ! docker compose version >/dev/null 2>&1; then
-  conflicts="$(dpkg-query -W -f='${db:Status-Abbrev} ${binary:Package}\n' docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc 2>/dev/null | awk '$1 ~ /^ii/ {print $2}')"
-  [[ -z "$conflicts" ]] || fail "Conflicting container packages are installed ($conflicts). Review them deliberately; this installer will not remove packages or data."
-  install -m 0755 -d /etc/apt/keyrings
-  key_tmp="$(mktemp /tmp/bifrost-docker-key.XXXXXX)"
-  curl --fail --silent --show-error --location "https://download.docker.com/linux/$DISTRO_ID/gpg" -o "$key_tmp"
-  fingerprint="$(gpg --show-keys --with-colons "$key_tmp" | awk -F: '$1 == "fpr" {print $10; exit}')"
-  expected='060A61C51B558A7F742B77AAC52FEB6B621E9F35'
-  [[ "$fingerprint" == "$expected" ]] || { rm -f -- "$key_tmp"; fail "Docker APT signing-key fingerprint verification failed."; }
-  docker_key=/etc/apt/keyrings/bifrost-docker.asc
-  if [[ -e "$docker_key" ]]; then
-    cmp -s "$key_tmp" "$docker_key" || { rm -f -- "$key_tmp"; fail "Existing Docker APT key differs; preserving it for review."; }
-    rm -f -- "$key_tmp"
-  else
-    install -m 0644 "$key_tmp" "$docker_key"
-    rm -f -- "$key_tmp"
-  fi
-  codename="${UBUNTU_CODENAME:-${VERSION_CODENAME:-}}"
-  [[ -n "$codename" ]] || fail "Distribution codename is unavailable; Docker repository was not configured."
-  docker_repo=/etc/apt/sources.list.d/bifrost-docker.sources
-  repo_content="Types: deb\nURIs: https://download.docker.com/linux/$DISTRO_ID\nSuites: $codename\nComponents: stable\nArchitectures: $ARCH\nSigned-By: $docker_key"
-  if [[ -e "$docker_repo" ]]; then
-    [[ "$(cat "$docker_repo")" == "$(printf '%b' "$repo_content")" ]] || fail "Existing Bifrost Docker repository file differs; preserving it for manual review."
-  else
-    printf '%b\n' "$repo_content" > "$docker_repo"
-    chmod 0644 "$docker_repo"
-  fi
-  apt-get update
-  DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-  systemctl enable --now docker
-fi
-docker compose version >/dev/null 2>&1 || fail "Docker Engine and Compose v2 are required."
 [[ ! -e "$INSTALL_DIR" ]] || fail "Install directory already exists: $INSTALL_DIR. Existing installations are preserved; use the documented upgrade procedure."
 
 read -r -p 'Public Controller HTTPS URL (TLS reverse proxy required): ' PUBLIC_URL </dev/tty
@@ -110,7 +86,7 @@ TMP="$(mktemp -d /tmp/bifrost-install.XXXXXX)"
 trap 'rm -rf -- "$TMP"' EXIT
 BASE="https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION"
 BUNDLE="bifrost-controller-linux-$VERSION.tar.gz"
-curl --fail --silent --show-error --location "$BASE/$BUNDLE" -o "$TMP/$BUNDLE" || fail "Could not download the fixed-version Controller bundle. Confirm that this public release exists."
+curl --fail --silent --show-error --location --max-filesize 104857600 "$BASE/$BUNDLE" -o "$TMP/$BUNDLE" || fail "Could not download the fixed-version Controller bundle (maximum size 100 MiB). Confirm that this public release exists."
 curl --fail --silent --show-error --location "$BASE/SHA256SUMS" -o "$TMP/SHA256SUMS" || fail "Could not download the release checksum file."
 (cd "$TMP" && grep -F "  $BUNDLE" SHA256SUMS | sha256sum --check --status) || fail "Bundle checksum validation failed."
 
@@ -123,10 +99,17 @@ with tarfile.open(archive, "r:gz") as bundle:
     members = bundle.getmembers()
     if not members or len(members) > 1000:
         raise SystemExit("Invalid bundle entry count.")
+    seen = set()
+    total = 0
     for member in members:
         path = pathlib.PurePosixPath(member.name)
-        if path.is_absolute() or ".." in path.parts or not (member.isfile() or member.isdir()):
+        normalized = str(path).casefold()
+        total += member.size
+        if (path.is_absolute() or ".." in path.parts or normalized in seen
+                or not (member.isfile() or member.isdir()) or member.size > 16 * 1024 * 1024
+                or total > 64 * 1024 * 1024):
             raise SystemExit("Bundle contains an unsafe path or non-regular entry.")
+        seen.add(normalized)
     bundle.extractall(root)
 PY
 
@@ -144,11 +127,15 @@ for n in range(256):
 else: raise SystemExit("No unused 10.240.x.0/24 Docker range is available")' <<< "$NETWORK_JSON") || fail "No non-overlapping Docker subnet is available. No existing networks were changed."
 [[ ${#NETWORK_VALUES[@]} -eq 3 ]] || fail "Could not select a non-overlapping Docker network."
 
-install -d -m 0750 "$INSTALL_DIR"
+mkdir -m 0700 -p "$(dirname "$INSTALL_DIR")"
+mkdir -m 0700 "$INSTALL_DIR"
+chmod 0700 "$INSTALL_DIR"
 cp -a "$TMP/unpacked/." "$INSTALL_DIR/"
-install -d -m 0700 "$INSTALL_DIR/secrets"
-install -m 0600 "$LICENSE_PUBLIC_KEY" "$INSTALL_DIR/secrets/license_signing_public.pem"
-install -m 0644 "$INSTALL_DIR/.env.example" "$INSTALL_DIR/.env"
+mkdir -m 0700 "$INSTALL_DIR/secrets"
+cp "$LICENSE_PUBLIC_KEY" "$INSTALL_DIR/secrets/license_signing_public.pem"
+chmod 0600 "$INSTALL_DIR/secrets/license_signing_public.pem"
+cp "$INSTALL_DIR/.env.example" "$INSTALL_DIR/.env"
+chmod 0600 "$INSTALL_DIR/.env"
 python3 - "$INSTALL_DIR" "$VERSION" "$PUBLIC_URL" "$LICENSE_URL" "${NETWORK_VALUES[0]}" "${NETWORK_VALUES[1]}" "${NETWORK_VALUES[2]}" "$PRIVACY_NAME" "$PRIVACY_CONTACT" "$PRIVACY_JURISDICTIONS" "$PRIVACY_BASES" "$PRIVACY_PROCESSORS" "$PRIVACY_REGION" "$PRIVACY_REVIEW_DATE" "$PRIVACY_REVIEW_REF" <<'PY'
 from pathlib import Path
 import sys
@@ -187,5 +174,5 @@ if [[ "$answer" =~ ^[Yy]$ ]]; then
   log "Controller containers started. Keep the generated secrets safe and configure the separate TLS proxy before public access."
   log "First admin setup is completed in the browser. This test deployment does not enroll a game host."
 else
-  log "Bundle and protected secrets are ready at $INSTALL_DIR; stack not started. Start later with: cd $INSTALL_DIR && sudo docker compose up -d"
+  log "Bundle and protected secrets are ready at $INSTALL_DIR; stack not started. Start later with: cd $INSTALL_DIR && docker compose up -d"
 fi
