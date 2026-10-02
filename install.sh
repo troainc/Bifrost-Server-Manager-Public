@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.2
+VERSION=v0.1.0-installtest.3
 INSTALL_DIR="${BIFROST_INSTALL_DIR:-$HOME/.local/share/bifrost}"
 fail() { printf '\nBifrost: %s\n' "$*" >&2; exit 1; }
 fetch() {
@@ -183,6 +183,17 @@ automated_bootstrap() {
   exec runuser -u bifrost -- env -i HOME="$account_home" USER=bifrost LOGNAME=bifrost PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin XDG_RUNTIME_DIR="/run/user/$uid" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" TERM="${TERM:-xterm}" BIFROST_RESUME="${BIFROST_RESUME:-0}" bash "$copied"
 }
 
+if [[ "${1:-}" == --update ]]; then
+  [[ $# -eq 1 ]] || fail 'Unexpected arguments.'
+  update_stage=$(mktemp -d)
+  update_base="https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION"
+  fetch "$update_base/update.sh" "$update_stage/update.sh"
+  fetch "$update_base/SHA256SUMS" "$update_stage/SHA256SUMS"
+  (cd "$update_stage" && grep -E '^[a-f0-9]{64}  update.sh$' SHA256SUMS | sha256sum --check --status) || fail 'Updater checksum failed.'
+  bash "$update_stage/update.sh"
+  rm -f "$update_stage/update.sh" "$update_stage/SHA256SUMS"; rmdir "$update_stage"
+  exit 0
+fi
 [[ "${1:-}" != --help ]] || { echo 'Run bash install.sh. The wizard authenticates the VM administrator once, prepares prerequisites and a non-privileged bifrost account, then installs and runs Bifrost as bifrost.'; exit 0; }
 if [[ "${1:-}" == --resume ]]; then export BIFROST_RESUME=1; shift; fi
 case "${1:-}" in

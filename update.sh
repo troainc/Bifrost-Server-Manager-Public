@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.2
+VERSION=v0.1.0-installtest.3
 fail(){ printf '\nBifrost update: %s\n' "$*" >&2; exit 1; }
 script=$(readlink -f "${BASH_SOURCE[0]}")
 if [[ $(id -un) != bifrost ]]; then
