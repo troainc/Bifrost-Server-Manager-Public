@@ -1,0 +1,13 @@
+# Local test secrets and deployment state
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.key
+*.pfx
+*.p12
+artifacts/
+*.tar
+*.tar.gz
+*.zip
