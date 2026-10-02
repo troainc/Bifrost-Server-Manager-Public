@@ -3,10 +3,40 @@ set -Eeuo pipefail
 umask 077
 VERSION=v0.1.0-installtest.3
 INSTALL_DIR="${BIFROST_INSTALL_DIR:-$HOME/.local/share/bifrost}"
+# Terminal presentation: readable without color, animation, or a wide terminal.
+UI_RESET='' UI_BLUE='' UI_GREEN='' UI_GOLD='' UI_DIM='' UI_BOLD=''
+if [[ -t 1 && -z "${NO_COLOR:-}" && "${TERM:-dumb}" != dumb ]]; then
+  UI_RESET=$'\033[0m'; UI_BLUE=$'\033[38;5;81m'; UI_GREEN=$'\033[38;5;114m'
+  UI_GOLD=$'\033[38;5;221m'; UI_DIM=$'\033[2m'; UI_BOLD=$'\033[1m'
+fi
+ui_rule(){ printf '%s%s%s\n' "$UI_DIM" '------------------------------------------------------------' "$UI_RESET"; }
+ui_banner(){
+  printf '\n'; ui_rule
+  printf '  %s%sT R O A   /   B I F R O S T%s\n' "$UI_BLUE" "$UI_BOLD" "$UI_RESET"
+  printf '  SERVER MANAGER  %s|  Linux %s%s\n' "$UI_DIM" "$VERSION" "$UI_RESET"
+  printf '  %sServers bridge worlds.%s\n' "$UI_DIM" "$UI_RESET"
+  ui_rule
+}
+ui_step(){ printf '\n%s%s  %s%s\n' "$UI_GOLD" "$UI_BOLD" "$1" "$UI_RESET"; [[ -z "${2:-}" ]] || printf '  %s%s%s\n' "$UI_DIM" "$2" "$UI_RESET"; ui_rule; }
+ui_ok(){ printf '  %s[OK]%s %s\n' "$UI_GREEN" "$UI_RESET" "$*"; }
+run_task(){
+  local label="$1" log status; shift
+  log=$(mktemp /tmp/bifrost-task.XXXXXX)
+  printf '  %s[WORK]%s %s\n' "$UI_BLUE" "$UI_RESET" "$label"
+  if "$@" >"$log" 2>&1; then
+    rm -f "$log"; ui_ok "$label"
+  else
+    status=$?; printf '\n  %s[FAILED]%s %s\n' "$UI_GOLD" "$UI_RESET" "$label" >&2
+    tail -n 25 "$log" >&2
+    printf '\n  Full diagnostic log: %s\n' "$log" >&2
+    return "$status"
+  fi
+}
+
 fail() { printf '\nBifrost: %s\n' "$*" >&2; exit 1; }
 fetch() {
-  if command -v curl >/dev/null; then curl -fSL --retry 3 "$1" -o "$2";
-  elif command -v wget >/dev/null; then wget --output-document="$2" "$1";
+  if command -v curl >/dev/null; then curl -fL --progress-bar --retry 3 "$1" -o "$2";
+  elif command -v wget >/dev/null; then wget --quiet --show-progress --output-document="$2" "$1";
   else fail 'This VM needs wget or curl.'; fi
 }
 bootstrap_prerequisites() {
@@ -150,10 +180,10 @@ automated_bootstrap() {
   if [[ $(id -u) -ne 0 ]]; then
     printf '\nAdministrator authentication is needed once to prepare the VM and create bifrost.\n'
     if command -v sudo >/dev/null && sudo -v; then
-      exec sudo -- env BIFROST_RESUME="${BIFROST_RESUME:-0}" bash "$script" --bootstrap
+      exec sudo -- env BIFROST_REINSTALL="${BIFROST_REINSTALL:-0}" BIFROST_RESUME="${BIFROST_RESUME:-0}" bash "$script" --bootstrap
     elif command -v su >/dev/null; then
       local command_line
-      printf -v command_line 'exec env BIFROST_RESUME=%q bash %q --bootstrap' "${BIFROST_RESUME:-0}" "$script"
+      printf -v command_line 'exec env BIFROST_REINSTALL=%q BIFROST_RESUME=%q bash %q --bootstrap' "${BIFROST_REINSTALL:-0}" "${BIFROST_RESUME:-0}" "$script"
       printf 'Enter the VM root password at the following prompt.\n'
       exec su -s /bin/bash -c "$command_line" root
     else
@@ -166,8 +196,10 @@ automated_bootstrap() {
   . /etc/os-release
   case "${ID:-}" in debian|ubuntu) ;; *) fail 'Automatic VM preparation currently supports Debian and Ubuntu.';; esac
   printf '\nPreparing VM prerequisites (the Bifrost application will run only as bifrost).\n'
-  apt-get update
-  DEBIAN_FRONTEND=noninteractive apt-get install -y uidmap kmod dbus-user-session iptables python3 openssl ca-certificates curl tar
+  ui_banner
+  ui_step 'VM PREPARATION' 'One-time administrator setup; the application runs as bifrost.'
+  run_task 'Refresh Debian/Ubuntu package sources' apt-get -q update
+  run_task 'Install VM prerequisites' env DEBIAN_FRONTEND=noninteractive apt-get -q install -y uidmap kmod dbus-user-session iptables python3 openssl ca-certificates curl tar
   modprobe nf_tables
   printf 'nf_tables\n' > /etc/modules-load.d/bifrost-rootless.conf
   prepare_account
@@ -180,7 +212,7 @@ automated_bootstrap() {
   copied="$account_home/.local/share/bifrost-bootstrap/install.sh"
   [[ "$script" == "$copied" ]] || install -m 0700 -o bifrost -g "$(id -gn bifrost)" "$script" "$copied"
   printf '\nVM preparation complete. Continuing installation as bifrost (UID %s).\n' "$uid"
-  exec runuser -u bifrost -- env -i HOME="$account_home" USER=bifrost LOGNAME=bifrost PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin XDG_RUNTIME_DIR="/run/user/$uid" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" TERM="${TERM:-xterm}" BIFROST_RESUME="${BIFROST_RESUME:-0}" bash "$copied"
+  exec runuser -u bifrost -- env -i HOME="$account_home" USER=bifrost LOGNAME=bifrost PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin XDG_RUNTIME_DIR="/run/user/$uid" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" TERM="${TERM:-xterm}" BIFROST_REINSTALL="${BIFROST_REINSTALL:-0}" BIFROST_RESUME="${BIFROST_RESUME:-0}" bash "$copied"
 }
 
 if [[ "${1:-}" == --update ]]; then
@@ -195,6 +227,7 @@ if [[ "${1:-}" == --update ]]; then
   exit 0
 fi
 [[ "${1:-}" != --help ]] || { echo 'Run bash install.sh. The wizard authenticates the VM administrator once, prepares prerequisites and a non-privileged bifrost account, then installs and runs Bifrost as bifrost.'; exit 0; }
+if [[ "${1:-}" == --reinstall ]]; then export BIFROST_REINSTALL=1; shift; fi
 if [[ "${1:-}" == --resume ]]; then export BIFROST_RESUME=1; shift; fi
 case "${1:-}" in
   --prepare-account|--bootstrap) [[ $# -eq 1 ]] || fail 'Unexpected arguments.'; automated_bootstrap;;
@@ -204,6 +237,26 @@ esac
 assert_service_account
 [[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || fail 'Linux x86_64 is required.'
 [[ "$INSTALL_DIR" == /* && "$INSTALL_DIR" != / && "$INSTALL_DIR" != "$HOME" ]] || fail 'Invalid installation directory.'
+if [[ "${BIFROST_REINSTALL:-0}" == 1 ]]; then
+  expected="$(readlink -f "$HOME")/.local/share/bifrost"
+  actual=$(readlink -m "$INSTALL_DIR")
+  [[ "$INSTALL_DIR" == "$HOME/.local/share/bifrost" && "$actual" == "$expected" && ! -L "$INSTALL_DIR" ]] || fail 'Reinstall only supports the standard bifrost home installation; refusing an alternate or symlinked path.'
+  [[ -r /dev/tty ]] || fail 'Reinstall requires an interactive terminal.'
+  ui_banner
+  ui_step 'RESET TEST INSTALLATION' 'This permanently deletes this panel database, administrator, credentials and local configuration.'
+  printf '  Target: %s\n' "$actual"
+  read -r -p 'Type WIPE to confirm a clean reinstall: ' confirmation </dev/tty
+  [[ "$confirmation" == WIPE ]] || fail 'Reinstall cancelled; data preserved.'
+  if [[ -d "$actual" ]]; then
+    [[ $(stat -c %u "$actual") -eq $(id -u) && -f "$actual/compose.yaml" && -f "$actual/.env" ]] || fail 'Refusing to wipe a directory that is not an owned, configured Bifrost installation.'
+    export PATH="$HOME/.local/bin:$HOME/bin:$PATH:/usr/sbin:/sbin"
+    export DOCKER_HOST="unix:///run/user/$(id -u)/docker.sock"
+    docker info --format '{{json .SecurityOptions}}' | grep -qi rootless || fail 'Rootless Docker is required to remove this installation.'
+    (cd "$actual" && run_task 'Remove test containers and database volumes' docker compose down --volumes)
+    rm -rf -- "$actual"
+    ui_ok 'Old test installation removed. Beginning a fresh install.'
+  fi
+fi
 if [[ -e "$INSTALL_DIR" ]]; then
   [[ "${BIFROST_RESUME:-0}" == 1 && -d "$INSTALL_DIR" && ! -L "$INSTALL_DIR" && ! -e "$INSTALL_DIR/.env" && -f "$INSTALL_DIR/customer-images.tar" && -f "$INSTALL_DIR/IMAGE-LOCK.json" && -f "$INSTALL_DIR/.env.example" && -d "$INSTALL_DIR/secrets" ]] || fail "Existing installation preserved: $INSTALL_DIR. For an interrupted pre-configuration install only, use bash install.sh --resume."
   [[ $(stat -c %u "$INSTALL_DIR") -eq $(id -u) ]] || fail 'Installation is owned by another account.'
@@ -214,10 +267,12 @@ else
   [[ "${BIFROST_RESUME:-0}" != 1 ]] || fail 'No interrupted installation exists to resume.'
 fi
 [[ -r /dev/tty ]] || fail 'Run from an interactive terminal.'
-printf '\nThank you for downloading the TROA Bifrost Server Manager\n\nWe hope you enjoy! Please report any issues in our support Discord: discord.gg/troainc\nLearn more about our projects on therelamsofasgard.com\n\n[1/5] Preparing your account and prerequisites\n'
+ui_banner
+printf '\nThank you for downloading the TROA Bifrost Server Manager\n\nWe hope you enjoy! Please report any issues in our support Discord:\n  discord.gg/troainc\nLearn more about our projects:\n  therelamsofasgard.com\n'
+ui_step '01 / 05   Prepare your account' 'Checking your tools and rootless Docker.'
 for tool in sha256sum tar awk sed sort; do command -v "$tool" >/dev/null || fail "Missing base OS tool: $tool"; done
 bootstrap_prerequisites
-printf '\n[2/5] Panel setup\n'
+ui_step '02 / 05   Make it yours' 'Choose the address and port for your new panel.'
 default_address=$(hostname -I 2>/dev/null | awk '{print $1}')
 read -r -p "VM IP or hostname [${default_address:-localhost}]: " address </dev/tty
 address=${address:-${default_address:-localhost}}
@@ -230,7 +285,7 @@ read -r -p "Install at $INSTALL_DIR? [Y/n]: " answer </dev/tty
 scratch=$(mktemp -d)
 trap 'rm -rf -- "$scratch"' EXIT
 if [[ "${BIFROST_RESUME:-0}" != 1 ]]; then
-printf '\n[3/5] Downloading Bifrost\n'
+ui_step '03 / 05   Download your command center' 'Downloading the release, then verifying its checksum.'
 bundle="bifrost-linux-amd64-$VERSION.tar.gz"
 base="https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION"
 fetch "$base/$bundle" "$scratch/$bundle" || fail 'Application download failed.'
@@ -248,7 +303,7 @@ with tarfile.open(sys.argv[1],'r:gz') as archive:
         seen.add(key)
     archive.extractall(root,filter='data')
 PY
-printf '\n[4/5] Configuring Bifrost\n'
+ui_step '04 / 05   Secure your installation' 'Creating private credentials and HTTPS configuration.'
 mkdir -p "$(dirname "$INSTALL_DIR")"
 mkdir -m 0700 "$INSTALL_DIR"
 cp -a "$scratch/package/." "$INSTALL_DIR/"
@@ -280,7 +335,7 @@ else:raise SystemExit('No available Docker subnet.')
 values={'BIFROST_PUBLIC_URL':f'https://{sys.argv[2]}:{sys.argv[3]}','BIFROST_HTTPS_PORT':sys.argv[3],'BIFROST_PRIVATE_SUBNET':str(subnet),'BIFROST_WEB_NETWORK_IP':str(subnet.network_address+10),'BIFROST_TRUSTED_PROXIES':f'127.0.0.1,::1,{subnet.network_address+10}'}
 env=root/'.env';env.write_text((root/'.env.example').read_text()+'\n'+'\n'.join(f'{k}={v}' for k,v in values.items())+'\n');env.chmod(0o600)
 PY
-docker load --input "$INSTALL_DIR/customer-images.tar"
+run_task 'Load verified application images' docker load --input "$INSTALL_DIR/customer-images.tar"
 python3 - "$INSTALL_DIR/IMAGE-LOCK.json" <<'PY'
 import json,subprocess,sys
 for name,expected in json.load(open(sys.argv[1])).items():
@@ -288,8 +343,10 @@ for name,expected in json.load(open(sys.argv[1])).items():
     if actual!=expected:raise SystemExit(f'Image identity mismatch: {name}')
 PY
 rm -f "$INSTALL_DIR/customer-images.tar"
-printf '\n[5/5] Starting your panel\n'
+ui_step '05 / 05   Bring your panel online' 'Waiting for the database, API and web services to be healthy.'
 cd "$INSTALL_DIR"
 docker compose config --quiet
-docker compose up -d --wait --wait-timeout 180
-printf '\nInstalled. Open https://%s:%s and create your administrator.\nThe VM-test HTTPS certificate is self-signed.\nManage: cd "%s" && docker compose ps\n' "$address" "$port" "$INSTALL_DIR"
+run_task 'Start and check all panel services' docker compose up -d --wait --wait-timeout 180
+ui_step 'YOUR COMMAND CENTER IS READY' 'Open the panel to begin onboarding.'
+printf '\n  Panel     https://%s:%s/install\n  Account   bifrost (non-root)\n  Files     %s\n\n  Your test HTTPS certificate is self-signed.\n  Your browser will ask you to confirm it.\n\n  Support   discord.gg/troainc\n\n' "$address" "$port" "$INSTALL_DIR"
+ui_rule
