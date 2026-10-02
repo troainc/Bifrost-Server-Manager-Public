@@ -92,9 +92,44 @@ bootstrap_prerequisites() {
   fi
 }
 
-[[ "${1:-}" != --help ]] || { echo 'Run bash install.sh as a regular Linux user. Automatically installs user-local prerequisites, rootless Docker and Compose.'; exit 0; }
+prepare_account() {
+  [[ $(id -u) -eq 0 ]] || fail 'Account creation requires a VM administrator: run bash install.sh --prepare-account from an administrator root shell.'
+  command -v useradd >/dev/null || fail 'The VM image needs the useradd utility.'
+  if ! id bifrost >/dev/null 2>&1; then
+    useradd --create-home --user-group --shell /bin/bash --comment 'TROA Bifrost Server Manager' bifrost
+    printf 'Created bifrost with a locked password and a private primary group.\n'
+  fi
+  [[ $(id -u bifrost) -ne 0 ]] || fail 'The existing bifrost account has UID 0. Refusing to use it.'
+  local group
+  for group in $(id -nG bifrost); do
+    case "$group" in sudo|wheel|docker|lxd|incus-admin) fail "Existing bifrost account belongs to privileged group $group. Remove that membership before continuing.";; esac
+  done
+  if command -v sudo >/dev/null && sudo -l -U bifrost >/dev/null 2>&1; then
+    fail 'The bifrost account has a sudo policy grant. Remove that grant before continuing.'
+  fi
+  local account_home
+  account_home=$(getent passwd bifrost | cut -d: -f6)
+  [[ -d "$account_home" && $(stat -c %u "$account_home") -eq $(id -u bifrost) ]] || fail 'The bifrost home directory is missing or owned by another account.'
+  chmod 0700 "$account_home"
+  command -v loginctl >/dev/null && loginctl enable-linger bifrost || fail 'Could not enable the bifrost user service at boot.'
+  printf '\nAccount ready: bifrost. No sudo/wheel membership or sudo policy grant found.\n'
+  printf 'Set its login password with: passwd bifrost\nThen log in directly via SSH as bifrost and run: bash install.sh\nThe application installer must never run as root.\n'
+}
+assert_service_account() {
+  [[ $(id -un) == bifrost && $(id -u) -ne 0 ]] || fail 'Run the application installer as bifrost. A VM administrator first runs bash install.sh --prepare-account, then sets its password with passwd bifrost. Log in directly as bifrost.'
+  local group
+  for group in $(id -nG); do
+    case "$group" in sudo|wheel|docker|lxd|incus-admin) fail "bifrost has privileged group membership: $group. Remove it before installing.";; esac
+  done
+  if command -v sudo >/dev/null && sudo -n -l >/dev/null 2>&1; then
+    fail 'bifrost has a sudo policy grant. Remove it before installing.'
+  fi
+}
+
+[[ "${1:-}" != --prepare-account ]] || { [[ $# -eq 1 ]] || fail "Unexpected arguments."; prepare_account; exit 0; }
+[[ "${1:-}" != --help ]] || { echo 'An administrator runs bash install.sh --prepare-account once. Then log in as bifrost and run bash install.sh. Automatically installs user-local prerequisites, rootless Docker and Compose.'; exit 0; }
 [[ $# -eq 0 ]] || fail 'Unknown argument.'
-[[ $(id -u) -ne 0 ]] || fail 'Sign in as a regular user. Do not run with sudo or as root.'
+assert_service_account
 [[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || fail 'Linux x86_64 is required.'
 [[ "$INSTALL_DIR" == /* && "$INSTALL_DIR" != / && "$INSTALL_DIR" != "$HOME" ]] || fail 'Invalid installation directory.'
 [[ ! -e "$INSTALL_DIR" ]] || fail "Existing installation preserved: $INSTALL_DIR"
