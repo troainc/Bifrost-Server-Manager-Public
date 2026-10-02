@@ -268,7 +268,7 @@ else
 fi
 [[ -r /dev/tty ]] || fail 'Run from an interactive terminal.'
 ui_banner
-printf '\nThank you for downloading the TROA Bifrost Server Manager\n\nWe hope you enjoy! Please report any issues in our support Discord:\n  discord.gg/troainc\nLearn more about our projects:\n  therelamsofasgard.com\n'
+printf '\nThank you for downloading the TROA Bifrost Server Manager\n\nWe hope you enjoy! Please report any issues in our support Discord:\n  discord.gg/troainc\nLearn more about our projects:\n  therealmsofasgard.com\n'
 ui_step '01 / 05   Prepare your account' 'Checking your tools and rootless Docker.'
 for tool in sha256sum tar awk sed sort; do command -v "$tool" >/dev/null || fail "Missing base OS tool: $tool"; done
 bootstrap_prerequisites

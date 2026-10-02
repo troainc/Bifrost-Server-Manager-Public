@@ -35,3 +35,5 @@ Run the normal one-line installer as the current VM user. It requests administra
 2026-10-02: Added explicit --reinstall for the requested disposable TROA VM reset. Requires typed WIPE, validates the standard canonical user-home target and ownership/configuration, then removes that Compose stack including volumes and its installation directory before reinstalling. Other locations and symlinked targets refused. This destroys the test panel database/admin/credentials; --update continues to preserve them. No VM wipe was executed remotely.
 
 2026-10-02: Fresh install/reinstall completion URL always ends in /install and opens the existing first-run onboarding route.
+
+2026-10-02: Corrected the installer welcome-banner project URL to therealmsofasgard.com. Bash syntax passed.
