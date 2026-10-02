@@ -10,6 +10,8 @@ if [[ $(id -un) != bifrost ]]; then
     if command -v sudo >/dev/null && sudo -v; then exec sudo bash "$script"; fi
     printf -v line 'exec bash %q' "$script"; exec su -s /bin/bash -c "$line" root
   fi
+  export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+  command -v runuser >/dev/null || fail 'The VM is missing runuser (util-linux package).'
   uid=$(id -u bifrost); home=$(getent passwd bifrost | cut -d: -f6)
   [[ "$uid" != 0 ]] || fail 'bifrost must be non-root.'
   install -d -m 0700 -o bifrost -g "$(id -gn bifrost)" "$home/.local/share/bifrost-bootstrap"
