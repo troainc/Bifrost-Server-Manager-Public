@@ -56,6 +56,14 @@ ui_banner
 ui_step 'UPDATE YOUR COMMAND CENTER' 'Your database, administrator and credentials will be preserved.'
 root="$HOME/.local/share/bifrost"
 [[ -f "$root/.env" && -d "$root/secrets" ]] || fail 'No configured installation exists.'
+# Changing libc/locale implementations is not a safe in-place database update.
+# Refuse older Debian bundles before downloading or modifying any installation data.
+python3 - "$root/.env" <<'DATABASE_RUNTIME_PY'
+import pathlib,sys
+values=dict(line.split('=',1) for line in pathlib.Path(sys.argv[1]).read_text().splitlines() if '=' in line and not line.startswith('#'))
+if values.get('BIFROST_POSTGRES_RUNTIME')!='alpine17-v1':
+    raise SystemExit('This testing release requires a fresh installation or a separately verified database backup/restore migration. Existing Debian PostgreSQL data is unchanged; automatic cross-runtime update is refused.')
+DATABASE_RUNTIME_PY
 docker info --format '{{json .SecurityOptions}}' | grep -qi rootless || fail 'Rootless Docker is required.'
 scratch=$(mktemp -d);trap 'rm -rf -- "$scratch"' EXIT
 base="https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION"
