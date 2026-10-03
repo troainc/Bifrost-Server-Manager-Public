@@ -20,6 +20,8 @@ mkdir -p "$output/package"
 cp -a deployment/. "$output/package/"
 cp .env.example README.md "$output/package/"
 cp "$key" "$output/package/config/license-signing-public.pem"
+# Public verification material must be readable by the unprivileged container.
+chmod 0644 "$output/package/config/license-signing-public.pem"
 docker image inspect "bifrost/control-plane:$version" "bifrost/web:$version" "bifrost/postgres:$version" > "$output/images.json"
 python3 - "$output/images.json" "$output/package/IMAGE-LOCK.json" <<'PY'
 import json,pathlib,sys
