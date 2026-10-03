@@ -102,15 +102,35 @@ PY
 read -r -p 'Master license HTTPS URL (Enter keeps existing configuration): ' license_url </dev/tty
 if [[ -n "$license_url" ]]; then
   read -r -p 'Public verification PEM file path (on this VM, readable by bifrost): ' key_file </dev/tty
-  [[ -f "$key_file" ]] || fail 'Public key file not found.'
-  openssl pkey -pubin -in "$key_file" -noout >/dev/null || fail 'Not a valid public key.'
-  python3 - "$license_url" .env <<'PY'
-import pathlib,sys,urllib.parse
-url=urllib.parse.urlsplit(sys.argv[1])
-if url.scheme!='https' or not url.hostname or url.username or url.password or url.query or url.fragment or any(c.isspace() for c in sys.argv[1]):raise SystemExit('Use an absolute HTTPS licensing-service URL')
-p=pathlib.Path(sys.argv[2]);lines=[l for l in p.read_text().splitlines() if not l.startswith('BIFROST_LICENSE_URL=')];p.write_text('\n'.join(lines+[f'BIFROST_LICENSE_URL={sys.argv[1]}'])+'\n')
-PY
-  cp "$key_file" config/license-signing-public.pem
+  python3 - "$root" "$license_url" "$key_file" <<'LICENSE_SETUP_PY'
+import pathlib,re,subprocess,sys,urllib.parse
+root=pathlib.Path(sys.argv[1]); raw=sys.argv[2]; key=pathlib.Path(sys.argv[3])
+url=urllib.parse.urlsplit(raw)
+try: port=url.port
+except ValueError: raise SystemExit('Invalid license service port.')
+if (url.scheme!='https' or not url.hostname or url.username is not None or url.password is not None
+    or url.query or url.fragment or url.path.rstrip('/') not in ('','/api')
+    or any(c.isspace() or ord(c)<32 or c in "'\"\\$`#" for c in raw)
+    or not re.fullmatch(r'[A-Za-z0-9.:-]+',url.hostname)
+    or port is not None and not 1<=port<=65535):
+    raise SystemExit('Use an HTTPS license service root or /api URL without credentials or extra parameters.')
+if not key.is_file() or key.is_symlink() or not 0<key.stat().st_size<=4096:
+    raise SystemExit('Use a regular matching public verification PEM file (maximum 4096 bytes).')
+data=key.read_bytes()
+if not re.fullmatch(rb'\s*-----BEGIN PUBLIC KEY-----\s+[A-Za-z0-9+/=\r\n]+-----END PUBLIC KEY-----\s*',data):
+    raise SystemExit('Only a public key is accepted; never supply an issuer private key.')
+check=subprocess.run(['openssl','pkey','-pubin','-outform','DER'],input=data,capture_output=True)
+prefix=bytes.fromhex('3059301306072a8648ce3d020106082a8648ce3d03010703420004')
+if check.returncode or len(check.stdout)!=91 or not check.stdout.startswith(prefix):
+    raise SystemExit('The Bifrost license issuer requires its matching P-256 public key.')
+env=root/'.env'; config=root/'config'; destination=config/'license-signing-public.pem'
+if env.is_symlink() or config.is_symlink() or destination.is_symlink() or not env.is_file() or not config.is_dir():
+    raise SystemExit('Unsafe or missing installation configuration.')
+lines=[line for line in env.read_text().splitlines() if line.partition('=')[0]!='BIFROST_LICENSE_URL']
+destination.write_bytes(data);destination.chmod(0o644)
+env.write_text('\n'.join(lines+[f'BIFROST_LICENSE_URL={raw.rstrip("/")}'])+'\n');env.chmod(0o600)
+print('License connection configured. Activation still requires the privacy readiness gate and in-panel disclosure acceptance.')
+LICENSE_SETUP_PY
 fi
 chmod 0644 config/license-signing-public.pem
 docker compose config --quiet
