@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.4
+VERSION=v0.1.0-installtest.5
 # Terminal presentation: readable without color, animation, or a wide terminal.
 UI_RESET='' UI_BLUE='' UI_GREEN='' UI_GOLD='' UI_DIM='' UI_BOLD=''
 if [[ -t 1 && -z "${NO_COLOR:-}" && "${TERM:-dumb}" != dumb ]]; then
@@ -75,6 +75,21 @@ with tarfile.open(sys.argv[1]) as archive:
         seen.add(key)
     archive.extractall(root,filter='data')
 PY
+
+printf '\nThis is a testing release. Qualified deployment review is still pending.\n'
+read -r -p 'Enable license testing before completing your local review? [y/N, Enter keeps setting]: ' test_intake </dev/tty
+case "$test_intake" in
+  [Yy]|[Nn])
+    test_value=false; [[ "$test_intake" != [Yy] ]] || test_value=true
+    python3 - "$root/.env" "$test_value" <<'TEST_INTAKE_PY'
+import pathlib,sys
+p=pathlib.Path(sys.argv[1]);lines=[line for line in p.read_text().splitlines() if line.partition('=')[0]!='BIFROST_LICENSE_TEST_INTAKE']
+p.write_text('\n'.join(lines+[f'BIFROST_LICENSE_TEST_INTAKE={sys.argv[2]}'])+'\n');p.chmod(0o600)
+TEST_INTAKE_PY
+    ;;
+  '') ;;
+  *) fail 'Answer y or n for testing intake.';;
+esac
 run_task 'Load verified update images' docker load --input "$scratch/package/customer-images.tar"
 python3 - "$scratch/package/IMAGE-LOCK.json" <<'PY'
 import json,subprocess,sys

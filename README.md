@@ -10,11 +10,11 @@ wget --output-document=install.sh https://github.com/troainc/Bifrost-Server-Mana
 
 The wizard asks for the VM IP/hostname and HTTPS port, downloads the application, checks its checksum, generates configuration and credentials, and starts the panel. Default port: **8443**. Create your administrator in the browser.
 
-Use Debian/Ubuntu x86_64 with wget or curl. The installer sets up Docker, Compose and missing Python/OpenSSL/iptables tools in your user account. The VM image must provide uidmap helpers, subordinate UID/GID ranges, enabled user namespaces and an active user systemd session. Bifrost refuses root and never invokes sudo.
+Use Debian/Ubuntu x86_64 with wget or curl. The installer sets up Docker, Compose and missing Python/OpenSSL/iptables tools in your user account. Host preparation installs required system packages with administrator authentication. The Controller and rootless Docker services run as the separate unprivileged bifrost account; administrator preparation does not run the application as root.
 
 The application is delivered as compiled container images inside a GitHub Release asset. No private registry login, private application source, or master licensing service is distributed. The repository-root `install.sh` is the bootstrap; GitHub's `releases/latest/download/install.sh` is a release asset, not a folder in the repository.
 
-This is a VM installation test release. HTTPS uses a generated self-signed certificate. Licensing activation still requires your license service and public verification key, configured separately. Privacy review fields are left unset until configured; installation does not invent a legal review.
+This is a VM installation test release. HTTPS uses a generated self-signed certificate. The new testing bundle includes the TROA issuer public verification key. The installer suggests the TROA HTTPS licensing endpoint; you still accept the tracking disclosure in your own panel. You can explicitly choose license testing while your deployment review is pending. Optional analytics stays unavailable until the normal review gate is complete. Privacy review fields are left unset until configured; installation does not invent a legal review.
 
 Files live in `~/.local/share/bifrost`. Existing installations are preserved.
 
