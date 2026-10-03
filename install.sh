@@ -335,6 +335,44 @@ else:raise SystemExit('No available Docker subnet.')
 values={'BIFROST_PUBLIC_URL':f'https://{sys.argv[2]}:{sys.argv[3]}','BIFROST_HTTPS_PORT':sys.argv[3],'BIFROST_PRIVATE_SUBNET':str(subnet),'BIFROST_WEB_NETWORK_IP':str(subnet.network_address+10),'BIFROST_TRUSTED_PROXIES':f'127.0.0.1,::1,{subnet.network_address+10}'}
 env=root/'.env';env.write_text((root/'.env.example').read_text()+'\n'+'\n'.join(f'{k}={v}' for k,v in values.items())+'\n');env.chmod(0o600)
 PY
+printf '\nLicensing uses your installation identifier and check-ins; optional analytics stays off.\n'
+read -r -p 'Configure the TROA license service now? [y/N]: ' configure_license </dev/tty
+if [[ "$configure_license" == [Yy] ]]; then
+  read -r -p 'Master license HTTPS URL [https://bifrost.therealmsofasgard.com/api]: ' license_url </dev/tty
+  license_url=${license_url:-https://bifrost.therealmsofasgard.com/api}
+  read -r -p 'Matching public verification PEM file path (on this VM, readable by bifrost): ' key_file </dev/tty
+  python3 - "$INSTALL_DIR" "$license_url" "$key_file" <<'LICENSE_SETUP_PY'
+import pathlib,re,subprocess,sys,urllib.parse
+root=pathlib.Path(sys.argv[1]); raw=sys.argv[2]; key=pathlib.Path(sys.argv[3])
+url=urllib.parse.urlsplit(raw)
+try: port=url.port
+except ValueError: raise SystemExit('Invalid license service port.')
+if (url.scheme!='https' or not url.hostname or url.username is not None or url.password is not None
+    or url.query or url.fragment or url.path.rstrip('/') not in ('','/api')
+    or any(c.isspace() or ord(c)<32 or c in "'\"\\$`#" for c in raw)
+    or not re.fullmatch(r'[A-Za-z0-9.:-]+',url.hostname)
+    or port is not None and not 1<=port<=65535):
+    raise SystemExit('Use an HTTPS license service root or /api URL without credentials or extra parameters.')
+if not key.is_file() or key.is_symlink() or not 0<key.stat().st_size<=4096:
+    raise SystemExit('Use a regular matching public verification PEM file (maximum 4096 bytes).')
+data=key.read_bytes()
+if not re.fullmatch(rb'\s*-----BEGIN PUBLIC KEY-----\s+[A-Za-z0-9+/=\r\n]+-----END PUBLIC KEY-----\s*',data):
+    raise SystemExit('Only a public key is accepted; never supply an issuer private key.')
+check=subprocess.run(['openssl','pkey','-pubin','-outform','DER'],input=data,capture_output=True)
+prefix=bytes.fromhex('3059301306072a8648ce3d020106082a8648ce3d03010703420004')
+if check.returncode or len(check.stdout)!=91 or not check.stdout.startswith(prefix):
+    raise SystemExit('The Bifrost license issuer requires its matching P-256 public key.')
+env=root/'.env'; config=root/'config'; destination=config/'license-signing-public.pem'
+if env.is_symlink() or config.is_symlink() or destination.is_symlink() or not env.is_file() or not config.is_dir():
+    raise SystemExit('Unsafe or missing installation configuration.')
+lines=[line for line in env.read_text().splitlines() if line.partition('=')[0]!='BIFROST_LICENSE_URL']
+destination.write_bytes(data);destination.chmod(0o644)
+env.write_text('\n'.join(lines+[f'BIFROST_LICENSE_URL={raw.rstrip("/")}'])+'\n');env.chmod(0o600)
+print('License connection configured. Activation still requires the privacy readiness gate and in-panel disclosure acceptance.')
+LICENSE_SETUP_PY
+else
+  printf 'License configuration skipped. You can configure it later with the updater; game management remains gated.\n'
+fi
 run_task 'Load verified application images' docker load --input "$INSTALL_DIR/customer-images.tar"
 python3 - "$INSTALL_DIR/IMAGE-LOCK.json" <<'PY'
 import json,subprocess,sys
