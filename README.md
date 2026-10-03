@@ -1,5 +1,9 @@
 # Bifrost Server Manager
 
+## Current testing download
+
+[Customer testing 5](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.5) includes the compiled Controller, bundled public verification key, image scan/checksum evidence and a separate compiled Linux Host Agent ZIP. Fresh Compose startup was verified in disposable CI; real installation, host enrollment and game/backup/recovery acceptance remain pending. The Host Agent ZIP is an unsigned testing build: extract it and follow INSTALL.md on your own game machine.
+
 ## Linux install
 
 Run this as your current VM user. The installer requests the administrator password once, creates the unprivileged bifrost account, and continues automatically:
