@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:17.6-bookworm
+    image: bifrost/postgres:${BIFROST_VERSION}
     pull_policy: never
     restart: unless-stopped
     environment:
@@ -57,6 +57,7 @@ services:
       RATE_LIMIT_PEPPER_FILE: /run/secrets/rate_limit_pepper
       BIFROST_LICENSE_URL: ${BIFROST_LICENSE_URL:-}
       BIFROST_LICENSE_PUBLIC_KEY_FILE: /run/bifrost/license-signing-public.pem
+      BIFROST_LICENSE_TEST_INTAKE: ${BIFROST_LICENSE_TEST_INTAKE:-false}
       BIFROST_PRIVACY_CONTROLLER_NAME: ${BIFROST_PRIVACY_CONTROLLER_NAME:-}
       BIFROST_PRIVACY_CONTACT: ${BIFROST_PRIVACY_CONTACT:-}
       BIFROST_PRIVACY_JURISDICTIONS: ${BIFROST_PRIVACY_JURISDICTIONS:-}

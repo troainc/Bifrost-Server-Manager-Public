@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.4
+VERSION=v0.1.0-installtest.5
 INSTALL_DIR="${BIFROST_INSTALL_DIR:-$HOME/.local/share/bifrost}"
 # Terminal presentation: readable without color, animation, or a wide terminal.
 UI_RESET='' UI_BLUE='' UI_GREEN='' UI_GOLD='' UI_DIM='' UI_BOLD=''
@@ -336,11 +336,12 @@ values={'BIFROST_PUBLIC_URL':f'https://{sys.argv[2]}:{sys.argv[3]}','BIFROST_HTT
 env=root/'.env';env.write_text((root/'.env.example').read_text()+'\n'+'\n'.join(f'{k}={v}' for k,v in values.items())+'\n');env.chmod(0o600)
 PY
 printf '\nLicensing uses your installation identifier and check-ins; optional analytics stays off.\n'
-read -r -p 'Configure the TROA license service now? [y/N]: ' configure_license </dev/tty
-if [[ "$configure_license" == [Yy] ]]; then
+read -r -p 'Configure the TROA license service now? [Y/n]: ' configure_license </dev/tty
+if [[ "$configure_license" != [Nn] ]]; then
   read -r -p 'Master license HTTPS URL [https://bifrost.therealmsofasgard.com/api]: ' license_url </dev/tty
   license_url=${license_url:-https://bifrost.therealmsofasgard.com/api}
-  read -r -p 'Matching public verification PEM file path (on this VM, readable by bifrost): ' key_file </dev/tty
+  read -r -p 'Matching public verification PEM path (Enter uses bundled TROA key): ' key_file </dev/tty
+  key_file=${key_file:-$INSTALL_DIR/config/license-signing-public.pem}
   python3 - "$INSTALL_DIR" "$license_url" "$key_file" <<'LICENSE_SETUP_PY'
 import pathlib,re,subprocess,sys,urllib.parse
 root=pathlib.Path(sys.argv[1]); raw=sys.argv[2]; key=pathlib.Path(sys.argv[3])
@@ -373,6 +374,21 @@ LICENSE_SETUP_PY
 else
   printf 'License configuration skipped. You can configure it later with the updater; game management remains gated.\n'
 fi
+
+printf '\nThis is a testing release. Qualified deployment review is still pending.\n'
+read -r -p 'Enable license testing before completing your local review? [y/N, Enter keeps setting]: ' test_intake </dev/tty
+case "$test_intake" in
+  [Yy]|[Nn])
+    test_value=false; [[ "$test_intake" != [Yy] ]] || test_value=true
+    python3 - "$INSTALL_DIR/.env" "$test_value" <<'TEST_INTAKE_PY'
+import pathlib,sys
+p=pathlib.Path(sys.argv[1]);lines=[line for line in p.read_text().splitlines() if line.partition('=')[0]!='BIFROST_LICENSE_TEST_INTAKE']
+p.write_text('\n'.join(lines+[f'BIFROST_LICENSE_TEST_INTAKE={sys.argv[2]}'])+'\n');p.chmod(0o600)
+TEST_INTAKE_PY
+    ;;
+  '') ;;
+  *) fail 'Answer y or n for testing intake.';;
+esac
 run_task 'Load verified application images' docker load --input "$INSTALL_DIR/customer-images.tar"
 python3 - "$INSTALL_DIR/IMAGE-LOCK.json" <<'PY'
 import json,subprocess,sys
