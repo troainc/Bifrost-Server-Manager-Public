@@ -2,6 +2,9 @@
 set -Eeuo pipefail
 umask 077
 VERSION=v0.1.0-installtest.6
+# Corrected updater for the unchanged testing 6 bundle; immutable source + digest.
+UPDATER_SOURCE_REF=d6d5201b43e7d64388848e39c76ce9844ce00384
+UPDATER_SHA256=4fc6543061de24b805df1032a223d0be8f14a060558bffb38ed4f955a3b0fa75
 INSTALL_DIR="${BIFROST_INSTALL_DIR:-$HOME/.local/share/bifrost}"
 # Terminal presentation: readable without color, animation, or a wide terminal.
 UI_RESET='' UI_BLUE='' UI_GREEN='' UI_GOLD='' UI_DIM='' UI_BOLD=''
@@ -218,12 +221,11 @@ automated_bootstrap() {
 if [[ "${1:-}" == --update ]]; then
   [[ $# -eq 1 ]] || fail 'Unexpected arguments.'
   update_stage=$(mktemp -d)
-  update_base="https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION"
-  fetch "$update_base/update.sh" "$update_stage/update.sh"
-  fetch "$update_base/SHA256SUMS" "$update_stage/SHA256SUMS"
-  (cd "$update_stage" && grep -E '^[a-f0-9]{64}  update.sh$' SHA256SUMS | sha256sum --check --status) || fail 'Updater checksum failed.'
+  fetch "https://raw.githubusercontent.com/troainc/Bifrost-Server-Manager-Public/$UPDATER_SOURCE_REF/update.sh" "$update_stage/update.sh"
+  (cd "$update_stage" && printf '%s  update.sh\n' "$UPDATER_SHA256" | sha256sum --check --status) || fail 'Updater checksum failed.'
+  grep -qx "VERSION=$VERSION" "$update_stage/update.sh" || fail 'Pinned updater version differs from the requested release.'
   bash "$update_stage/update.sh"
-  rm -f "$update_stage/update.sh" "$update_stage/SHA256SUMS"; rmdir "$update_stage"
+  rm -f "$update_stage/update.sh"; rmdir "$update_stage"
   exit 0
 fi
 [[ "${1:-}" != --help ]] || { echo 'Run bash install.sh. The wizard authenticates the VM administrator once, prepares prerequisites and a non-privileged bifrost account, then installs and runs Bifrost as bifrost.'; exit 0; }
@@ -390,12 +392,107 @@ TEST_INTAKE_PY
   *) fail 'Answer y or n for testing intake.';;
 esac
 run_task 'Load verified application images' docker load --input "$INSTALL_DIR/customer-images.tar"
-python3 - "$INSTALL_DIR/IMAGE-LOCK.json" <<'PY'
-import json,subprocess,sys
-for name,expected in json.load(open(sys.argv[1])).items():
-    actual=subprocess.check_output(['docker','image','inspect',name,'--format','{{.Id}}'],text=True).strip()
-    if actual!=expected:raise SystemExit(f'Image identity mismatch: {name}')
-PY
+python3 - "$INSTALL_DIR/customer-images.tar" "$INSTALL_DIR/IMAGE-LOCK.json" <<'IMAGE_IDENTITY_PY'
+"""Verify Docker image identity against the checksummed release archive.
+
+Classic Docker reports the config digest as Id; containerd reports the manifest
+digest. Accept either only when archive metadata binds it to the locked config.
+This file is embedded verbatim in both standalone installer scripts.
+"""
+import hashlib
+import json
+import pathlib
+import re
+import subprocess
+import sys
+import tarfile
+
+
+def archive_identities(path):
+    with tarfile.open(path, "r:") as archive:
+        members = archive.getmembers()
+        if len(members) > 10000:
+            raise ValueError("Too many image archive entries")
+        files = {}
+        for member in members:
+            name = str(pathlib.PurePosixPath(member.name))
+            if name in files or name.startswith("/") or ".." in pathlib.PurePosixPath(name).parts:
+                raise ValueError("Unsafe or duplicate image archive entry")
+            files[name] = member
+
+        def read_json(name, digest=None):
+            member = files.get(name)
+            if not member or not member.isfile() or not 0 < member.size <= 1024 * 1024:
+                raise ValueError("Missing or unsafe image metadata: " + name)
+            data = archive.extractfile(member).read()
+            actual = "sha256:" + hashlib.sha256(data).hexdigest()
+            if digest is not None and actual != digest:
+                raise ValueError("Image metadata digest mismatch: " + name)
+            return json.loads(data), actual
+
+        saved, _ = read_json("manifest.json")
+        identities = {}
+        for image in saved:
+            config, digest = read_json(image["Config"])
+            if config.get("os") != "linux" or config.get("architecture") != "amd64":
+                raise ValueError("Only Linux amd64 release images are supported")
+            for tag in image.get("RepoTags") or []:
+                if tag in identities:
+                    raise ValueError("Ambiguous image tag: " + tag)
+                identities[tag] = {"config": digest, "ids": {digest}}
+
+        if "index.json" in files:
+            index, _ = read_json("index.json")
+            for descriptor in index["manifests"]:
+                tag = descriptor.get("annotations", {}).get("io.containerd.image.name", "")
+                if tag.startswith("docker.io/"):
+                    tag = tag[len("docker.io/"):]
+                if tag not in identities:
+                    continue
+                digest = descriptor["digest"]
+                if not re.fullmatch(r"sha256:[a-f0-9]{64}", digest):
+                    raise ValueError("Invalid OCI manifest digest")
+                manifest, _ = read_json("blobs/sha256/" + digest[7:], digest)
+                if manifest.get("config", {}).get("digest") != identities[tag]["config"]:
+                    raise ValueError("OCI manifest/config identity mismatch: " + tag)
+                identities[tag]["ids"].add(digest)
+        return identities
+
+
+def main(args):
+    archive_path, lock_path = args[:2]
+    identities = archive_identities(archive_path)
+    if len(args) > 2 and args[2] == "--write-lock":
+        tags = args[3:]
+        if len(tags) != 3 or len(set(tags)) != 3:
+            raise ValueError("Exactly three release image tags are required")
+        lock = {tag: identities[tag]["config"] for tag in tags}
+        pathlib.Path(lock_path).write_text(json.dumps(lock, indent=2) + "\n")
+        return
+    lock = json.loads(pathlib.Path(lock_path).read_text())
+    if not isinstance(lock, dict) or len(lock) != 3:
+        raise ValueError("Exactly three locked release images are required")
+    for tag, expected in lock.items():
+        if not re.fullmatch(r"bifrost/(control-plane|web|postgres):v[0-9]+\.[0-9]+\.[0-9]+-installtest\.[0-9]+", tag):
+            raise ValueError("Unexpected release image tag: " + tag)
+        if not isinstance(expected, str) or not re.fullmatch(r"sha256:[a-f0-9]{64}", expected):
+            raise ValueError("Invalid locked configuration digest: " + tag)
+        identity = identities.get(tag)
+        if not identity or identity["config"] != expected:
+            raise ValueError("Archive/lock configuration mismatch: " + tag)
+        image = json.loads(subprocess.check_output(["docker", "image", "inspect", tag], text=True))[0]
+        actual = image["Id"]
+        if actual not in identity["ids"] or image.get("Os") != "linux" or image.get("Architecture") != "amd64":
+            raise ValueError(f"Image identity mismatch: {tag}; loaded={actual}; allowed={','.join(sorted(identity['ids']))}")
+        print(f"Verified {tag}: {actual} (locked config {expected})")
+
+
+if __name__ == "__main__":
+    try:
+        main(sys.argv[1:])
+    except (ValueError, KeyError, IndexError, OSError, tarfile.TarError, subprocess.CalledProcessError) as error:
+        raise SystemExit(str(error))
+IMAGE_IDENTITY_PY
 rm -f "$INSTALL_DIR/customer-images.tar"
 ui_step '05 / 05   Bring your panel online' 'Waiting for the database, API and web services to be healthy.'
 cd "$INSTALL_DIR"

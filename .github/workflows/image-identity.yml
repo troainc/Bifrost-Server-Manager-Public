@@ -1,0 +1,81 @@
+name: Verify release image identity across Docker stores
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  image-identity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        store: [classic, containerd]
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - name: Download and checksum the actual customer testing 6 package
+        run: |
+          set -euo pipefail
+          base=https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/v0.1.0-installtest.6
+          mkdir "$RUNNER_TEMP/release"
+          cd "$RUNNER_TEMP/release"
+          curl -fL "$base/SHA256SUMS" -o SHA256SUMS
+          curl -fL "$base/bifrost-linux-amd64-v0.1.0-installtest.6.tar.gz" -o bifrost-linux-amd64-v0.1.0-installtest.6.tar.gz
+          grep -E '^[a-f0-9]{64}  bifrost-linux-amd64-v0.1.0-installtest.6.tar.gz$' SHA256SUMS | sha256sum --check
+          mkdir package
+          tar -xzf bifrost-linux-amd64-v0.1.0-installtest.6.tar.gz -C package
+      - name: Start an isolated Docker 29.8.2 daemon with the selected image store
+        env:
+          STORE: ${{ matrix.store }}
+        run: |
+          set -euo pipefail
+          mkdir "$RUNNER_TEMP/docker29"
+          curl -fL https://download.docker.com/linux/static/stable/x86_64/docker-29.8.2.tgz -o "$RUNNER_TEMP/docker29.tgz"
+          tar -xzf "$RUNNER_TEMP/docker29.tgz" --strip-components=1 -C "$RUNNER_TEMP/docker29"
+          snapshotter=false; [[ "$STORE" != containerd ]] || snapshotter=true
+          printf '{"features":{"containerd-snapshotter":%s}}\n' "$snapshotter" > "$RUNNER_TEMP/daemon.json"
+          export DOCKER_HOST="unix://$RUNNER_TEMP/docker29.sock"
+          sudo env PATH="$RUNNER_TEMP/docker29:$PATH" "$RUNNER_TEMP/docker29/dockerd" \
+            --config-file "$RUNNER_TEMP/daemon.json" --host "$DOCKER_HOST" \
+            --data-root "$RUNNER_TEMP/docker-data" --exec-root "$RUNNER_TEMP/docker-exec" \
+            --pidfile "$RUNNER_TEMP/docker29.pid" --bridge none --iptables=false --ip6tables=false \
+            > "$RUNNER_TEMP/docker29.log" 2>&1 &
+          ready=false
+          for attempt in {1..60}; do
+            if "$RUNNER_TEMP/docker29/docker" info > /dev/null 2>&1; then ready=true; break; fi
+            sleep 1
+          done
+          if [[ "$ready" != true ]]; then cat "$RUNNER_TEMP/docker29.log"; exit 1; fi
+          echo "DOCKER_HOST=$DOCKER_HOST" >> "$GITHUB_ENV"
+          echo "$RUNNER_TEMP/docker29" >> "$GITHUB_PATH"
+      - name: Reproduce the old check and verify the repaired check without running application containers
+        env:
+          STORE: ${{ matrix.store }}
+        run: |
+          set -euo pipefail
+          docker version
+          docker info --format '{{json .DriverStatus}}'
+          package="$RUNNER_TEMP/release/package"
+          docker load --input "$package/customer-images.tar"
+          python3 - "$package/IMAGE-LOCK.json" "$STORE" <<'PY'
+          import json,subprocess,sys
+          mismatch=[]
+          for tag,expected in json.load(open(sys.argv[1])).items():
+              actual=subprocess.check_output(['docker','image','inspect',tag,'--format','{{.Id}}'],text=True).strip()
+              print(f'OLD CHECK {tag}: locked-config={expected}; loaded-Id={actual}; equal={expected==actual}')
+              if expected!=actual:mismatch.append(tag)
+          assert len(mismatch)==(3 if sys.argv[2]=='containerd' else 0),mismatch
+          PY
+          python3 scripts/verify-image-archive.py "$package/customer-images.tar" "$package/IMAGE-LOCK.json"
+          # Exercise the exact embedded installer and updater code, not only the helper.
+          python3 - "$package" <<'PY'
+          import pathlib,subprocess,sys
+          for name in ['install.sh','update.sh']:
+              code=pathlib.Path(name).read_text().split("<<'IMAGE_IDENTITY_PY'\n",1)[1].split('\nIMAGE_IDENTITY_PY',1)[0]
+              subprocess.run([sys.executable,'-c',code,sys.argv[1]+'/customer-images.tar',sys.argv[1]+'/IMAGE-LOCK.json'],check=True)
+          PY
+      - name: Stop the isolated test daemon
+        if: always()
+        run: |
+          if [[ -f "$RUNNER_TEMP/docker29.pid" ]]; then sudo kill "$(cat "$RUNNER_TEMP/docker29.pid")" || true; fi

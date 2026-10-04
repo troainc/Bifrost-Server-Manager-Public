@@ -13,10 +13,14 @@ The separate **Linux Host Agent** has no distribution-name restriction, but requ
 Run this as your current VM user. The installer requests the administrator password once, creates the unprivileged bifrost account, and continues automatically:
 
 ```bash
-wget --output-document=install.sh https://github.com/troainc/Bifrost-Server-Manager-Public/releases/latest/download/install.sh && bash install.sh
+wget --output-document=install.sh https://raw.githubusercontent.com/troainc/Bifrost-Server-Manager-Public/main/install.sh && bash install.sh
 ```
 
 The wizard asks for the VM IP/hostname and HTTPS port, downloads the application, checks its checksum, generates configuration and credentials, and starts the panel. Default port: **8443**. Create your administrator in the browser.
+
+The repository bootstrap includes the Docker image-identity repair for the unchanged, checksummed testing 6 application bundle. The original testing 6 release attachments contain the earlier installer; use the repository command above for this repair.
+
+If testing 6 stopped after writing configuration with `Image identity mismatch`, preserve that installation and run the corrected repository bootstrap with `bash install.sh --update`. Its updater preserves the database, administrator, credentials, license URL/public key and testing-intake choice. Press Enter at its configuration prompts to retain those settings. Do not use `--reinstall` or delete the installation directory to recover this failure. This applies to the prepared Alpine testing 6 installation; the older Debian PostgreSQL runtime remains refused by the updater.
 
 Use Debian/Ubuntu x86_64 with wget or curl. The installer sets up Docker, Compose and missing Python/OpenSSL/iptables tools in your user account. Host preparation installs required system packages with administrator authentication. The Controller and rootless Docker services run as the separate unprivileged bifrost account; administrator preparation does not run the application as root.
 
