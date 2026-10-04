@@ -2,6 +2,9 @@
 set -Eeuo pipefail
 umask 077
 VERSION=v0.1.0-installtest.6
+# Corrected updater for the unchanged testing 6 bundle; immutable source + digest.
+UPDATER_SOURCE_REF=d6d5201b43e7d64388848e39c76ce9844ce00384
+UPDATER_SHA256=4fc6543061de24b805df1032a223d0be8f14a060558bffb38ed4f955a3b0fa75
 INSTALL_DIR="${BIFROST_INSTALL_DIR:-$HOME/.local/share/bifrost}"
 # Terminal presentation: readable without color, animation, or a wide terminal.
 UI_RESET='' UI_BLUE='' UI_GREEN='' UI_GOLD='' UI_DIM='' UI_BOLD=''
@@ -218,12 +221,11 @@ automated_bootstrap() {
 if [[ "${1:-}" == --update ]]; then
   [[ $# -eq 1 ]] || fail 'Unexpected arguments.'
   update_stage=$(mktemp -d)
-  update_base="https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION"
-  fetch "$update_base/update.sh" "$update_stage/update.sh"
-  fetch "$update_base/SHA256SUMS" "$update_stage/SHA256SUMS"
-  (cd "$update_stage" && grep -E '^[a-f0-9]{64}  update.sh$' SHA256SUMS | sha256sum --check --status) || fail 'Updater checksum failed.'
+  fetch "https://raw.githubusercontent.com/troainc/Bifrost-Server-Manager-Public/$UPDATER_SOURCE_REF/update.sh" "$update_stage/update.sh"
+  (cd "$update_stage" && printf '%s  update.sh\n' "$UPDATER_SHA256" | sha256sum --check --status) || fail 'Updater checksum failed.'
+  grep -qx "VERSION=$VERSION" "$update_stage/update.sh" || fail 'Pinned updater version differs from the requested release.'
   bash "$update_stage/update.sh"
-  rm -f "$update_stage/update.sh" "$update_stage/SHA256SUMS"; rmdir "$update_stage"
+  rm -f "$update_stage/update.sh"; rmdir "$update_stage"
   exit 0
 fi
 [[ "${1:-}" != --help ]] || { echo 'Run bash install.sh. The wizard authenticates the VM administrator once, prepares prerequisites and a non-privileged bifrost account, then installs and runs Bifrost as bifrost.'; exit 0; }

@@ -3,6 +3,7 @@ import importlib.util
 import io
 import json
 import pathlib
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -137,6 +138,14 @@ class ImageIdentity(unittest.TestCase):
             script = (ROOT / name).read_text()
             embedded = script.split("<<'IMAGE_IDENTITY_PY'\n", 1)[1].split("\nIMAGE_IDENTITY_PY", 1)[0]
             self.assertEqual(embedded, (ROOT / "scripts/verify-image-archive.py").read_text().rstrip())
+
+    def test_bootstrap_pins_the_corrected_updater_with_a_matching_digest(self):
+        script = (ROOT / "install.sh").read_text()
+        values = dict(line.split("=", 1) for line in script.splitlines() if line.startswith(("UPDATER_SOURCE_REF=", "UPDATER_SHA256=")))
+        updater = subprocess.check_output(["git", "-c", "safe.directory=*", "show", values["UPDATER_SOURCE_REF"] + ":update.sh"], cwd=ROOT)
+        self.assertEqual(hashlib.sha256(updater).hexdigest(), values["UPDATER_SHA256"])
+        self.assertIn(b"IMAGE_IDENTITY_PY", updater)
+        self.assertIn("Pinned updater version differs", script)
 
 
 if __name__ == "__main__":
