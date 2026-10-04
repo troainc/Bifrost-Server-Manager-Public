@@ -1,5 +1,9 @@
 # Work log
 
+## 2026-10-03 - Linux support clarification
+
+Inspected Controller automatic preparation and both Host Agent installation scripts. Documented Debian/Ubuntu x86_64 Controller bootstrap and prerequisite-based Linux Host Agent compatibility separately. Broadened the acceptance plan to compatible Linux candidates with exact distro/version records; no universal Linux acceptance claimed and no guards removed. Documentation-only change.
+
 ## 2026-10-02
 Replaced the release-dependent placeholder bootstrap with a short Linux wizard. Packaging and download verification are in progress; record final results after release publication.
 
