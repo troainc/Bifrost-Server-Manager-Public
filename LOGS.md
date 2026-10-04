@@ -88,3 +88,7 @@ This is a fresh-install testing download. Home Ubuntu installation, enrollment, 
 ## 2026-10-03 - Disclosure v5 customer integration refresh
 
 Prepare v0.1.0-installtest.6 for the creator's current Controller features and disclosure version 5. Personal user agreement acceptance is separate from administrator installation-license consent. The customer Controller cannot enable owner registry/configuration/recovery APIs, even through environment flags. Customer privacy identity and location belong to the local operator and default blank. The Alpine 17 update compatibility guard and data/key preservation remain unchanged. Hosted packaging, fresh migrations, image scans and licensing flow must pass before publishing; real Ubuntu and game-host acceptance remain pending.
+## 2026-10-04 — Clarify role choice as installer step one
+
+- Made the existing role prompt visibly step 01 in the interactive installer and renumbered Controller stages 02–06.
+- Updated the public bootstrap guide to tell operators that Controller/Instance Host selection happens inside the installer. No QA or live host testing was run.

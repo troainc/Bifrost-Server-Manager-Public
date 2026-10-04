@@ -303,7 +303,8 @@ elif [[ "${1:-}" == --reinstall || "${1:-}" == --resume || "${1:-}" == --prepare
 elif [[ -z "${BIFROST_INSTALL_ROLE:-}" ]]; then
   [[ -r /dev/tty ]] || fail 'Choose a role with --controller or --host when running without a terminal.'
   ui_banner
-  printf "\n  Choose this machine's role:\n\n  1) Bifrost Controller  — central panel; install once\n  2) Linux Instance Host — game machine; join an existing Controller\n\n"
+  ui_step '01 / 06   Choose this machine’s role' 'This is the first step in the installer. Choose Controller once, or Instance Host on each game machine.'
+  printf "\n  1) Bifrost Controller  — central panel; install once\n  2) Linux Instance Host — game machine; join an existing Controller\n\n"
   read -r -p 'Select 1 or 2: ' install_choice </dev/tty
   case "$install_choice" in 1) BIFROST_INSTALL_ROLE=controller;; 2) BIFROST_INSTALL_ROLE=host;; *) fail 'Choose 1 for Controller or 2 for Linux Instance Host.';; esac
 fi
@@ -350,10 +351,10 @@ fi
 [[ -r /dev/tty ]] || fail 'Run from an interactive terminal.'
 ui_banner
 printf '\nThank you for downloading the TROA Bifrost Server Manager\n\nWe hope you enjoy! Please report any issues in our support Discord:\n  discord.gg/troainc\nLearn more about our projects:\n  therealmsofasgard.com\n'
-ui_step '01 / 05   Prepare your account' 'Checking your tools and rootless Docker.'
+ui_step '02 / 06   Prepare your account' 'Checking your tools and rootless Docker.'
 for tool in sha256sum tar awk sed sort; do command -v "$tool" >/dev/null || fail "Missing base OS tool: $tool"; done
 bootstrap_prerequisites
-ui_step '02 / 05   Make it yours' 'Choose the address and port for your new panel.'
+ui_step '03 / 06   Make it yours' 'Choose the address and port for your new panel.'
 default_address=$(hostname -I 2>/dev/null | awk '{print $1}')
 read -r -p "VM IP or hostname [${default_address:-localhost}]: " address </dev/tty
 address=${address:-${default_address:-localhost}}
@@ -366,7 +367,7 @@ read -r -p "Install at $INSTALL_DIR? [Y/n]: " answer </dev/tty
 scratch=$(mktemp -d)
 trap 'rm -rf -- "$scratch"' EXIT
 if [[ "${BIFROST_RESUME:-0}" != 1 ]]; then
-ui_step '03 / 05   Download your command center' 'Downloading the release, then verifying its checksum.'
+ui_step '04 / 06   Download your command center' 'Downloading the release, then verifying its checksum.'
 bundle="bifrost-linux-amd64-$VERSION.tar.gz"
 base="https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION"
 fetch "$base/$bundle" "$scratch/$bundle" || fail 'Application download failed.'
@@ -384,7 +385,7 @@ with tarfile.open(sys.argv[1],'r:gz') as archive:
         seen.add(key)
     archive.extractall(root,filter='data')
 PY
-ui_step '04 / 05   Secure your installation' 'Creating private credentials and HTTPS configuration.'
+ui_step '05 / 06   Secure your installation' 'Creating private credentials and HTTPS configuration.'
 mkdir -p "$(dirname "$INSTALL_DIR")"
 mkdir -m 0700 "$INSTALL_DIR"
 cp -a "$scratch/package/." "$INSTALL_DIR/"
@@ -573,7 +574,7 @@ if __name__ == "__main__":
         raise SystemExit(str(error))
 IMAGE_IDENTITY_PY
 rm -f "$INSTALL_DIR/customer-images.tar"
-ui_step '05 / 05   Bring your panel online' 'Waiting for the database, API and web services to be healthy.'
+ui_step '06 / 06   Bring your panel online' 'Waiting for the database, API and web services to be healthy.'
 cd "$INSTALL_DIR"
 docker compose config --quiet
 run_task 'Start and check all panel services' docker compose up -d --wait --wait-timeout 180

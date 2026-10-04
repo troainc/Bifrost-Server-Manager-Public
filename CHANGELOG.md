@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-04 — Make role choice installer step one
+
+- Presented Controller versus Instance Host selection as step 01 of the interactive installer; Controller setup stages now follow as 02–06.
+- Kept role selection inside the installer process; no standalone role-selection page was added.
+
 ## 2026-10-04 — Controller and Instance Host installer roles
 
 - Added explicit `--controller` / `--host` selection and an interactive role chooser. Existing noninteractive setup must name a role; administrative bootstrap, reinstall, and resume modes retain their existing behavior.
