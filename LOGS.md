@@ -92,3 +92,7 @@ Prepare v0.1.0-installtest.6 for the creator's current Controller features and d
 
 - Made the existing role prompt visibly step 01 in the interactive installer and renumbered Controller stages 02–06.
 - Updated the public bootstrap guide to tell operators that Controller/Instance Host selection happens inside the installer. No QA or live host testing was run.
+## 2026-10-04 — Repair downloaded installer parse error
+
+- Fixed the Host Agent extraction block's closing heredoc label from `PY` to `HOST_ZIP_PY`, matching its opener and resolving the screenshot's EOF parse failure.
+- Updated public installer notes. Did not run Bash checks, QA, or a VM install per owner direction.

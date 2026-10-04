@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-04 — Fix Host installer heredoc terminator
+
+- Closed the Host Agent ZIP extraction Python block with its matching `HOST_ZIP_PY` delimiter. Bash can now parse the complete installer after download.
+- No QA or VM execution performed per owner direction.
+
 ## 2026-10-04 — Make role choice installer step one
 
 - Presented Controller versus Instance Host selection as step 01 of the interactive installer; Controller setup stages now follow as 02–06.

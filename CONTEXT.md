@@ -80,3 +80,6 @@ Prepare v0.1.0-installtest.6 for the creator's current Controller features and d
 ## 2026-10-04 — Installer role-selection step
 
 The interactive installer presents Controller/Instance Host choice as its first numbered step. The old v0.1.0-installtest.6 release installer remains immutable; use the maintained raw `main/install.sh` bootstrap until a later release contains the role selector.
+## 2026-10-04 — Host installer parse repair
+
+The Host Agent ZIP extraction heredoc in `install.sh` must close with the exact `HOST_ZIP_PY` marker used at its opening. A mismatched `PY` marker makes the whole downloaded installer fail at EOF before any role setup. Current public `main` is the corrected path; tagged release assets remain immutable.

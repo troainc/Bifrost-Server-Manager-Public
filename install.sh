@@ -267,7 +267,7 @@ with zipfile.ZipFile(archive) as source:
                 chunk=inp.read(1024*1024)
                 if not chunk:break
                 out.write(chunk)
-PY
+HOST_ZIP_PY
   [[ -f "$package/install-agent.sh" && -f "$package/dist/enroll.js" ]] || fail 'The downloaded Host Agent package is incomplete.'
   digest=$(sha256sum "$stage/bifrost-linux-host-agent.zip" | awk '{print $1}')
   printf '%s\n' "$digest" > "$package/.bifrost-package-sha256"
