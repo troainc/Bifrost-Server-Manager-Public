@@ -22,8 +22,12 @@ were modified during this audit.
 Hosted [reproduction run 37177955493](https://github.com/troainc/Bifrost-Server-Manager-Public/actions/runs/37177955493)
 loaded the exact release: containerd produced all three mismatches above and the
 repaired helper, embedded installer and embedded updater accepted all three.
-The workflow also tests the classic store, where the old configuration comparison
-should pass. Final repeat run and configuration suite must pass before merge.
+The classic store passed with the expected configuration Ids. Final repeat
+[image-store run 37178051391](https://github.com/troainc/Bifrost-Server-Manager-Public/actions/runs/37178051391)
+passed both stores and both embedded scripts.
+[Configuration run 37178051407](https://github.com/troainc/Bifrost-Server-Manager-Public/actions/runs/37178051407)
+passed all 17 regression tests, Bash syntax and the actual pinned public updater
+download/hash check.
 
 The repair verifies configuration bytes from the archive against the locked
 configuration digest. A manifest Id is accepted only when the archive's tag
