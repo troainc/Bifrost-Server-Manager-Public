@@ -1,5 +1,9 @@
 # Work log
 
+## 2026-10-03 - Published testing 6 and verified public downloads
+
+Published v0.1.0-installtest.6 at 22:32:42 EDT. Final merged bundle run 37170883561 and all merged CI jobs in 37170874470 passed. The downloaded artifact digest matched 96035214bf07689c12fc3254742193fb31bc1a515ca6edc65ce05146d142515d; eleven allowlisted uploaded assets matched local sizes/SHA-256 digests. Raw image inspection intermediate was excluded. Anonymous latest install.sh and SHA256SUMS matched exact verified bytes. Release remains explicitly for fresh-install testing; compatible Linux host/game acceptance and unsigned Host Agent limitations remain recorded.
+
 ## 2026-10-03 - Linux support clarification
 
 Inspected Controller automatic preparation and both Host Agent installation scripts. Documented Debian/Ubuntu x86_64 Controller bootstrap and prerequisite-based Linux Host Agent compatibility separately. Broadened the acceptance plan to compatible Linux candidates with exact distro/version records; no universal Linux acceptance claimed and no guards removed. Documentation-only change.

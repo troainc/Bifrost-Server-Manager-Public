@@ -2,7 +2,7 @@
 
 ## Current testing download
 
-[Customer testing 6](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.6) is being verified for disclosure version 5 and the current Controller features. It includes the compiled Controller, bundled public verification key, image scan/checksum evidence and a separate compiled Linux Host Agent ZIP. The previous testing bundle passed disposable Compose verification; this refreshed bundle requires its own hosted checks before publication. real installation, host enrollment and game/backup/recovery acceptance remain pending. The Host Agent ZIP is an unsigned testing build: extract it and follow INSTALL.md on your own game machine.
+[Customer testing 6](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.6) is published with disclosure version 5 and the creator's current Controller features. It includes the compiled Controller, bundled public verification key, image scan/checksum evidence and a separate compiled Linux Host Agent ZIP. [Hosted bundle verification](https://github.com/troainc/Bifrost-Server-Manager/actions/runs/37170883561) passed customer/issuer isolation, three HIGH/CRITICAL image scans and fresh bundled Compose migrations/first-admin setup over verified disposable HTTPS. The public installer and checksums were downloaded anonymously and matched the verified assets. Real installation, host enrollment and game/backup/recovery acceptance remain pending. The Host Agent ZIP is an unsigned testing build: extract it and follow INSTALL.md on your own game machine.
 
 ## Linux install
 
