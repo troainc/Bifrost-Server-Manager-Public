@@ -13,3 +13,16 @@ jobs:
         run: bash -n install.sh && bash -n update.sh
       - name: Check license URL and key rejection using temporary files
         run: python3 -m unittest discover -s tests -v
+      - name: Verify the pinned public updater download without executing it
+        run: |
+          python3 - <<'PY'
+          import hashlib,pathlib,re,urllib.request
+          source=pathlib.Path('install.sh').read_text()
+          ref=re.search(r'^UPDATER_SOURCE_REF=([a-f0-9]{40})$',source,re.M)[1]
+          expected=re.search(r'^UPDATER_SHA256=([a-f0-9]{64})$',source,re.M)[1]
+          url=f'https://raw.githubusercontent.com/troainc/Bifrost-Server-Manager-Public/{ref}/update.sh'
+          with urllib.request.urlopen(url,timeout=30) as response:data=response.read()
+          assert hashlib.sha256(data).hexdigest()==expected,'Pinned public updater digest mismatch'
+          assert b'IMAGE_IDENTITY_PY' in data,'Updater missing repaired verification'
+          print('Pinned updater source and SHA-256 match')
+          PY
