@@ -1,5 +1,10 @@
 # Work log
 
+## 2026-10-04 — Repair Host role command
+
+- Added Controller/Instance Host choice to the authoritative public installer source. Host mode verifies and safely extracts the already-published v0.1.0-installtest.6 Host Agent package and starts enrollment as the regular Linux operator account.
+- The documented/released installer asset is unchanged; use the current raw `main/install.sh` command until the next matching customer release is published. No QA/tests or customer VM checks run per owner direction.
+
 ## 2026-10-04 - Audit and image verification repair
 
 - Updated local private/public checkouts from main before auditing. Inspected the actual published customer image archive and its configuration/OCI manifest metadata; did not alter the release, master deployment or test VM.

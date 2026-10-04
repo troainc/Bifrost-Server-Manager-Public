@@ -1,5 +1,9 @@
 # Context
 
+## 2026-10-04 — Controller / Instance Host roles
+
+Public `main/install.sh` now includes explicit `--controller` and `--host` roles plus an interactive role chooser. Its current matched asset version is v0.1.0-installtest.6 so Host mode can use the already-published Host Agent ZIP and checksum. Use maintained raw `main/install.sh`; the immutable v0.1.0-installtest.6 installer asset predates Host role support. Publish a later matching installer release before switching customer instructions back to the release-asset URL.
+
 ## 2026-10-04 - Image identity repair
 
 Refreshed private main bc5bf0e and public main 6c8c09f before this repair. The published testing 6 archive has locked configuration digests d93e716d (Controller), 5008ef01 (web) and 4895b4d2 (PostgreSQL), and separate OCI manifest digests 09066a5b, 2d4df712 and 243d3757. The installer provisions Docker 29.8.2, whose fresh containerd image store can expose the manifest as image Id. The old direct Id/config comparison cannot recognize the same image in that store. The corrected installer/updater verify either representation against the checksummed archive and exact locked configuration. Hosted run 37178051391 reproduced all three old containerd mismatches and verified both repaired scripts on the actual package under both stores. Configuration run 37178051407 passed 17 tests and the public updater pin/hash check. The user's VM image IDs have not been supplied; no VM commands were executed by this repair.

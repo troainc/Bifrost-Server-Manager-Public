@@ -183,10 +183,10 @@ automated_bootstrap() {
   if [[ $(id -u) -ne 0 ]]; then
     printf '\nAdministrator authentication is needed once to prepare the VM and create bifrost.\n'
     if command -v sudo >/dev/null && sudo -v; then
-      exec sudo -- env BIFROST_REINSTALL="${BIFROST_REINSTALL:-0}" BIFROST_RESUME="${BIFROST_RESUME:-0}" bash "$script" --bootstrap
+      exec sudo -- env BIFROST_REINSTALL="${BIFROST_REINSTALL:-0}" BIFROST_RESUME="${BIFROST_RESUME:-0}" BIFROST_INSTALL_ROLE="${BIFROST_INSTALL_ROLE:-controller}" bash "$script" --bootstrap
     elif command -v su >/dev/null; then
       local command_line
-      printf -v command_line 'exec env BIFROST_REINSTALL=%q BIFROST_RESUME=%q bash %q --bootstrap' "${BIFROST_REINSTALL:-0}" "${BIFROST_RESUME:-0}" "$script"
+      printf -v command_line 'exec env BIFROST_REINSTALL=%q BIFROST_RESUME=%q BIFROST_INSTALL_ROLE=%q bash %q --bootstrap' "${BIFROST_REINSTALL:-0}" "${BIFROST_RESUME:-0}" "${BIFROST_INSTALL_ROLE:-controller}" "$script"
       printf 'Enter the VM root password at the following prompt.\n'
       exec su -s /bin/bash -c "$command_line" root
     else
@@ -215,7 +215,68 @@ automated_bootstrap() {
   copied="$account_home/.local/share/bifrost-bootstrap/install.sh"
   [[ "$script" == "$copied" ]] || install -m 0700 -o bifrost -g "$(id -gn bifrost)" "$script" "$copied"
   printf '\nVM preparation complete. Continuing installation as bifrost (UID %s).\n' "$uid"
-  exec runuser -u bifrost -- env -i HOME="$account_home" USER=bifrost LOGNAME=bifrost PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin XDG_RUNTIME_DIR="/run/user/$uid" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" TERM="${TERM:-xterm}" BIFROST_REINSTALL="${BIFROST_REINSTALL:-0}" BIFROST_RESUME="${BIFROST_RESUME:-0}" bash "$copied"
+  exec runuser -u bifrost -- env -i HOME="$account_home" USER=bifrost LOGNAME=bifrost PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin XDG_RUNTIME_DIR="/run/user/$uid" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" TERM="${TERM:-xterm}" BIFROST_REINSTALL="${BIFROST_REINSTALL:-0}" BIFROST_RESUME="${BIFROST_RESUME:-0}" BIFROST_INSTALL_ROLE="${BIFROST_INSTALL_ROLE:-controller}" bash "$copied"
+}
+
+require_host_runtime() {
+  command -v python3 >/dev/null || fail 'Python 3 is required to safely unpack the Host Agent package.'
+  command -v sha256sum >/dev/null || fail 'sha256sum is required to verify the Host Agent package.'
+  [[ -x /usr/bin/node ]] && /usr/bin/node -e 'process.exit(Number(process.versions.node.split(".")[0]) === 24 ? 0 : 1)' || fail 'Instance Host needs Node.js 24 at /usr/bin/node. Prepare it for this account, then rerun.'
+  command -v podman >/dev/null || fail 'Instance Host needs rootless Podman available to this account.'
+  [[ "$(podman info --format '{{.Host.Security.Rootless}}' 2>/dev/null || true)" == true ]] || fail 'Podman is not running rootless for this account.'
+  systemctl --user show-environment >/dev/null 2>&1 || fail 'A systemd user manager is unavailable. Sign in as the regular game-server operator account and retry.'
+}
+
+install_instance_host() {
+  [[ $(id -u) -ne 0 ]] || fail 'Run Instance Host setup as the regular account that will own its game services; do not use sudo.'
+  require_host_runtime
+  local stage package checksum_file digest
+  mkdir -p -m 0700 "$HOME/.local/share"
+  stage=$(mktemp -d "$HOME/.local/share/bifrost-host-setup.XXXXXX")
+  package="$stage/package"
+  checksum_file="$stage/bifrost-linux-host-agent.zip.sha256"
+  ui_banner
+  ui_step 'INSTANCE HOST   Connect this game machine' 'This installs the outbound Host Agent under your current account.'
+  fetch "https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION/bifrost-linux-host-agent.zip" "$stage/bifrost-linux-host-agent.zip" || fail 'Could not download the Host Agent package for this release.'
+  fetch "https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION/bifrost-linux-host-agent.zip.sha256" "$checksum_file" || fail 'Could not download the Host Agent checksum.'
+  (cd "$stage" && sha256sum --check bifrost-linux-host-agent.zip.sha256) || fail 'Host Agent package checksum failed.'
+  mkdir -m 0700 "$package"
+  python3 - "$stage/bifrost-linux-host-agent.zip" "$package" <<'HOST_ZIP_PY'
+import os,pathlib,stat,sys,zipfile
+archive,destination=sys.argv[1:]
+root=pathlib.Path(destination).resolve(strict=True);seen=set();total=0
+with zipfile.ZipFile(archive) as source:
+    entries=source.infolist()
+    if not entries or len(entries)>10000:raise SystemExit('Invalid Host Agent package entry count.')
+    for entry in entries:
+        name=entry.filename;path=pathlib.PurePosixPath(name);mode=entry.external_attr>>16;kind=stat.S_IFMT(mode)
+        if not name or name.startswith('/') or '\\' in name or ':' in name or any(part in ('','.','..') for part in name.rstrip('/').split('/')):raise SystemExit('Unsafe Host Agent package path.')
+        if name.casefold() in seen:raise SystemExit('Duplicate Host Agent package path.')
+        seen.add(name.casefold())
+        if kind not in (0,stat.S_IFREG,stat.S_IFDIR):raise SystemExit('Host Agent package contains a link or special file.')
+        total+=entry.file_size
+        if entry.file_size>512*1024*1024 or total>1024*1024*1024:raise SystemExit('Host Agent package exceeds its extraction limit.')
+    for entry in entries:
+        target=root.joinpath(*pathlib.PurePosixPath(entry.filename).parts)
+        if os.path.commonpath((str(root),str(target.resolve(strict=False))))!=str(root):raise SystemExit('Host Agent package path escapes its staging directory.')
+        if entry.is_dir():target.mkdir(mode=0o700,parents=True,exist_ok=True);continue
+        target.parent.mkdir(mode=0o700,parents=True,exist_ok=True)
+        fd=os.open(target,os.O_WRONLY|os.O_CREAT|os.O_EXCL|getattr(os,'O_NOFOLLOW',0),0o600)
+        with os.fdopen(fd,'wb') as out,source.open(entry) as inp:
+            while True:
+                chunk=inp.read(1024*1024)
+                if not chunk:break
+                out.write(chunk)
+PY
+  [[ -f "$package/install-agent.sh" && -f "$package/dist/enroll.js" ]] || fail 'The downloaded Host Agent package is incomplete.'
+  digest=$(sha256sum "$stage/bifrost-linux-host-agent.zip" | awk '{print $1}')
+  printf '%s\n' "$digest" > "$package/.bifrost-package-sha256"
+  chmod 0600 "$package/.bifrost-package-sha256"
+  printf '\nCreate a fresh one-use code in the Controller under Hosts → Add host. The Host Agent will ask for the Controller panel HTTPS URL and that code.\n'
+  bash "$package/install-agent.sh" "$package"
+  rm -rf -- "$stage"
+  ui_ok 'Instance Host enrolled and its user service is enabled.'
+  printf '  Enrollment connects this machine to the fleet; install a reviewed game Blueprint separately.\n'
 }
 
 if [[ "${1:-}" == --update ]]; then
@@ -228,7 +289,25 @@ if [[ "${1:-}" == --update ]]; then
   rm -f "$update_stage/update.sh"; rmdir "$update_stage"
   exit 0
 fi
-[[ "${1:-}" != --help ]] || { echo 'Run bash install.sh. The wizard authenticates the VM administrator once, prepares prerequisites and a non-privileged bifrost account, then installs and runs Bifrost as bifrost.'; exit 0; }
+[[ "${1:-}" != --help ]] || { echo 'Run bash install.sh to choose Controller or Linux Instance Host. Pass --controller or --host to select a role directly.'; exit 0; }
+if [[ "${1:-}" == --host ]]; then
+  [[ $# -eq 1 ]] || fail 'Use --host by itself.'
+  BIFROST_INSTALL_ROLE=host
+  shift
+elif [[ "${1:-}" == --controller ]]; then
+  [[ $# -eq 1 ]] || fail 'Use --controller by itself.'
+  BIFROST_INSTALL_ROLE=controller
+  shift
+elif [[ "${1:-}" == --reinstall || "${1:-}" == --resume || "${1:-}" == --prepare-account || "${1:-}" == --bootstrap ]]; then
+  BIFROST_INSTALL_ROLE="${BIFROST_INSTALL_ROLE:-controller}"
+elif [[ -z "${BIFROST_INSTALL_ROLE:-}" ]]; then
+  [[ -r /dev/tty ]] || fail 'Choose a role with --controller or --host when running without a terminal.'
+  ui_banner
+  printf "\n  Choose this machine's role:\n\n  1) Bifrost Controller  — central panel; install once\n  2) Linux Instance Host — game machine; join an existing Controller\n\n"
+  read -r -p 'Select 1 or 2: ' install_choice </dev/tty
+  case "$install_choice" in 1) BIFROST_INSTALL_ROLE=controller;; 2) BIFROST_INSTALL_ROLE=host;; *) fail 'Choose 1 for Controller or 2 for Linux Instance Host.';; esac
+fi
+case "$BIFROST_INSTALL_ROLE" in host) install_instance_host; exit 0;; controller) ;; *) fail 'Installation role is missing; choose Controller or Instance Host.';; esac
 if [[ "${1:-}" == --reinstall ]]; then export BIFROST_REINSTALL=1; shift; fi
 if [[ "${1:-}" == --resume ]]; then export BIFROST_RESUME=1; shift; fi
 case "${1:-}" in

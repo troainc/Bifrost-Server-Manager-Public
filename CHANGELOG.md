@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-04 — Controller and Instance Host installer roles
+
+- Added explicit `--controller` / `--host` selection and an interactive role chooser. Existing noninteractive setup must name a role; administrative bootstrap, reinstall, and resume modes retain their existing behavior.
+- Instance Host mode downloads the Host Agent ZIP and checksum for the installer's matching release, verifies the digest, safely unpacks bounded regular files under the user's home, and runs Host enrollment as the regular operator account.
+- Host setup requires existing Node.js 24, rootless Podman, and a systemd user manager. It does not create another Controller or install a game server.
+- Public release assets are unchanged. Use maintained `main/install.sh` source until a future tagged installer release includes this support.
+
 - 2026-10-04: Repair configuration-versus-manifest image identity checking in both standalone scripts. Derive portable configuration locks from the saved archive. Bind accepted OCI manifest IDs to hashed archive metadata and the exact locked configuration; keep rejection of other IDs. Add negative regression cases and an actual testing 6 package/Docker 29 classic/containerd reproduction workflow. Recover a prepared Alpine testing 6 installation through the corrected preserving-data updater rather than another wipe. Published testing 6 attachments remain unchanged; use the current repository bootstrap. Hosted configuration run 37178051407 passed all 17 regression tests and updater-pin verification; image-store run 37178051391 reproduced the old containerd failure and passed both repaired scripts on classic and containerd.
 
 - 2026-10-03: Published v0.1.0-installtest.6 with the current agreements, compiled customer isolation, patched dependency runtime, matched public signing key, three image scan reports and a separate Linux Host Agent ZIP. Final merged hosted bundle and anonymous latest download/checksum verification passed. Real host/game acceptance remains pending.
