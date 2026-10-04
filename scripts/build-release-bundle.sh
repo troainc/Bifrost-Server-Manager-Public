@@ -23,14 +23,11 @@ cp "$key" "$output/package/config/license-signing-public.pem"
 # Public verification material must be readable by the unprivileged container.
 chmod 0644 "$output/package/config/license-signing-public.pem"
 docker image inspect "bifrost/control-plane:$version" "bifrost/web:$version" "bifrost/postgres:$version" > "$output/images.json"
-python3 - "$output/images.json" "$output/package/IMAGE-LOCK.json" <<'PY'
-import json,pathlib,sys
-images=json.loads(pathlib.Path(sys.argv[1]).read_text())
-lock={tag:image['Id'] for image in images for tag in image['RepoTags'] if tag.startswith('bifrost/')}
-assert len(lock)==3
-pathlib.Path(sys.argv[2]).write_text(json.dumps(lock,indent=2)+'\n')
-PY
 docker save "bifrost/control-plane:$version" "bifrost/web:$version" "bifrost/postgres:$version" > "$output/package/customer-images.tar"
+# A portable lock records the archive config digest, not the engine-specific Id.
+python3 scripts/verify-image-archive.py "$output/package/customer-images.tar" "$output/package/IMAGE-LOCK.json" --write-lock \
+  "bifrost/control-plane:$version" "bifrost/web:$version" "bifrost/postgres:$version"
+
 tar -czf "$output/bifrost-linux-amd64-$version.tar.gz" -C "$output/package" .
 cp install.sh update.sh "$output/"
 (cd "$output" && sha256sum "bifrost-linux-amd64-$version.tar.gz" install.sh update.sh > SHA256SUMS)

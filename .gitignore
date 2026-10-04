@@ -11,3 +11,4 @@ artifacts/
 *.tar
 *.tar.gz
 *.zip
+__pycache__/

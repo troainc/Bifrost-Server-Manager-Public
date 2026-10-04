@@ -1,5 +1,12 @@
 # Work log
 
+## 2026-10-04 - Audit and image verification repair
+
+- Updated local private/public checkouts from main before auditing. Inspected the actual published customer image archive and its configuration/OCI manifest metadata; did not alter the release, master deployment or test VM.
+- Replaced the engine-specific Id comparison with archive-bound configuration/manifest verification in installer and updater. Bundle builder now derives configuration digests from saved bytes instead of Docker's backend-dependent inspect Id.
+- Added regression tests for both stores, wrong image/platform/lock, corrupt manifest, mismatched manifest/config, duplicate metadata and symlinked config. Added hosted tests loading the real testing 6 package in isolated Docker 29.8.2 classic and containerd daemons. Hosted results remain pending at this entry.
+- Recovery uses the preserving-data updater for the prepared Alpine installation; no second WIPE is required. Original release attachments remain unchanged.
+
 ## 2026-10-03 - Published testing 6 and verified public downloads
 
 Published v0.1.0-installtest.6 at 22:32:42 EDT. Final merged bundle run 37170883561 and all merged CI jobs in 37170874470 passed. The downloaded artifact digest matched 96035214bf07689c12fc3254742193fb31bc1a515ca6edc65ce05146d142515d; eleven allowlisted uploaded assets matched local sizes/SHA-256 digests. Raw image inspection intermediate was excluded. Anonymous latest install.sh and SHA256SUMS matched exact verified bytes. Release remains explicitly for fresh-install testing; compatible Linux host/game acceptance and unsigned Host Agent limitations remain recorded.
