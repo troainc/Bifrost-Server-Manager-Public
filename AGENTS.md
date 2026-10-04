@@ -1,5 +1,7 @@
 # Repository instructions
 
+Keep Linux support claims role-specific: automatic Controller preparation currently checks Debian/Ubuntu x86_64; the separate Host Agent checks Linux plus Node.js 24 at /usr/bin/node, user systemd and rootless Podman. Other compatible distributions are candidates for recorded acceptance testing, not universally supported or verified. Do not remove prerequisite guards merely to advertise broader support.
+
 Customer installer and compiled distribution only. Keep private application source, master service, credentials and private signing keys out of this repository. Install and operate as a non-root user with rootless Docker. Preserve installed data. Update README, CHANGELOG, CONTEXT and LOGS with changes.
 
 ## 2026-10-03 - Customer testing release preparation

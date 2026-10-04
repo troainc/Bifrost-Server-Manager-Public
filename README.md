@@ -6,6 +6,10 @@
 
 ## Linux install
 
+The automatic **Controller installer currently supports Debian and Ubuntu on x86_64**. Its host-preparation step checks the distribution and uses Debian/Ubuntu package tools. Containerized application code does not make that bootstrap script portable to every Linux distribution.
+
+The separate **Linux Host Agent** has no distribution-name restriction, but requires Node.js 24 at `/usr/bin/node`, a working systemd user manager and rootless Podman under the unprivileged account that owns the games. Other Linux distributions are compatibility candidates when those prerequisites exist; record the exact distribution/version during installation, enrollment and game tests before claiming support. Systems without systemd do not meet the current agent requirements. An Ubuntu test is one useful acceptance target, not evidence that every Linux system works.
+
 Run this as your current VM user. The installer requests the administrator password once, creates the unprivileged bifrost account, and continues automatically:
 
 ```bash

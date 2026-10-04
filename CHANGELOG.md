@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-03: Clarify separate Linux support boundaries for the automatic Debian/Ubuntu x86_64 Controller installer and the prerequisite-based Linux Host Agent. Record distro/version-specific tests before claiming broader support.
+
 ## 2026-10-02
 - Rebuilt Linux QuickStart as a single bootstrap script and short interactive wizard.
 - Bundled application images in release assets instead of depending on private GHCR visibility.
