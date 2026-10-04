@@ -208,6 +208,8 @@ cp "$scratch/package/compose.yaml" compose.yaml
 for file in "$scratch/package/config"/*; do
   name=$(basename "$file")
   [[ "$name" != license-signing-public.pem || ! -s config/license-signing-public.pem ]] || continue
+  # Local executable Blueprint approvals are preserved across releases.
+  [[ "$name" != provisioning-catalog.json && "$name" != provisioning-trust.json || ! -e "config/$name" ]] || continue
   cp "$file" "config/$name"
 done
 cp "$scratch/package/IMAGE-LOCK.json" IMAGE-LOCK.json
