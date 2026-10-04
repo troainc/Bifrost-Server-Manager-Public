@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-03: Published v0.1.0-installtest.6 with the current agreements, compiled customer isolation, patched dependency runtime, matched public signing key, three image scan reports and a separate Linux Host Agent ZIP. Final merged hosted bundle and anonymous latest download/checksum verification passed. Real host/game acceptance remains pending.
+
 - 2026-10-03: Clarify separate Linux support boundaries for the automatic Debian/Ubuntu x86_64 Controller installer and the prerequisite-based Linux Host Agent. Record distro/version-specific tests before claiming broader support.
 
 ## 2026-10-02
