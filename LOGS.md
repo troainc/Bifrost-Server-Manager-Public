@@ -117,3 +117,7 @@ Prepare v0.1.0-installtest.6 for the creator's current Controller features and d
 
 - Fixed the Host Agent extraction block's closing heredoc label from `PY` to `HOST_ZIP_PY`, matching its opener and resolving the screenshot's EOF parse failure.
 - Updated public installer notes. Did not run Bash checks, QA, or a VM install per owner direction.
+
+## 2026-10-05 — Automatic creation testing 9 candidate
+
+Prepare a matched immutable testing 9 Controller/web/database and compiled Linux Host Agent from PR #44's verified source. Update installer/environment and pin updater e9ffc7d6af53aeddbcd1cb612bb2181e48f7968f with SHA-256 44a6488824ef221166dd06a48a1c82bc1be3167e8315b37c1cde850c816103ff. Keep testing 8 assets and main bootstrap intact until the new build, scans, hashes and draft assets are verified, then promote this candidate. A newer package does not approve unsigned runtime recipes, certify real vendor games or include public Windows distribution. Hosted release build/publication remains pending at this entry.

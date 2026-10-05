@@ -1,3 +1,11 @@
+# Customer testing 9: automatic download and create
+
+This candidate updates the compiled Controller/web and separate Linux Host Agent with signed official-source download recipes and automatic new-instance creation for approved Space Engineers, Palworld and Minecraft targets. Choose the reviewed game/version and enrolled Host, accept required terms, preview placement, then Create. The Host verifies downloads and readiness before registering a separate instance.
+
+A package update alone does not make an unsigned game choice install-ready. Actual reviewed runtime images, signed game recipes/catalogs and independently matching Host policy are required; real vendor-game acceptance remains pending. No synthetic test game is included. Windows public distribution/signing and runtime isolation review are separate and are not included here.
+
+Testing 9 preserves compatible Alpine PostgreSQL 17 installations, keys, accounts, data and the existing provisioning catalog/trust on update. Earlier Debian database runtimes remain refused before mutation. Existing Hosts need their own Agent update; updating the Controller does not silently upgrade Hosts.
+
 # Bifrost Server Manager
 
 ## Current testing download

@@ -104,3 +104,7 @@ The interactive installer presents Controller/Instance Host choice as its first 
 ## 2026-10-04 — Host installer parse repair
 
 The Host Agent ZIP extraction heredoc in `install.sh` must close with the exact `HOST_ZIP_PY` marker used at its opening. A mismatched `PY` marker makes the whole downloaded installer fail at EOF before any role setup. Current public `main` is the corrected path; tagged release assets remain immutable.
+
+## 2026-10-05 — Automatic creation testing 9 candidate
+
+Prepare a matched immutable testing 9 Controller/web/database and compiled Linux Host Agent from PR #44's verified source. Update installer/environment and pin updater e9ffc7d6af53aeddbcd1cb612bb2181e48f7968f with SHA-256 44a6488824ef221166dd06a48a1c82bc1be3167e8315b37c1cde850c816103ff. Keep testing 8 assets and main bootstrap intact until the new build, scans, hashes and draft assets are verified, then promote this candidate. A newer package does not approve unsigned runtime recipes, certify real vendor games or include public Windows distribution. Hosted release build/publication remains pending at this entry.
