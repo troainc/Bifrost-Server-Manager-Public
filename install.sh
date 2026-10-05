@@ -306,8 +306,11 @@ elif [[ "${1:-}" == --reinstall || "${1:-}" == --resume || "${1:-}" == --prepare
 elif [[ -z "${BIFROST_INSTALL_ROLE:-}" ]]; then
   [[ -r /dev/tty ]] || fail 'Choose a role with --controller or --host when running without a terminal.'
   ui_banner
-  ui_step '01 / 06   Choose this machine’s role' 'This is the first step in the installer. Choose Controller once, or Instance Host on each game machine.'
-  printf "\n  1) Bifrost Controller  — central panel; install once\n  2) Linux Instance Host — game machine; join an existing Controller\n\n"
+  ui_step '01 / 06   Choose this machine’s role' 'Controller manages the fleet. Host Agent runs one or more game servers on this machine.'
+  printf "\n  1) Bifrost Controller  — management panel and API; install once per fleet\n  2) Linux Instance Host — Host Agent; join your existing Controller\n\n"
+  printf '  A game instance is one server created later in the Controller panel.\n'
+  printf '  For one game server, you still need a Controller and an enrolled Host.\n'
+  printf '  For one machine, install the Controller first, then run --host under your prepared game account.\n\n'
   read -r -p 'Select 1 or 2: ' install_choice </dev/tty
   case "$install_choice" in 1) BIFROST_INSTALL_ROLE=controller;; 2) BIFROST_INSTALL_ROLE=host;; *) fail 'Choose 1 for Controller or 2 for Linux Instance Host.';; esac
 fi
