@@ -1,6 +1,6 @@
 # Customer testing 9: automatic download and create
 
-This candidate updates the compiled Controller/web and separate Linux Host Agent with signed official-source download recipes and automatic new-instance creation for approved Space Engineers, Palworld and Minecraft targets. Choose the reviewed game/version and enrolled Host, accept required terms, preview placement, then Create. The Host verifies downloads and readiness before registering a separate instance.
+This release updates the compiled Controller/web and separate Linux Host Agent with signed official-source download recipes and automatic new-instance creation for approved Space Engineers, Palworld and Minecraft targets. Choose the reviewed game/version and enrolled Host, accept required terms, preview placement, then Create. The Host verifies downloads and readiness before registering a separate instance.
 
 A package update alone does not make an unsigned game choice install-ready. Actual reviewed runtime images, signed game recipes/catalogs and independently matching Host policy are required; real vendor-game acceptance remains pending. No synthetic test game is included. Windows public distribution/signing and runtime isolation review are separate and are not included here.
 
@@ -10,7 +10,7 @@ Testing 9 preserves compatible Alpine PostgreSQL 17 installations, keys, account
 
 ## Current testing download
 
-[Customer testing 8](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.8) is published from verified compiled source 418753a. It includes the Controller/web/database, matching installer/updater, public license key, image scans/checksums and the separate compiled Linux Host Agent with preparation guides. [Final hosted verification](https://github.com/troainc/Bifrost-Server-Manager/actions/runs/37262001155) passed customer/issuer isolation, three zero HIGH/CRITICAL scans and fresh HTTPS migrations/setup. All eleven public asset digests and five anonymous download checks match.
+[Customer testing 9](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.9) is published from compiled source fde5104 and installer/environment source 00514eb. It includes the automatic download/create engine, Controller/web/database, matching installer/updater, public license key, image scans/checksums and the updated compiled Linux Host Agent. [Hosted verification](https://github.com/troainc/Bifrost-Server-Manager/actions/runs/37273201450) passed customer/issuer isolation, three zero HIGH/CRITICAL scans and fresh HTTPS migrations/setup. All eleven published asset digests and five anonymous latest downloads match. Reviewed game recipes/runtime images and actual vendor-game acceptance remain pending.
 
 Space Engineers vanilla/Torch, Palworld dedicated/community and Minecraft Java/Paper/Fabric/Forge/NeoForge/Bedrock are available for Host-approved package review. Each needs exact reviewed local software, service/runtime policy and real game testing. Accepted public one-click downloads, automatic Windows service creation and signed Windows distribution remain separate. Updating the Controller does not update an installed Host Agent automatically. The downloaded compiled preparer was checked independently using synthetic SE/Minecraft manifests; this does not run or accept a real game.
 
@@ -28,7 +28,7 @@ wget --output-document=install.sh https://raw.githubusercontent.com/troainc/Bifr
 
 The wizard asks for the VM IP/hostname and HTTPS port, downloads the application, checks its checksum, generates configuration and credentials, and starts the panel. Default port: **8443**. Create your administrator in the browser.
 
-Testing 7's repository bootstrap and release installer both include the Controller/Instance Host selector. Its first interactive step asks for the machine role: choose **Bifrost Controller** once; choose **Linux Instance Host** on each game machine. You can also pass `--controller` or `--host`. From the Controller, create a fresh one-use code under **Hosts → Add host**. Host setup verifies and installs the matching Host Agent package and asks for the Controller panel HTTPS URL and code. It requires Node.js 24, rootless Podman, and systemd user services under the regular game operator account. The licensing service URL is different from the Controller URL. Enrolling a host does not install a game; use an approved signed executable Blueprint separately. The catalog starts empty; metadata candidates and drafts do not authorize installation.
+Testing 7's repository bootstrap and release installer both include the Controller/Instance Host selector. Its first interactive step asks for the machine role: choose **Bifrost Controller** once; choose **Linux Instance Host** on each game machine. You can also pass `--controller` or `--host`. From the Controller, create a fresh one-use code under **Hosts â†’ Add host**. Host setup verifies and installs the matching Host Agent package and asks for the Controller panel HTTPS URL and code. It requires Node.js 24, rootless Podman, and systemd user services under the regular game operator account. The licensing service URL is different from the Controller URL. Enrolling a host does not install a game; use an approved signed executable Blueprint separately. The catalog starts empty; metadata candidates and drafts do not authorize installation.
 
 The matched testing 7 installer/updater recognize Docker's classic and containerd image identities only when they match the checksummed archive and locked configuration. Earlier testing 6 attachments remain unchanged.
 
@@ -53,16 +53,16 @@ docker compose stop
 docker compose up -d
 ```
 
-## 2026-10-02 — Automatic non-root prerequisites
+## 2026-10-02 â€” Automatic non-root prerequisites
 install.sh now downloads rootless Docker 29.8.2 and Compose v2.39.4 automatically, starts the user service, and downloads/extracts missing Python, OpenSSL and iptables packages under the user's home using Debian/Ubuntu package sources without APT installation or sudo. It saves the Docker environment for subsequent logins and includes the TROA welcome/support/project message. System UID mapping helpers, assigned subordinate ID ranges, enabled user namespaces, package indexes and an active user systemd login must exist in the VM image; missing requirements are listed precisely. Unattended operation requires user lingering provisioned in that image. This is not a claim of zero host prerequisites or completed clean-VM acceptance.
 
 
 
-## 2026-10-02 — Dedicated service account
+## 2026-10-02 â€” Dedicated service account
 The explicit --prepare-account mode performs only administrator-owned account preparation: creates bifrost with its own group and initially locked password, checks UID and privileged memberships and sudo policy, protects its home and enables user lingering. It refuses an existing privileged account without altering its groups or grants. Set a login password with passwd bifrost and log in directly as bifrost. Normal installation now requires bifrost and rejects sudo/wheel/docker/lxd/incus-admin membership and discoverable sudo grants. Application installation and services remain non-root; administrator preparation does not install or run the application. Bash syntax checked; real VM account acceptance pending.
 
 
-## 2026-10-02 — Automated VM bootstrap (supersedes manual preparation)
+## 2026-10-02 â€” Automated VM bootstrap (supersedes manual preparation)
 Run the normal one-line installer as the current VM user. It requests administrator authentication using sudo, or su when sudo is unavailable/denied, prepares Debian/Ubuntu system prerequisites and nf_tables, creates/checks the non-privileged bifrost account, enables lingering and starts its user manager, then drops privileges with runuser and continues automatically. New service accounts have locked passwords; no passwd command or manual SSH switch is needed. The legacy --prepare-account option now invokes the same complete bootstrap. Existing installations and privileged account memberships remain fail-closed. Only host preparation is elevated; application setup/runtime remain non-root. Bash syntax passed; clean VM end-to-end acceptance pending.
 
 
@@ -89,7 +89,7 @@ Run the normal one-line installer as the current VM user. It requests administra
 
 2026-10-02: v0.1.0-installtest.4 customer UI includes five-step onboarding and redesigned License & privacy activation/disclosure/status panel with explicit connection and MFA errors. Licensing/consent gates preserved. No master configuration UI is distributed. Existing data preserved with --update; --reinstall requires typed WIPE and resets test data.
 
-## 2026-10-03 — Customer licensing setup
+## 2026-10-03 â€” Customer licensing setup
 
 - Fresh installs now offer an explicit optional licensing-connection step, with https://bifrost.therealmsofasgard.com/api as the suggested TROA endpoint. Supply the matching issuer public PEM file obtained through a trusted channel; no issuer private key or owner credential is needed or accepted. Skipping leaves management gated until licensing is configured.
 - Installer and updater validate the HTTPS root or /api URL and the issuer P-256 public key before replacing license settings. Invalid URLs, private keys, missing/oversized keys and wrong curves preserve the previous license URL/key. Other environment settings, including privacy-review fields, are preserved. This checks key type, not that the operator obtained the correct trusted issuer key.
