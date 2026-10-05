@@ -21,3 +21,5 @@ This is a fresh-install testing download. Home Ubuntu installation, enrollment, 
 ## 2026-10-03 - Disclosure v5 customer integration refresh
 
 Prepare v0.1.0-installtest.6 for the creator's current Controller features and disclosure version 5. Personal user agreement acceptance is separate from administrator installation-license consent. The customer Controller cannot enable owner registry/configuration/recovery APIs, even through environment flags. Customer privacy identity and location belong to the local operator and default blank. The Alpine 17 update compatibility guard and data/key preservation remain unchanged. Hosted packaging, fresh migrations, image scans and licensing flow must pass before publishing; real Ubuntu and game-host acceptance remain pending.
+
+- Testing release 7 binds the updater to its immutable Git commit and hash. Preserve config/provisioning-catalog.json and config/provisioning-trust.json on upgrade. These contain only signed manifests/public publisher keys; never bundle publisher private keys. Publish and verify every matching release asset before advancing main to the new bootstrap.

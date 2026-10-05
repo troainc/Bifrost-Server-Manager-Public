@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.6
-# Corrected updater for the unchanged testing 6 bundle; immutable source + digest.
-UPDATER_SOURCE_REF=d6d5201b43e7d64388848e39c76ce9844ce00384
-UPDATER_SHA256=4fc6543061de24b805df1032a223d0be8f14a060558bffb38ed4f955a3b0fa75
+VERSION=v0.1.0-installtest.7
+# Matched testing release updater; immutable source + digest.
+UPDATER_SOURCE_REF=d720f8401b52238a7f4352347e6b6129f5b24351
+UPDATER_SHA256=429d35f552be9a78999cf59ba6c41d92d933113f3dd1b8d1f1bc590760c0fcd9
 INSTALL_DIR="${BIFROST_INSTALL_DIR:-$HOME/.local/share/bifrost}"
 # Terminal presentation: readable without color, animation, or a wide terminal.
 UI_RESET='' UI_BLUE='' UI_GREEN='' UI_GOLD='' UI_DIM='' UI_BOLD=''
@@ -273,7 +273,7 @@ HOST_ZIP_PY
   printf '%s\n' "$digest" > "$package/.bifrost-package-sha256"
   chmod 0600 "$package/.bifrost-package-sha256"
   printf '\nCreate a fresh one-use code in the Controller under Hosts → Add host. The Host Agent will ask for the Controller panel HTTPS URL and that code.\n'
-  bash "$package/install-agent.sh" "$package"
+  bash "$package/install-agent.sh" "$package" "${HOST_FLAGS[@]}"
   rm -rf -- "$stage"
   ui_ok 'Instance Host enrolled and its user service is enabled.'
   printf '  Enrollment connects this machine to the fleet; install a reviewed game Blueprint separately.\n'
@@ -289,11 +289,14 @@ if [[ "${1:-}" == --update ]]; then
   rm -f "$update_stage/update.sh"; rmdir "$update_stage"
   exit 0
 fi
-[[ "${1:-}" != --help ]] || { echo 'Run bash install.sh to choose Controller or Linux Instance Host. Pass --controller or --host to select a role directly.'; exit 0; }
+[[ "${1:-}" != --help ]] || { echo 'Run bash install.sh to choose Controller or Linux Instance Host. Pass --controller or --host to select a role directly. Existing Hosts can use --host --upgrade; revoked Hosts can use --host --upgrade --re-enroll.'; exit 0; }
+HOST_FLAGS=()
 if [[ "${1:-}" == --host ]]; then
-  [[ $# -eq 1 ]] || fail 'Use --host by itself.'
   BIFROST_INSTALL_ROLE=host
   shift
+  while [[ $# -gt 0 ]]; do
+    case "$1" in --upgrade|--re-enroll) HOST_FLAGS+=("$1"); shift;; *) fail 'Host accepts only --upgrade and --re-enroll.';; esac
+  done
 elif [[ "${1:-}" == --controller ]]; then
   [[ $# -eq 1 ]] || fail 'Use --controller by itself.'
   BIFROST_INSTALL_ROLE=controller

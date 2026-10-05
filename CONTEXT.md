@@ -1,3 +1,9 @@
+## 2026-10-04 - Prepared testing 7 fleet release
+
+- Prepared matching immutable version 7 installer/updater pins; retained creator role selection and safe Host ZIP verification/extraction. Host --upgrade/--re-enroll flags forward to the matching compiled Agent package.
+- Added protected read-only executable Blueprint mounts with empty defaults; the updater preserves operator-owned catalog/trust files. Signed game approval remains a separate operator step, not an installation toggle.
+- Local Python installer regressions: 17 passed. Release assets and hosted compiled bundle acceptance are pending; testing 6 assets were not overwritten. Main must not advance to this bootstrap until all matching testing 7 assets exist and hashes are verified.
+
 # Context
 
 ## 2026-10-04 — Controller / Instance Host roles
