@@ -1,3 +1,7 @@
+## 2026-10-04 - Testing 8 preparation
+
+Preparing a matched Controller/Linux Host Agent download for Space Engineers vanilla/Torch, Palworld and Minecraft Java/Paper/Fabric/Forge/NeoForge/Bedrock Host-approved package review. All nine choices require reviewed local packages and runtime/service policy; vendor downloads, game acceptance and Windows signed distribution remain separate. Testing 7 assets stay immutable. Publish and verify testing 8 assets before merging this bootstrap to main.
+
 ## 2026-10-04 - Published testing 7 and verified delivery
 
 - Customer testing 7 is published at https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.7 . Private compiled source is bb557236502171d79ec3239954d845e4330b3586; public script source is aedbbf30e16c6400ac7ce32d82262aa88226aaab. Final bundle run 37250982073 and all main CI/general-operations/security workflows passed. Public run 37245958294 passed 17 installer regressions and updater pin verification; 37245958314 passed actual Docker classic/containerd image checks.

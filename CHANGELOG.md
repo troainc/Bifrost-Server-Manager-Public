@@ -1,3 +1,7 @@
+## 2026-10-04 - Testing 8 preparation
+
+Preparing a matched Controller/Linux Host Agent download for Space Engineers vanilla/Torch, Palworld and Minecraft Java/Paper/Fabric/Forge/NeoForge/Bedrock Host-approved package review. All nine choices require reviewed local packages and runtime/service policy; vendor downloads, game acceptance and Windows signed distribution remain separate. Testing 7 assets stay immutable. Publish and verify testing 8 assets before merging this bootstrap to main.
+
 ## 2026-10-04 - Publish matching testing 7 customer download
 
 - Publish verified compiled Controller/Host packages and matching installer/updater with immutable updater pins, role selection, archive-backed image identity and preserving-data upgrades.
