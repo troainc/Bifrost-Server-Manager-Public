@@ -2,6 +2,10 @@
 
 [Customer testing 8](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.8) is published. Compiled private source 418753acfc9e0618810eaa7bc900f5f0a5640952, public installer/environment source efe2dbe900019bd1fa96217b0dac4dbef028a3e5, final workflow 37262001155. Downloaded artifact SHA-256 59cecfbe436d47485601139873fea9f1b0e3d48126a14f2d92a3ba0c9fe3128e matched GitHub; all eleven uploaded sizes/digests and five anonymous latest downloads matched. Three image scans contained zero HIGH/CRITICAL findings; compiled-only Controller/Agent isolation, deployed public key and fresh HTTPS/database setup passed. The downloaded Agent preparer produced compatible synthetic SE and Minecraft manifests without private repository access. Main CI/security/generic Host operations passed. Runtime approval and actual game/player/lifecycle/recovery acceptance remain pending; signed Windows distribution is not included. Earlier pending notes are historical. Testing 7 assets are unchanged.
 
+# Reviewed catalog handoff - 2026-10-05
+
+Only accept catalog inputs from the private publisher's cryptographic packager and an independently approved public key ID. The public builder verifies the publisher-signed exact-byte handoff with OpenSSL, copies three public JSON files, and refuses existing/nonempty catalog replacement. Do not copy private keys, private application source or arbitrary sibling files. Controller and Host still verify every recipe and local policy. Do not mutate testing 9 assets or claim a reviewed customer catalog until it is signed, packaged and independently verified.
+
 # Repository instructions
 
 Current matched download is published testing 7, verified from private runtime bb55723 and public script aedbbf3. Current CONTEXT/LOGS entries supersede historical pending notes below. Keep prior release assets immutable. Publishable assets remain compiled-only; a passed generic Linux test does not approve a vendor game or update a remote customer VM.

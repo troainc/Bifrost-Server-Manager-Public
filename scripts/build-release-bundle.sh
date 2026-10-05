@@ -2,6 +2,8 @@
 set -euo pipefail
 umask 077
 version=${1:?version}; key=${2:?public verification key}; output=${3:?new output directory}
+catalog=${4:-}; publisher=${5:-}
+[[ $# -eq 3 || $# -eq 5 ]] || { printf 'Pass both reviewed catalog directory and pinned publisher ID, or neither.\n' >&2; exit 1; }
 [[ "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-installtest\.[0-9]+$ ]] || exit 1
 [[ ! -e "$output" && -f "$key" && ! -L "$key" ]] || exit 1
 grep -qx "VERSION=$version" install.sh
@@ -21,6 +23,18 @@ PY
 rm -f "$key.der"
 mkdir -p "$output/package"
 cp -a deployment/. "$output/package/"
+if [[ -n "$catalog" ]]; then
+  # These are empty templates in this new staging tree, never an installed policy.
+  python3 - "$output/package/config" <<'PY'
+import json,pathlib,sys
+root=pathlib.Path(sys.argv[1])
+for name,empty in [('provisioning-catalog.json',[]),('provisioning-trust.json',{})]:
+    p=root/name
+    assert p.is_file() and not p.is_symlink() and json.loads(p.read_text())==empty, 'Refusing to replace a nonempty template'
+for name in ['provisioning-catalog.json','provisioning-trust.json']:(root/name).unlink()
+PY
+  python3 scripts/install-reviewed-catalog.py "$catalog" "$publisher" "$output/package/config"
+fi
 cp .env.example README.md "$output/package/"
 cp "$key" "$output/package/config/license-signing-public.pem"
 # Public verification material must be readable by the unprivileged container.

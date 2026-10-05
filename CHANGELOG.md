@@ -1,3 +1,10 @@
+## Prepared - reviewed publisher catalog handoff
+
+- A future bundle build can accept a signed public catalog and an independently approved publisher key ID.
+- Verify exact-byte handoff signatures/hashes and copy only three public data files.
+- Reject wrong publisher, forged signature, altered bytes, private-key material and existing catalog replacement.
+- Testing 9 remains immutable; a real reviewed/signed catalog and matched release are still pending.
+
 ## 2026-10-05 - Published matched testing 8
 
 [Customer testing 8](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.8) is published. Compiled private source 418753acfc9e0618810eaa7bc900f5f0a5640952, public installer/environment source efe2dbe900019bd1fa96217b0dac4dbef028a3e5, final workflow 37262001155. Downloaded artifact SHA-256 59cecfbe436d47485601139873fea9f1b0e3d48126a14f2d92a3ba0c9fe3128e matched GitHub; all eleven uploaded sizes/digests and five anonymous latest downloads matched. Three image scans contained zero HIGH/CRITICAL findings; compiled-only Controller/Agent isolation, deployed public key and fresh HTTPS/database setup passed. The downloaded Agent preparer produced compatible synthetic SE and Minecraft manifests without private repository access. Main CI/security/generic Host operations passed. Runtime approval and actual game/player/lifecycle/recovery acceptance remain pending; signed Windows distribution is not included. Earlier pending notes are historical. Testing 7 assets are unchanged.
