@@ -1,3 +1,7 @@
+## 2026-10-05 - Catalog builder delivered; release still pending
+
+Public PR #13 merged as 3cb45eebd5b98b201c343f890feef4745cff88b1 after exact source 944f8d0aea4cf380c189239a5e75173a6aede7df passed installer checks (37283582285) and Docker classic/containerd checks (37283582163). The optional signed catalog builder is available on main. Testing 9 assets/bootstrap remain unchanged. The actual publisher identity, signed game catalog, dependency-runtime publication and a new matched Controller/Host release remain pending; this merge alone does not enable customer game creation or prove game startup.
+
 ## 2026-10-05 - Reviewed catalog packaging prepared
 
 Current public download remains immutable testing 9. A future matched bundle can supply a public signed catalog handoff and an independently pinned Ed25519 publisher identity to the builder. OpenSSL verifies the publisher signature over exact catalog/trust hashes before copying only three public JSON files into a new build tree. Per-recipe signatures and Host policy remain independently verified by the compiled product. Four local cryptographic handoff tests passed with disposable fixture keys; hosted validation and main merge are pending. No actual publisher key/catalog or new release has been created.

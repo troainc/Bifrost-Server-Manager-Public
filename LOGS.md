@@ -1,3 +1,7 @@
+## 2026-10-05 - Catalog builder delivered; release still pending
+
+Public PR #13 merged as 3cb45eebd5b98b201c343f890feef4745cff88b1 after exact source 944f8d0aea4cf380c189239a5e75173a6aede7df passed installer checks (37283582285) and Docker classic/containerd checks (37283582163). The optional signed catalog builder is available on main. Testing 9 assets/bootstrap remain unchanged. The actual publisher identity, signed game catalog, dependency-runtime publication and a new matched Controller/Host release remain pending; this merge alone does not enable customer game creation or prove game startup.
+
 ## 2026-10-05 - Reviewed catalog builder
 
 Prepared scripts/install-reviewed-catalog.py and optional builder arguments 4/5. Verified four OpenSSL tests: signed exact-byte handoff, tampering/wrong-publisher/signature rejection, private-key exclusion, and refusal to replace installed catalog files. Only empty templates in a new bundle staging directory can be replaced. Existing installers/releases/updates remain unchanged; private application source and actual private keys were not copied.
