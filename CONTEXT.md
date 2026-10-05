@@ -1,3 +1,7 @@
+## 2026-10-05 - Preparing matched testing 10
+
+Testing 10 is being prepared for the merged automatic-download filename, bounded Steam bootstrap restart, Forge launcher and Torch inventory corrections. The new Controller and compiled Linux Host Agent must receive the same verified publisher catalog. Dedicated publisher identity/signing and the matched customer build/release remain pending; this preparation does not enable games on testing 9. Preserve all existing release assets. Real game start, player connection, lifecycle/recovery, Bedrock/Wine and signed Windows acceptance remain separate. No remote installation has been changed.
+
 ## 2026-10-05 - Catalog builder delivered; release still pending
 
 Public PR #13 merged as 3cb45eebd5b98b201c343f890feef4745cff88b1 after exact source 944f8d0aea4cf380c189239a5e75173a6aede7df passed installer checks (37283582285) and Docker classic/containerd checks (37283582163). The optional signed catalog builder is available on main. Testing 9 assets/bootstrap remain unchanged. The actual publisher identity, signed game catalog, dependency-runtime publication and a new matched Controller/Host release remain pending; this merge alone does not enable customer game creation or prove game startup.

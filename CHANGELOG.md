@@ -1,3 +1,7 @@
+## 2026-10-05 - Preparing matched testing 10
+
+Testing 10 is being prepared for the merged automatic-download filename, bounded Steam bootstrap restart, Forge launcher and Torch inventory corrections. The new Controller and compiled Linux Host Agent must receive the same verified publisher catalog. Dedicated publisher identity/signing and the matched customer build/release remain pending; this preparation does not enable games on testing 9. Preserve all existing release assets. Real game start, player connection, lifecycle/recovery, Bedrock/Wine and signed Windows acceptance remain separate. No remote installation has been changed.
+
 ## Prepared - reviewed publisher catalog handoff
 
 - A future bundle build can accept a signed public catalog and an independently approved publisher key ID.
