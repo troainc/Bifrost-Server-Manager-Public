@@ -14,17 +14,17 @@ jobs:
         store: [classic, containerd]
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - name: Download and checksum the actual customer testing 8 package
+      - name: Download and checksum the actual customer testing 9 package
         run: |
           set -euo pipefail
-          base=https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/v0.1.0-installtest.8
+          base=https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/v0.1.0-installtest.9
           mkdir "$RUNNER_TEMP/release"
           cd "$RUNNER_TEMP/release"
           curl -fL "$base/SHA256SUMS" -o SHA256SUMS
-          curl -fL "$base/bifrost-linux-amd64-v0.1.0-installtest.8.tar.gz" -o bifrost-linux-amd64-v0.1.0-installtest.8.tar.gz
-          grep -E '^[a-f0-9]{64}  bifrost-linux-amd64-v0.1.0-installtest.8.tar.gz$' SHA256SUMS | sha256sum --check
+          curl -fL "$base/bifrost-linux-amd64-v0.1.0-installtest.9.tar.gz" -o bifrost-linux-amd64-v0.1.0-installtest.9.tar.gz
+          grep -E '^[a-f0-9]{64}  bifrost-linux-amd64-v0.1.0-installtest.9.tar.gz$' SHA256SUMS | sha256sum --check
           mkdir package
-          tar -xzf bifrost-linux-amd64-v0.1.0-installtest.8.tar.gz -C package
+          tar -xzf bifrost-linux-amd64-v0.1.0-installtest.9.tar.gz -C package
       - name: Start an isolated Docker 29.8.2 daemon with the selected image store
         env:
           STORE: ${{ matrix.store }}

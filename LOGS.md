@@ -117,3 +117,11 @@ Prepare v0.1.0-installtest.6 for the creator's current Controller features and d
 
 - Fixed the Host Agent extraction block's closing heredoc label from `PY` to `HOST_ZIP_PY`, matching its opener and resolving the screenshot's EOF parse failure.
 - Updated public installer notes. Did not run Bash checks, QA, or a VM install per owner direction.
+
+## 2026-10-05 — Automatic creation testing 9 candidate
+
+Prepare a matched immutable testing 9 Controller/web/database and compiled Linux Host Agent from PR #44's verified source. Update installer/environment and pin updater e9ffc7d6af53aeddbcd1cb612bb2181e48f7968f with SHA-256 44a6488824ef221166dd06a48a1c82bc1be3167e8315b37c1cde850c816103ff. Keep testing 8 assets and main bootstrap intact until the new build, scans, hashes and draft assets are verified, then promote this candidate. A newer package does not approve unsigned runtime recipes, certify real vendor games or include public Windows distribution. Hosted release build/publication remains pending at this entry.
+
+## 2026-10-05 — Matched testing 9 published
+
+Published testing 9 from private source fde51044090de7f786d78d6902d9c2ffecba59b5 and public installer/environment source 00514ebd23fae447030a790ec039b86980eb0572; workflow 37273201450 succeeded. The downloaded artifact SHA-256 af05705e877a07db36aabd29626a3049633728c8f8930ca275ab3c9c9cc4aff9 matched GitHub. All eleven uploaded asset sizes/digests and five cookie-free latest downloads match. Three image scans have zero HIGH/CRITICAL findings; compiled-only customer/Agent packaging, fresh HTTPS migrations/setup and deployed public licensing key passed. Updated Host archive includes the automatic installer and generated Java launcher. Public Docker classic/containerd checks now target the actual testing 9 package. Testing 8 assets remain unchanged. Real signed game catalog/runtime preparation and vendor acceptance remain pending; no Windows public distribution or remote customer update is implied.
