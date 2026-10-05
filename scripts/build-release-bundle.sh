@@ -23,6 +23,12 @@ PY
 rm -f "$key.der"
 mkdir -p "$output/package"
 cp -a deployment/. "$output/package/"
+# This is new staging with public templates only. Archive/checkouts created under
+# umask 077 can otherwise leave PostgreSQL's non-root init hook unreadable.
+for public_config in "$output/package/config/"*; do
+  [[ -f "$public_config" && ! -L "$public_config" ]] || exit 1
+  chmod 0644 "$public_config"
+done
 if [[ -n "$catalog" ]]; then
   # These are empty templates in this new staging tree, never an installed policy.
   python3 - "$output/package/config" <<'PY'

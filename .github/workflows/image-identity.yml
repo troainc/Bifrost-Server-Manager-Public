@@ -14,17 +14,25 @@ jobs:
         store: [classic, containerd]
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - name: Download and checksum the actual customer testing 9 package
+      - name: Download and checksum the actual customer testing 10 package
         run: |
           set -euo pipefail
-          base=https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/v0.1.0-installtest.9
+          base=https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/v0.1.0-installtest.10
           mkdir "$RUNNER_TEMP/release"
           cd "$RUNNER_TEMP/release"
           curl -fL "$base/SHA256SUMS" -o SHA256SUMS
-          curl -fL "$base/bifrost-linux-amd64-v0.1.0-installtest.9.tar.gz" -o bifrost-linux-amd64-v0.1.0-installtest.9.tar.gz
-          grep -E '^[a-f0-9]{64}  bifrost-linux-amd64-v0.1.0-installtest.9.tar.gz$' SHA256SUMS | sha256sum --check
+          curl -fL "$base/bifrost-linux-amd64-v0.1.0-installtest.10.tar.gz" -o bifrost-linux-amd64-v0.1.0-installtest.10.tar.gz
+          grep -E '^[a-f0-9]{64}  bifrost-linux-amd64-v0.1.0-installtest.10.tar.gz$' SHA256SUMS | sha256sum --check
           mkdir package
-          tar -xzf bifrost-linux-amd64-v0.1.0-installtest.9.tar.gz -C package
+          tar -xzf bifrost-linux-amd64-v0.1.0-installtest.10.tar.gz -C package
+          # Public service configuration must remain readable under non-root UIDs.
+          python3 - <<'PY'
+          import tarfile,pathlib
+          with tarfile.open('bifrost-linux-amd64-v0.1.0-installtest.10.tar.gz','r:gz') as archive:
+              for member in archive:
+                  if member.isfile() and 'config' in pathlib.PurePosixPath(member.name).parts:
+                      assert member.mode&0o777==0o644,(member.name,oct(member.mode))
+          PY
       - name: Start an isolated Docker 29.8.2 daemon with the selected image store
         env:
           STORE: ${{ matrix.store }}
@@ -58,6 +66,7 @@ jobs:
           docker info --format '{{json .DriverStatus}}'
           package="$RUNNER_TEMP/release/package"
           docker load --input "$package/customer-images.tar"
+          docker run --rm --network none --read-only --cap-drop ALL --entrypoint sh bifrost/web:v0.1.0-installtest.10 -c 'test "$(id -u)" -ne 0 && test -r /etc/nginx/conf.d/default.conf'
           python3 - "$package/IMAGE-LOCK.json" "$STORE" <<'PY'
           import json,subprocess,sys
           mismatch=[]

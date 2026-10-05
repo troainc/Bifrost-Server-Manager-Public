@@ -60,6 +60,63 @@ class ImageIdentity(unittest.TestCase):
     def test_classic_configuration_ids_pass(self):
         self.verify(self.configs)
 
+    def wrap_indexes(self, mutate=None):
+        index = json.loads(self.blobs['index.json'])
+        ids = {}
+        for descriptor in index['manifests']:
+            tag = descriptor['annotations']['io.containerd.image.name'].removeprefix('docker.io/')
+            child = {'digest': descriptor['digest'], 'platform': {'architecture': 'amd64', 'os': 'linux'}}
+            attestation = json.dumps({'config': {'digest': 'sha256:' + 'a' * 64}}).encode()
+            att_digest = 'sha256:' + hashlib.sha256(attestation).hexdigest()
+            self.blobs['blobs/sha256/' + att_digest[7:]] = attestation
+            provenance = {'digest': att_digest, 'platform': {'architecture': 'unknown', 'os': 'unknown'}, 'annotations': {'vnd.docker.reference.type': 'attestation-manifest', 'vnd.docker.reference.digest': child['digest']}}
+            children = [child, provenance]
+            if mutate:
+                mutate(children)
+            body = json.dumps({'schemaVersion': 2, 'manifests': children}).encode()
+            digest = 'sha256:' + hashlib.sha256(body).hexdigest()
+            self.blobs['blobs/sha256/' + digest[7:]] = body
+            descriptor['digest'] = digest
+            ids[tag] = digest
+        self.blobs['index.json'] = json.dumps(index).encode()
+        self.write_archive()
+        return ids
+
+    def test_buildkit_index_and_runtime_leaf_bind_same_locked_config(self):
+        indexes = self.wrap_indexes()
+        self.verify(indexes)
+        self.verify(self.manifests)
+        self.verify(self.configs)
+
+    def test_index_rejects_duplicate_runnable_images(self):
+        ids = self.wrap_indexes(lambda c: c.append(dict(c[0])))
+        with self.assertRaisesRegex(ValueError, 'Ambiguous'):
+            self.verify(ids)
+
+    def test_index_rejects_unbound_attestation(self):
+        ids = self.wrap_indexes(lambda c: c[1]['annotations'].update({'vnd.docker.reference.digest': 'sha256:' + 'f' * 64}))
+        with self.assertRaisesRegex(ValueError, 'unbound'):
+            self.verify(ids)
+
+    def test_index_rejects_other_platform(self):
+        ids = self.wrap_indexes(lambda c: c[0]['platform'].update({'architecture': 'arm64'}))
+        with self.assertRaisesRegex(ValueError, 'Unsupported OCI index platform'):
+            self.verify(ids)
+
+    def test_index_rejects_corrupt_child_manifest(self):
+        ids = self.wrap_indexes()
+        self.blobs['blobs/sha256/' + next(iter(self.manifests.values()))[7:]] += b' '
+        self.write_archive()
+        with self.assertRaisesRegex(ValueError, 'metadata digest mismatch'):
+            self.verify(ids)
+
+    def test_index_rejects_attestation_as_loaded_runtime(self):
+        self.wrap_indexes()
+        attestation = json.dumps({'config': {'digest': 'sha256:' + 'a' * 64}}).encode()
+        wrong = {tag: 'sha256:' + hashlib.sha256(attestation).hexdigest() for tag in self.configs}
+        with self.assertRaisesRegex(ValueError, 'Image identity mismatch'):
+            self.verify(wrong)
+
     def test_containerd_manifest_ids_pass_for_the_same_locked_configs(self):
         self.verify(self.manifests)
 

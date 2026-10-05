@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.9
+VERSION=v0.1.0-installtest.10
 # Terminal presentation: readable without color, animation, or a wide terminal.
 UI_RESET='' UI_BLUE='' UI_GREEN='' UI_GOLD='' UI_DIM='' UI_BOLD=''
 if [[ -t 1 && -z "${NO_COLOR:-}" && "${TERM:-dumb}" != dumb ]]; then
@@ -156,10 +156,39 @@ def archive_identities(path):
                     tag = tag[len("docker.io/"):]
                 if tag not in identities:
                     continue
-                digest = descriptor["digest"]
-                if not re.fullmatch(r"sha256:[a-f0-9]{64}", digest):
-                    raise ValueError("Invalid OCI manifest digest")
-                manifest, _ = read_json("blobs/sha256/" + digest[7:], digest)
+                def manifest_data(item):
+                    digest = item["digest"]
+                    if not re.fullmatch(r"sha256:[a-f0-9]{64}", digest):
+                        raise ValueError("Invalid OCI manifest digest")
+                    data, _ = read_json("blobs/sha256/" + digest[7:], digest)
+                    return data, digest
+
+                manifest, digest = manifest_data(descriptor)
+                if "manifests" in manifest:
+                    # BuildKit's containerd store may tag an OCI index containing
+                    # one runnable image and its non-runnable provenance record.
+                    children = manifest["manifests"]
+                    if manifest.get("schemaVersion") != 2 or not isinstance(children, list) or not 1 <= len(children) <= 8:
+                        raise ValueError("Invalid or excessive OCI index")
+                    runnable, attestations = [], []
+                    for child in children:
+                        body, child_digest = manifest_data(child)
+                        if "manifests" in body:
+                            raise ValueError("Nested OCI indexes are unsupported")
+                        platform = child.get("platform", {})
+                        annotations = child.get("annotations", {})
+                        if platform.get("os") == "linux" and platform.get("architecture") == "amd64":
+                            if body.get("config", {}).get("digest") != identities[tag]["config"]:
+                                raise ValueError("OCI manifest/config identity mismatch: " + tag)
+                            runnable.append(child_digest)
+                        elif platform == {"architecture": "unknown", "os": "unknown"} and annotations.get("vnd.docker.reference.type") == "attestation-manifest":
+                            attestations.append(annotations.get("vnd.docker.reference.digest"))
+                        else:
+                            raise ValueError("Unsupported OCI index platform")
+                    if len(runnable) != 1 or any(reference != runnable[0] for reference in attestations):
+                        raise ValueError("Ambiguous or unbound OCI index")
+                    identities[tag]["ids"].update([digest, runnable[0]])
+                    continue
                 if manifest.get("config", {}).get("digest") != identities[tag]["config"]:
                     raise ValueError("OCI manifest/config identity mismatch: " + tag)
                 identities[tag]["ids"].add(digest)

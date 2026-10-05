@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.9
+VERSION=v0.1.0-installtest.10
 # Matched testing release updater; immutable source + digest.
-UPDATER_SOURCE_REF=e9ffc7d6af53aeddbcd1cb612bb2181e48f7968f
-UPDATER_SHA256=44a6488824ef221166dd06a48a1c82bc1be3167e8315b37c1cde850c816103ff
+UPDATER_SOURCE_REF=80853a9449f148be74030a62397690e7d29df027
+UPDATER_SHA256=05ee4eac07d66d96068ce766b1804e225f67e0293b0364d6f3db0697403b78b1
 INSTALL_DIR="${BIFROST_INSTALL_DIR:-$HOME/.local/share/bifrost}"
 # Terminal presentation: readable without color, animation, or a wide terminal.
 UI_RESET='' UI_BLUE='' UI_GREEN='' UI_GOLD='' UI_DIM='' UI_BOLD=''
@@ -306,8 +306,11 @@ elif [[ "${1:-}" == --reinstall || "${1:-}" == --resume || "${1:-}" == --prepare
 elif [[ -z "${BIFROST_INSTALL_ROLE:-}" ]]; then
   [[ -r /dev/tty ]] || fail 'Choose a role with --controller or --host when running without a terminal.'
   ui_banner
-  ui_step '01 / 06   Choose this machine’s role' 'This is the first step in the installer. Choose Controller once, or Instance Host on each game machine.'
-  printf "\n  1) Bifrost Controller  — central panel; install once\n  2) Linux Instance Host — game machine; join an existing Controller\n\n"
+  ui_step '01 / 06   Choose this machine’s role' 'Controller manages the fleet. Host Agent runs one or more game servers on this machine.'
+  printf "\n  1) Bifrost Controller  — management panel and API; install once per fleet\n  2) Linux Instance Host — Host Agent; join your existing Controller\n\n"
+  printf '  A game instance is one server created later in the Controller panel.\n'
+  printf '  For one game server, you still need a Controller and an enrolled Host.\n'
+  printf '  For one machine, install the Controller first, then run --host under your prepared game account.\n\n'
   read -r -p 'Select 1 or 2: ' install_choice </dev/tty
   case "$install_choice" in 1) BIFROST_INSTALL_ROLE=controller;; 2) BIFROST_INSTALL_ROLE=host;; *) fail 'Choose 1 for Controller or 2 for Linux Instance Host.';; esac
 fi
@@ -532,10 +535,39 @@ def archive_identities(path):
                     tag = tag[len("docker.io/"):]
                 if tag not in identities:
                     continue
-                digest = descriptor["digest"]
-                if not re.fullmatch(r"sha256:[a-f0-9]{64}", digest):
-                    raise ValueError("Invalid OCI manifest digest")
-                manifest, _ = read_json("blobs/sha256/" + digest[7:], digest)
+                def manifest_data(item):
+                    digest = item["digest"]
+                    if not re.fullmatch(r"sha256:[a-f0-9]{64}", digest):
+                        raise ValueError("Invalid OCI manifest digest")
+                    data, _ = read_json("blobs/sha256/" + digest[7:], digest)
+                    return data, digest
+
+                manifest, digest = manifest_data(descriptor)
+                if "manifests" in manifest:
+                    # BuildKit's containerd store may tag an OCI index containing
+                    # one runnable image and its non-runnable provenance record.
+                    children = manifest["manifests"]
+                    if manifest.get("schemaVersion") != 2 or not isinstance(children, list) or not 1 <= len(children) <= 8:
+                        raise ValueError("Invalid or excessive OCI index")
+                    runnable, attestations = [], []
+                    for child in children:
+                        body, child_digest = manifest_data(child)
+                        if "manifests" in body:
+                            raise ValueError("Nested OCI indexes are unsupported")
+                        platform = child.get("platform", {})
+                        annotations = child.get("annotations", {})
+                        if platform.get("os") == "linux" and platform.get("architecture") == "amd64":
+                            if body.get("config", {}).get("digest") != identities[tag]["config"]:
+                                raise ValueError("OCI manifest/config identity mismatch: " + tag)
+                            runnable.append(child_digest)
+                        elif platform == {"architecture": "unknown", "os": "unknown"} and annotations.get("vnd.docker.reference.type") == "attestation-manifest":
+                            attestations.append(annotations.get("vnd.docker.reference.digest"))
+                        else:
+                            raise ValueError("Unsupported OCI index platform")
+                    if len(runnable) != 1 or any(reference != runnable[0] for reference in attestations):
+                        raise ValueError("Ambiguous or unbound OCI index")
+                    identities[tag]["ids"].update([digest, runnable[0]])
+                    continue
                 if manifest.get("config", {}).get("digest") != identities[tag]["config"]:
                     raise ValueError("OCI manifest/config identity mismatch: " + tag)
                 identities[tag]["ids"].add(digest)

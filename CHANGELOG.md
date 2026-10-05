@@ -1,3 +1,17 @@
+## 2026-10-05 - Published matched testing 10 using free local verification
+
+Testing 10 is published at https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.10. Private source 4c1a32b7a1010dc81770afcffebe509c821265d6 has the exact same tree as merged private main c30118b5dcea05b0008be3fe264be416547c2e9f; public build source is c5b0bd24e446d8ba259cf32fe30941ef002523e0. Free local Ubuntu WSL Docker Engine passed compiled-only isolation, all three zero HIGH/CRITICAL vulnerability/secret scans, image archive identity/config locks and fresh HTTPS database migrations/first-admin setup. The compiled Linux Host verified the real signed five-target Java catalog as non-root, installed protected policy/backup keys and preserved existing policy. All 14 uploaded asset sizes/digests and five anonymous latest downloads matched. Public source checks 37378786091/37378786180 passed; actual testing 10 classic/containerd acceptance now targets the new immutable archive. Private hosted Actions were blocked before steps by account billing/quota; no paid services/signups/billing changes were used. The dedicated private publisher key is outside Git and distribution. Testing 9 assets and inaccessible customer VMs remain unchanged.
+
+The signed controlled-testing automatic catalog covers Minecraft Java 1.21.1 vanilla/Paper/Fabric/Forge/NeoForge. Real game/player/lifecycle/recovery acceptance, Palworld native readiness, SE Wine/.NET, Bedrock bytes and trusted Windows distribution remain pending. Historical preparation notes below are superseded by this record. Existing installations retain their local catalog/policy on --update; fresh-Host approval and existing-policy migration are distinct.
+
+## 2026-10-05 - Free local release verification and public template permissions
+
+Private hosted Actions are blocked before execution by the account billing/quota state. Edward explicitly prohibited paid services and account changes; verification uses existing Ubuntu WSL with free Docker Engine instead. The local three-image build, scans and compiled isolation checks passed. A restrictive-umask source export also revealed unreadable mode 0600 public database-init/config templates: PostgreSQL could initialize its database, skip the failed hook on restart, and then fail migrations because bifrost_app was missing. The builder now normalizes only public config files in its new staging tree to 0644; customer credentials/installed files are untouched. Fresh empty-volume HTTPS validation must pass before publication. Testing 9 remains unchanged.
+
+## 2026-10-05 - Preparing matched testing 10
+
+Testing 10 is being prepared for the merged automatic-download filename, bounded Steam bootstrap restart, Forge launcher and Torch inventory corrections. The new Controller and compiled Linux Host Agent must receive the same verified publisher catalog. Dedicated publisher identity/signing and the matched customer build/release remain pending; this preparation does not enable games on testing 9. Preserve all existing release assets. Real game start, player connection, lifecycle/recovery, Bedrock/Wine and signed Windows acceptance remain separate. No remote installation has been changed.
+
 ## Prepared - reviewed publisher catalog handoff
 
 - A future bundle build can accept a signed public catalog and an independently approved publisher key ID.
