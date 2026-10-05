@@ -6,6 +6,9 @@ version=${1:?version}; key=${2:?public verification key}; output=${3:?new output
 [[ ! -e "$output" && -f "$key" && ! -L "$key" ]] || exit 1
 grep -qx "VERSION=$version" install.sh
 grep -qx "VERSION=$version" update.sh
+grep -qx "BIFROST_VERSION=$version" .env.example
+grep -qx "BIFROST_CONTROL_PLANE_IMAGE=bifrost/control-plane:$version" .env.example
+grep -qx "BIFROST_WEB_IMAGE=bifrost/web:$version" .env.example
 [[ $(wc -c < "$key") -le 4096 ]] || exit 1
 grep -q '^-----BEGIN PUBLIC KEY-----$' "$key"
 ! grep -q 'PRIVATE KEY' "$key"

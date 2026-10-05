@@ -1,3 +1,5 @@
+Testing 8 is being prepared for Space Engineers vanilla/Torch, Palworld dedicated/community and Minecraft Java/Paper/Fabric/Forge/NeoForge/Bedrock Host-approved package review. All variants need reviewed local software/runtime policies and real Host testing. This adds package preparation and signed installation review on existing approved slots; vendor downloads, automatic Windows service creation and public accepted one-click Blueprints remain separate. Do not use this branch's bootstrap until the matched release assets are published.
+
 # Bifrost Server Manager
 
 ## Current testing download
