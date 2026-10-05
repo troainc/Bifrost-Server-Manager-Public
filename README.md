@@ -1,3 +1,7 @@
+## Publisher catalog packaging (prepared for a future release)
+
+The bundle builder accepts optional arguments 4/5: a reviewed public catalog directory and its independently approved publisher key ID. It verifies the publisher's signed handoff binding the exact catalog/trust bytes, then copies only three public JSON files into the new build tree. Existing installations are never edited by the builder. Controller and Host independently verify each recipe before execution. Testing 9 remains the current download and its reviewed real-game catalog is still pending.
+
 # Customer testing 9: automatic download and create
 
 This release updates the compiled Controller/web and separate Linux Host Agent with signed official-source download recipes and automatic new-instance creation for approved Space Engineers, Palworld and Minecraft targets. Choose the reviewed game/version and enrolled Host, accept required terms, preview placement, then Create. The Host verifies downloads and readiness before registering a separate instance.
