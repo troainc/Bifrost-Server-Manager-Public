@@ -1,3 +1,16 @@
+## 2026-10-04 - Published testing 7 and verified delivery
+
+- Customer testing 7 is published at https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.7 . Private compiled source is bb557236502171d79ec3239954d845e4330b3586; public script source is aedbbf30e16c6400ac7ce32d82262aa88226aaab. Final bundle run 37250982073 and all main CI/general-operations/security workflows passed. Public run 37245958294 passed 17 installer regressions and updater pin verification; 37245958314 passed actual Docker classic/containerd image checks.
+- Workflow artifact SHA-256 cbb549e027b16f709049cdb8b289cd6689ecc95413ed17e06c04b07fe436b594 matched its downloaded ZIP. All eleven published asset sizes/digests match the verified package; anonymous latest installer, updater, SHA256SUMS, public key and Host checksum match byte for byte. Three image scans contain zero HIGH/CRITICAL vulnerability or secret findings. No images.json intermediate, private issuer/source/owner service, credential or private key was uploaded.
+- New installs choose Controller once or Host per game machine. Compatible Alpine updates preserve data, settings and catalog/trust; old Debian PostgreSQL runtimes still require a separately verified migration. Signed generic Linux OCI acceptance is not real customer-host or vendor-game acceptance. The executable catalog starts empty. Remote customer VM remains inaccessible and was not updated.
+- This current record supersedes historical preparation/release notes below; previous release attachments remain immutable.
+
+## 2026-10-04 - Prepared testing 7 fleet release
+
+- Prepared matching immutable version 7 installer/updater pins; retained creator role selection and safe Host ZIP verification/extraction. Host --upgrade/--re-enroll flags forward to the matching compiled Agent package.
+- Added protected read-only executable Blueprint mounts with empty defaults; the updater preserves operator-owned catalog/trust files. Signed game approval remains a separate operator step, not an installation toggle.
+- Local Python installer regressions: 17 passed. Release assets and hosted compiled bundle acceptance are pending; testing 6 assets were not overwritten. Main must not advance to this bootstrap until all matching testing 7 assets exist and hashes are verified.
+
 # Work log
 
 ## 2026-10-04 — Repair Host role command

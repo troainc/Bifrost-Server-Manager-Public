@@ -1,5 +1,7 @@
 # Repository instructions
 
+Current matched download is published testing 7, verified from private runtime bb55723 and public script aedbbf3. Current CONTEXT/LOGS entries supersede historical pending notes below. Keep prior release assets immutable. Publishable assets remain compiled-only; a passed generic Linux test does not approve a vendor game or update a remote customer VM.
+
 Keep Linux support claims role-specific: automatic Controller preparation currently checks Debian/Ubuntu x86_64; the separate Host Agent checks Linux plus Node.js 24 at /usr/bin/node, user systemd and rootless Podman. Other compatible distributions are candidates for recorded acceptance testing, not universally supported or verified. Do not remove prerequisite guards merely to advertise broader support.
 
 Customer installer and compiled distribution only. Keep private application source, master service, credentials and private signing keys out of this repository. Install and operate as a non-root user with rootless Docker. Preserve installed data. Update README, CHANGELOG, CONTEXT and LOGS with changes.
@@ -21,3 +23,5 @@ This is a fresh-install testing download. Home Ubuntu installation, enrollment, 
 ## 2026-10-03 - Disclosure v5 customer integration refresh
 
 Prepare v0.1.0-installtest.6 for the creator's current Controller features and disclosure version 5. Personal user agreement acceptance is separate from administrator installation-license consent. The customer Controller cannot enable owner registry/configuration/recovery APIs, even through environment flags. Customer privacy identity and location belong to the local operator and default blank. The Alpine 17 update compatibility guard and data/key preservation remain unchanged. Hosted packaging, fresh migrations, image scans and licensing flow must pass before publishing; real Ubuntu and game-host acceptance remain pending.
+
+- Testing release 7 binds the updater to its immutable Git commit and hash. Preserve config/provisioning-catalog.json and config/provisioning-trust.json on upgrade. These contain only signed manifests/public publisher keys; never bundle publisher private keys. Publish and verify every matching release asset before advancing main to the new bootstrap.

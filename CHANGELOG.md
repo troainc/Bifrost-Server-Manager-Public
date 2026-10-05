@@ -1,3 +1,9 @@
+## 2026-10-04 - Publish matching testing 7 customer download
+
+- Publish verified compiled Controller/Host packages and matching installer/updater with immutable updater pins, role selection, archive-backed image identity and preserving-data upgrades.
+- Include signed generic Linux OCI placement, forward schema repair, bounded operations, Host upgrade/re-enrollment, MFA and mobile-navigation fixes; preserve operator catalog/trust with empty defaults.
+- All eleven asset digests and anonymous download bytes verified. Actual game/customer-host acceptance remains separate; older Debian PostgreSQL upgrade guard retained.
+
 # Changelog
 
 ## 2026-10-04 — Fix Host installer heredoc terminator

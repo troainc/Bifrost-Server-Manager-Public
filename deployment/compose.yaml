@@ -59,6 +59,8 @@ services:
       BIFROST_LICENSE_PUBLIC_KEY_FILE: /run/bifrost/license-signing-public.pem
       BIFROST_LICENSE_TEST_INTAKE: ${BIFROST_LICENSE_TEST_INTAKE:-false}
       BIFROST_PRIVACY_CONTROLLER_NAME: ${BIFROST_PRIVACY_CONTROLLER_NAME:-}
+      BIFROST_BLUEPRINT_CATALOG_FILE: /run/bifrost/provisioning-catalog.json
+      BIFROST_BLUEPRINT_TRUSTED_KEYS_FILE: /run/bifrost/provisioning-trust.json
       BIFROST_VERSION: ${BIFROST_VERSION}
       BIFROST_PRIVACY_CONTROLLER_LOCATION: ${BIFROST_PRIVACY_CONTROLLER_LOCATION:-}
       BIFROST_PRIVACY_CONTACT: ${BIFROST_PRIVACY_CONTACT:-}
@@ -80,6 +82,8 @@ services:
     volumes:
       - branding_data:/var/lib/bifrost/branding
       - ./config/license-signing-public.pem:/run/bifrost/license-signing-public.pem:ro
+      - ./config/provisioning-catalog.json:/run/bifrost/provisioning-catalog.json:ro
+      - ./config/provisioning-trust.json:/run/bifrost/provisioning-trust.json:ro
       - ./config/runtime-profile-catalog.example.json:/run/bifrost/runtime-profiles.json:ro
       - ./config/runtime-profile-trust.example.json:/run/bifrost/runtime-profile-trust.json:ro
       - ./config/migration-target-policies.example.json:/run/bifrost/migration-target-policies.json:ro

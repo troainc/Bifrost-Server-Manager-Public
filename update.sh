@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.6
+VERSION=v0.1.0-installtest.7
 # Terminal presentation: readable without color, animation, or a wide terminal.
 UI_RESET='' UI_BLUE='' UI_GREEN='' UI_GOLD='' UI_DIM='' UI_BOLD=''
 if [[ -t 1 && -z "${NO_COLOR:-}" && "${TERM:-dumb}" != dumb ]]; then
@@ -208,6 +208,8 @@ cp "$scratch/package/compose.yaml" compose.yaml
 for file in "$scratch/package/config"/*; do
   name=$(basename "$file")
   [[ "$name" != license-signing-public.pem || ! -s config/license-signing-public.pem ]] || continue
+  # Local executable Blueprint approvals are preserved across releases.
+  [[ "$name" != provisioning-catalog.json && "$name" != provisioning-trust.json || ! -e "config/$name" ]] || continue
   cp "$file" "config/$name"
 done
 cp "$scratch/package/IMAGE-LOCK.json" IMAGE-LOCK.json
