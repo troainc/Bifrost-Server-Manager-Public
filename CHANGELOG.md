@@ -1,3 +1,11 @@
+## 2026-10-05 - Published matched testing 8
+
+[Customer testing 8](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.8) is published. Compiled private source 418753acfc9e0618810eaa7bc900f5f0a5640952, public installer/environment source efe2dbe900019bd1fa96217b0dac4dbef028a3e5, final workflow 37262001155. Downloaded artifact SHA-256 59cecfbe436d47485601139873fea9f1b0e3d48126a14f2d92a3ba0c9fe3128e matched GitHub; all eleven uploaded sizes/digests and five anonymous latest downloads matched. Three image scans contained zero HIGH/CRITICAL findings; compiled-only Controller/Agent isolation, deployed public key and fresh HTTPS/database setup passed. The downloaded Agent preparer produced compatible synthetic SE and Minecraft manifests without private repository access. Main CI/security/generic Host operations passed. Runtime approval and actual game/player/lifecycle/recovery acceptance remain pending; signed Windows distribution is not included. Earlier pending notes are historical. Testing 7 assets are unchanged.
+
+## 2026-10-04 - Testing 8 preparation
+
+Preparing a matched Controller/Linux Host Agent download for Space Engineers vanilla/Torch, Palworld and Minecraft Java/Paper/Fabric/Forge/NeoForge/Bedrock Host-approved package review. All nine choices require reviewed local packages and runtime/service policy; vendor downloads, game acceptance and Windows signed distribution remain separate. Testing 7 assets stay immutable. Publish and verify testing 8 assets before merging this bootstrap to main.
+
 ## 2026-10-04 - Publish matching testing 7 customer download
 
 - Publish verified compiled Controller/Host packages and matching installer/updater with immutable updater pins, role selection, archive-backed image identity and preserving-data upgrades.
