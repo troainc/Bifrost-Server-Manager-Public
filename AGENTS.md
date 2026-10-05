@@ -1,3 +1,7 @@
+## 2026-10-05 - Free local release verification and public template permissions
+
+Private hosted Actions are blocked before execution by the account billing/quota state. Edward explicitly prohibited paid services and account changes; verification uses existing Ubuntu WSL with free Docker Engine instead. The local three-image build, scans and compiled isolation checks passed. A restrictive-umask source export also revealed unreadable mode 0600 public database-init/config templates: PostgreSQL could initialize its database, skip the failed hook on restart, and then fail migrations because bifrost_app was missing. The builder now normalizes only public config files in its new staging tree to 0644; customer credentials/installed files are untouched. Fresh empty-volume HTTPS validation must pass before publication. Testing 9 remains unchanged.
+
 ## 2026-10-05 - Preparing matched testing 10
 
 Testing 10 is being prepared for the merged automatic-download filename, bounded Steam bootstrap restart, Forge launcher and Torch inventory corrections. The new Controller and compiled Linux Host Agent must receive the same verified publisher catalog. Dedicated publisher identity/signing and the matched customer build/release remain pending; this preparation does not enable games on testing 9. Preserve all existing release assets. Real game start, player connection, lifecycle/recovery, Bedrock/Wine and signed Windows acceptance remain separate. No remote installation has been changed.
