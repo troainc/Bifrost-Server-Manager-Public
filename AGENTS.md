@@ -1,3 +1,7 @@
+## 2026-10-06 - Testing 14 onboarding candidate
+
+Fresh Instance setup now separates installed role from independent/parent management cards. Step 04 collects the parent panel URL and public identity confirmation; destination changes clear trust and the public draft survives step 05 within the wizard. No credentials are stored in the browser. Step 06 retains the verified join ticket and terminal entry of a fresh parent Host code after activation. A narrow authenticated administrator/MFA/CSRF-protected identity preview is available before agreement; topology writes and fleet controls stay gated. Matched testing 14 publication and deployment verification are pending. No paid service, real customer Host mutation or game acceptance.
+
 ## 2026-10-06 - Testing 13 published; direct Instance joining verified
 
 Published [controlled testing 13](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.13) from private runtime source 43ef3e48f4389af80371d70c09e68fdef04dbdc7 and public packaging source e6148a98970e53dd9969df10b7ce9c95de3bad05. All fifteen uploaded sizes/digests and seven full anonymous latest downloads matched; public main bootstrap matches the release installer. Prior release assets remain immutable. Both main branches preserve previous contributor commits.

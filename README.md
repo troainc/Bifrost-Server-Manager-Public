@@ -1,15 +1,24 @@
-## Instance parent pairing in testing 13
+## Instance onboarding in testing 14
 
-When installing `--instance`, choose **Use independently** for local management
-or **Join an existing Controller** during panel setup. Joining asks for the parent
-HTTPS address and independently verified public identity. Complete the join under
-the separately prepared game-service account with `bash install.sh --host --join-instance`.
-The terminal asks for this Instance's URL, its private setup ticket and a fresh
-Host pairing code generated on the parent. It verifies a signed parent receipt
-before starting the Agent. Interrupted joins reuse their private saved receipt;
-existing enrolled Hosts must use the separate reviewed handover flow. No local
-Host code or licensing key is used to join a parent. Testing 13 publication and anonymous downloads are
-verified; prior release assets remain immutable.
+Choose **Run independently** to manage local games or **Connect to a Controller**
+to use a parent fleet panel. The installed Instance role is displayed separately.
+After administrator/MFA setup, **step 04** asks for the parent's HTTPS panel URL
+(without `/api`), fetches its public identity and requires independent confirmation
+of its Node ID and key fingerprint. Editing the address clears confirmation.
+The verified destination stays in this wizard while you activate the separate
+Instance license in step 05. Reloading requires checking the destination again;
+no pairing credential is saved in browser storage.
+
+In **step 06**, confirm this Instance Node ID and provide a reason, then prepare
+its private join ticket. Under the separately prepared non-root game-service
+account, run `bash install.sh --host --join-instance`. The terminal asks for the
+Instance URL, private ticket and a fresh five-digit code generated on the parent
+Controller → Hosts → Add host. Generate the code when ready, rather than before
+license onboarding, because it expires quickly. The compiled Agent verifies the
+live parent and signed receipt before starting. Interrupted joins reuse saved
+private recovery state; existing enrolled Hosts use the separate handover flow.
+Checking an address does not delegate control, enroll a Host or activate a license.
+Prior release assets remain immutable; publication verification is recorded below.
 
 ## Installation roles in testing 12
 
