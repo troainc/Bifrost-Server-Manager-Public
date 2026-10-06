@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.10
+VERSION=v0.1.0-installtest.11
 # Matched testing release updater; immutable source + digest.
-UPDATER_SOURCE_REF=80853a9449f148be74030a62397690e7d29df027
-UPDATER_SHA256=05ee4eac07d66d96068ce766b1804e225f67e0293b0364d6f3db0697403b78b1
+UPDATER_SOURCE_REF=04645cb2f98a4401f2cfd8f1618427631e430df6
+UPDATER_SHA256=ec2509175a7f1d56a182fbafdb150e52eac5804cff2a89a72f4f0604352d86d6
 INSTALL_DIR="${BIFROST_INSTALL_DIR:-$HOME/.local/share/bifrost}"
 # Terminal presentation: readable without color, animation, or a wide terminal.
 UI_RESET='' UI_BLUE='' UI_GREEN='' UI_GOLD='' UI_DIM='' UI_BOLD=''
@@ -289,7 +289,7 @@ if [[ "${1:-}" == --update ]]; then
   rm -f "$update_stage/update.sh"; rmdir "$update_stage"
   exit 0
 fi
-[[ "${1:-}" != --help ]] || { echo 'Run bash install.sh to choose Controller or Linux Instance Host. Pass --controller or --host to select a role directly. Existing Hosts can use --host --upgrade; revoked Hosts can use --host --upgrade --re-enroll.'; exit 0; }
+[[ "${1:-}" != --help ]] || { echo 'Run bash install.sh to choose Controller, standalone Instance node, or Hybrid. Pass --controller, --instance, or --hybrid; --host installs only an Agent for an existing Controller. Existing Hosts can use --host --upgrade; revoked Hosts can use --host --upgrade --re-enroll.'; exit 0; }
 HOST_FLAGS=()
 if [[ "${1:-}" == --host ]]; then
   BIFROST_INSTALL_ROLE=host
@@ -297,24 +297,25 @@ if [[ "${1:-}" == --host ]]; then
   while [[ $# -gt 0 ]]; do
     case "$1" in --upgrade|--re-enroll) HOST_FLAGS+=("$1"); shift;; *) fail 'Host accepts only --upgrade and --re-enroll.';; esac
   done
-elif [[ "${1:-}" == --controller ]]; then
-  [[ $# -eq 1 ]] || fail 'Use --controller by itself.'
-  BIFROST_INSTALL_ROLE=controller
+elif [[ "${1:-}" == --controller || "${1:-}" == --instance || "${1:-}" == --hybrid ]]; then
+  BIFROST_INSTALL_ROLE="${1#--}"
   shift
+  case "${1:-}" in --reinstall) export BIFROST_REINSTALL=1; shift;; --resume) export BIFROST_RESUME=1; shift;; esac
+  [[ $# -eq 0 ]] || fail 'A node role accepts only an optional --reinstall or --resume.'
 elif [[ "${1:-}" == --reinstall || "${1:-}" == --resume || "${1:-}" == --prepare-account || "${1:-}" == --bootstrap ]]; then
   BIFROST_INSTALL_ROLE="${BIFROST_INSTALL_ROLE:-controller}"
 elif [[ -z "${BIFROST_INSTALL_ROLE:-}" ]]; then
-  [[ -r /dev/tty ]] || fail 'Choose a role with --controller or --host when running without a terminal.'
+  [[ -r /dev/tty ]] || fail 'Choose --controller, --instance, --hybrid or --host when running without a terminal.'
   ui_banner
-  ui_step '01 / 06   Choose this machine’s role' 'Controller manages the fleet. Host Agent runs one or more game servers on this machine.'
-  printf "\n  1) Bifrost Controller  — management panel and API; install once per fleet\n  2) Linux Instance Host — Host Agent; join your existing Controller\n\n"
+  ui_step '01 / 06   Choose this machine’s role' 'Controller manages a fleet. Instance manages this machine. Hybrid does both.'
+  printf "\n  1) Controller — central fleet panel; separate game Hosts\n  2) Standalone Instance node — local panel and local game Host; can pair later\n  3) Hybrid — fleet Controller plus a local game Host\n  4) Host Agent only — join an existing Controller; no new panel\n\n"
   printf '  A game instance is one server created later in the Controller panel.\n'
   printf '  For one game server, you still need a Controller and an enrolled Host.\n'
-  printf '  For one machine, install the Controller first, then run --host under your prepared game account.\n\n'
-  read -r -p 'Select 1 or 2: ' install_choice </dev/tty
-  case "$install_choice" in 1) BIFROST_INSTALL_ROLE=controller;; 2) BIFROST_INSTALL_ROLE=host;; *) fail 'Choose 1 for Controller or 2 for Linux Instance Host.';; esac
+  printf '  Instance and Hybrid panels require a separately prepared local Host Agent account.\n  Complete panel setup and licensing, then enroll that local Agent before creating games.\n\n'
+  read -r -p 'Select 1, 2, 3 or 4: ' install_choice </dev/tty
+  case "$install_choice" in 1) BIFROST_INSTALL_ROLE=controller;; 2) BIFROST_INSTALL_ROLE=instance;; 3) BIFROST_INSTALL_ROLE=hybrid;; 4) BIFROST_INSTALL_ROLE=host;; *) fail 'Choose a displayed node role or Host Agent only.';; esac
 fi
-case "$BIFROST_INSTALL_ROLE" in host) install_instance_host; exit 0;; controller) ;; *) fail 'Installation role is missing; choose Controller or Instance Host.';; esac
+case "$BIFROST_INSTALL_ROLE" in host) install_instance_host; exit 0;; controller|instance|hybrid) ;; *) fail 'Installation role is missing; choose Controller, Instance, Hybrid or Host Agent.';; esac
 if [[ "${1:-}" == --reinstall ]]; then export BIFROST_REINSTALL=1; shift; fi
 if [[ "${1:-}" == --resume ]]; then export BIFROST_RESUME=1; shift; fi
 case "${1:-}" in
@@ -410,8 +411,8 @@ else
 fi
 network_ids=$(docker network ls -q)
 if [[ -n "$network_ids" ]]; then docker network inspect $network_ids > "$scratch/networks.json"; else echo '[]' > "$scratch/networks.json"; fi
-python3 - "$INSTALL_DIR" "$address" "$port" "$scratch/networks.json" <<'PY'
-import ipaddress,json,pathlib,sys
+python3 - "$INSTALL_DIR" "$address" "$port" "$scratch/networks.json" "$BIFROST_INSTALL_ROLE" <<'PY'
+import ipaddress,json,pathlib,sys,socket
 root=pathlib.Path(sys.argv[1]);used=[]
 for network in json.loads(pathlib.Path(sys.argv[4]).read_text()):
     for item in (network.get('IPAM') or {}).get('Config') or []:
@@ -420,7 +421,7 @@ for index in range(256):
     subnet=ipaddress.ip_network(f'10.240.{index}.0/24')
     if not any(subnet.overlaps(existing) for existing in used):break
 else:raise SystemExit('No available Docker subnet.')
-values={'BIFROST_PUBLIC_URL':f'https://{sys.argv[2]}:{sys.argv[3]}','BIFROST_HTTPS_PORT':sys.argv[3],'BIFROST_PRIVATE_SUBNET':str(subnet),'BIFROST_WEB_NETWORK_IP':str(subnet.network_address+10),'BIFROST_TRUSTED_PROXIES':f'127.0.0.1,::1,{subnet.network_address+10}'}
+values={'BIFROST_NODE_ROLE':sys.argv[5],'BIFROST_NODE_HOSTNAME':socket.gethostname(),'BIFROST_PUBLIC_URL':f'https://{sys.argv[2]}:{sys.argv[3]}','BIFROST_HTTPS_PORT':sys.argv[3],'BIFROST_PRIVATE_SUBNET':str(subnet),'BIFROST_WEB_NETWORK_IP':str(subnet.network_address+10),'BIFROST_TRUSTED_PROXIES':f'127.0.0.1,::1,{subnet.network_address+10}'}
 env=root/'.env';env.write_text((root/'.env.example').read_text()+'\n'+'\n'.join(f'{k}={v}' for k,v in values.items())+'\n');env.chmod(0o600)
 PY
 printf '\nLicensing uses your installation identifier and check-ins; optional analytics stays off.\n'
@@ -613,6 +614,10 @@ ui_step '06 / 06   Bring your panel online' 'Waiting for the database, API and w
 cd "$INSTALL_DIR"
 docker compose config --quiet
 run_task 'Start and check all panel services' docker compose up -d --wait --wait-timeout 180
-ui_step 'YOUR COMMAND CENTER IS READY' 'Open the panel to begin onboarding.'
+ui_step 'YOUR BIFROST PANEL IS READY' 'Open the panel to confirm its node role and begin onboarding.'
+printf '\n  Node role: %s\n' "$BIFROST_INSTALL_ROLE"
+if [[ "$BIFROST_INSTALL_ROLE" == instance || "$BIFROST_INSTALL_ROLE" == hybrid ]]; then
+  printf '  Next: prepare a separate non-root game-service account with Node.js 24 and rootless Podman.\n  After panel setup and license activation, use Hosts → Add host to pair that local Agent.\n  Run bash install.sh --host as the prepared game account, using this panel URL.\n  Standalone Instance nodes later use an explicit ownership handover to a parent Controller.\n'
+fi
 printf '\n  Panel     https://%s:%s/install\n  Account   bifrost (non-root)\n  Files     %s\n\n  Your test HTTPS certificate is self-signed.\n  Your browser will ask you to confirm it.\n\n  Support   discord.gg/troainc\n\n' "$address" "$port" "$INSTALL_DIR"
 ui_rule

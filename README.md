@@ -1,3 +1,21 @@
+## Installation roles in testing 11
+
+Choose `--controller`, `--instance` or `--hybrid` when installing a panel. `--host` installs only the game Host Agent and joins the explicitly selected Controller. A Bifrost node, its free-license installation and each game server have separate identities. A standalone Instance enrolls its own local Host; Hybrid can enroll local and remote Hosts. The game-service account, Node.js 24 and rootless Podman still require separate preparation.
+
+Standalone-to-Controller handover requires verified parent identity, administrator confirmation, completed jobs and a stopped Agent. The matched `dist/pair-controller.js` retains profiles/data/backup keys, saves a signed receipt for recovery and disables local game authority. Historical backup/schedule inventory stays local pending migration. Optional private-LAN Bifrost discovery is disabled by default, bounded and never automatically establishes trust. AMP import, hypervisor VM creation and Windows handover distribution remain separate.
+
+Examples, after downloading and verifying the release installer:
+
+```bash
+bash install.sh --controller
+bash install.sh --instance
+bash install.sh --hybrid
+```
+
+To wipe a disposable test panel, use the selected role with `--reinstall`, review its displayed absolute path and type its required confirmation. This deletes that panel's stored data; it does not wipe a separately installed Host Agent or its games. Preserve game data before choosing any reset.
+
+Testing 11 retains the reviewed five-target Java catalog from testing 10. Role changes do not approve a new vendor runtime. Existing installations update separately from their Host Agents and retain local catalogs/keys/policies. Publication and real game acceptance are recorded separately below.
+
 ## Publisher catalog packaging
 
 Testing 10 includes the verified publisher-signed public catalog for Minecraft Java 1.21.1 vanilla/Paper/Fabric/Forge/NeoForge. Controller and Linux Host packages receive the same signed bytes and pinned public publisher identity. The Host asks its operator to approve private storage, bind address and resource limits. Each Create still requires the game-specific terms/EULA. Customers do not create publisher recipes or signing keys.
