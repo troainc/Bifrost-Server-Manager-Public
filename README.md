@@ -1,4 +1,4 @@
-## Installation roles in testing 11
+## Installation roles in testing 12
 
 Choose `--controller`, `--instance` or `--hybrid` when installing a panel. `--host` installs only the game Host Agent and joins the explicitly selected Controller. A Bifrost node, its free-license installation and each game server have separate identities. A standalone Instance enrolls its own local Host; Hybrid can enroll local and remote Hosts. The game-service account, Node.js 24 and rootless Podman still require separate preparation.
 
@@ -14,7 +14,7 @@ bash install.sh --hybrid
 
 To wipe a disposable test panel, use the selected role with `--reinstall`, review its displayed absolute path and type its required confirmation. This deletes that panel's stored data; it does not wipe a separately installed Host Agent or its games. Preserve game data before choosing any reset.
 
-Testing 11 retains the reviewed five-target Java catalog from testing 10. Role changes do not approve a new vendor runtime. Existing installations update separately from their Host Agents and retain local catalogs/keys/policies. Publication and real game acceptance are recorded separately below.
+Testing 12 retains the reviewed five-target Java catalog from testing 10. Role changes do not approve a new vendor runtime. Existing installations update separately from their Host Agents and retain local catalogs/keys/policies. Publication and real game acceptance are recorded separately below.
 
 ## Publisher catalog packaging
 
@@ -26,9 +26,9 @@ Palworld and Space Engineers download/create engine fixes are included, but thei
 
 ## Current testing download
 
-[Customer testing 10](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.10) is published with matched compiled Controller/web/PostgreSQL and Linux Host Agent, signed five-target Java catalog, checksum/scan reports and local verification receipts. Free local Docker builds passed compiled-only isolation, three zero HIGH/CRITICAL scans and fresh verified HTTPS database migrations/first-admin setup. All fourteen uploaded asset digests and five anonymous latest downloads match. No paid services, signup or billing/spending changes were used.
+[Customer testing 12](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.12) is published with matched compiled Controller/web/PostgreSQL and Linux Host Agent, explicit node roles/pairing, the signed five-target Java catalog, checksums, scans and verification receipts. All fifteen uploaded sizes/digests and seven full anonymous latest downloads matched. Fresh locked-role setup and migrations passed over verified local HTTPS; three image scans reported zero HIGH/CRITICAL vulnerabilities and no detected secrets. Build, typecheck, least-privilege pairing/recovery and role-aware browser checks passed. No paid services, signup or billing/spending changes were used.
 
-This release fixes Docker image-index/attestation identity verification and public service configuration permissions under restrictive build umasks. It includes the previously merged official-download filename, bounded Steam bootstrap restart, Forge launcher and Torch inventory corrections. Testing 9 and older assets are unchanged.
+It includes role-aware local/remote Host setup, persistent identities and safe Instance-to-Controller handover, plus source-map-js 1.2.2. Older release assets remain immutable. Actual customer Host and game startup/player/lifecycle acceptance remain separate.
 
 Compatible Alpine PostgreSQL 17 updates preserve accounts, secrets, data and existing local provisioning catalog/trust/policy. Updating the Controller does not silently update a Host Agent or replace its approved game policy. Fresh Hosts can explicitly approve the included signed Java catalog; existing Hosts need their separate update and policy migration review. Real vendor-game acceptance and public Windows distribution remain pending.
 
@@ -39,9 +39,11 @@ The installer asks for the machine's role before installation:
 | Role | Purpose |
 | --- | --- |
 | Controller (`--controller`) | Management panel/API/database; one per fleet |
-| Instance Host (`--host`) | Host Agent on a game machine; joins your Controller and can run one or more servers |
+| Standalone Instance (`--instance`) | Local panel; manages its own enrolled local Host until explicitly handed to a Controller |
+| Hybrid (`--hybrid`) | Controller with a separate local Host, plus optional remote Hosts |
+| Host Agent only (`--host`) | No panel; joins the selected Controller and can run one or more games |
 
-A **game instance** is one game server created later in the Controller panel, after Host enrollment and reviewed game-policy approval. For a single game server, use one Controller and one enrolled Host. On one physical machine, install the Controller first, then run `--host` under a prepared non-root game account with Node.js 24, rootless Podman and user systemd. A Host-only install joins an existing Controller; it does not create a separate management panel. The role choice does not determine the number of game instances.
+A **game instance** is one game server created later in your panel, after Host enrollment and reviewed game-policy approval. For one machine, choose Instance for local-only use or Hybrid for local plus remote management, then separately prepare a non-root game account and install its local Host using that panel's Node ID. Host-only installation joins an existing Controller and creates no panel. Role choice does not determine the number of game servers.
 
 The automatic **Controller installer currently supports Debian and Ubuntu on x86_64**. Its host-preparation step checks the distribution and uses Debian/Ubuntu package tools. Containerized application code does not make that bootstrap script portable to every Linux distribution.
 
@@ -55,9 +57,9 @@ wget --output-document=install.sh https://raw.githubusercontent.com/troainc/Bifr
 
 The wizard asks for the VM IP/hostname and HTTPS port, downloads the application, checks its checksum, generates configuration and credentials, and starts the panel. Default port: **8443**. Create your administrator in the browser.
 
-The testing 10 repository bootstrap and release installer both include the Controller/Instance Host selector. Its first interactive step asks for the machine role: choose **Bifrost Controller** once; choose **Linux Instance Host** on each game machine. You can also pass `--controller` or `--host`. From the Controller, create a fresh one-use code under **Hosts â†’ Add host**. Host setup verifies and installs the matching Host Agent package and asks for the Controller panel HTTPS URL and code. It requires Node.js 24, rootless Podman, and systemd user services under the regular game operator account. The licensing service URL is different from the Controller URL. Enrolling a host does not install a game; use an approved signed executable Blueprint separately. Testing 10 includes the signed five-target Java catalog, subject to independent Host approval; other metadata candidates and drafts do not authorize installation.
+The testing 12 bootstrap and release installer support all four role choices. From **Hosts -> Add host**, create a fresh one-use machine pairing code. Host setup verifies its matching package and asks for the Controller panel HTTPS URL and code. Local Instance/Hybrid setup also supplies that panel's Node ID, as shown in its guide. The licensing URL is different; enrollment connects a machine and does not install a game. Choose a reviewed signed Blueprint afterward.
 
-The matched testing 10 installer/updater recognize Docker's classic and containerd image identities only when they match the checksummed archive and locked configuration. Earlier testing 6 attachments remain unchanged.
+The installer/updater recognizes Docker classic/containerd image identities only when they match the checksummed archive and locked configuration. Earlier release attachments remain unchanged.
 
 If a compatible Alpine installation stopped after writing configuration with `Image identity mismatch`, preserve it and use `bash install.sh --update` with the current verified bootstrap. The updater preserves the database, administrator, credentials, license URL/public key, testing-intake choice and provisioning catalog/trust. Press Enter at configuration prompts to retain settings. Do not use `--reinstall` or delete the installation to recover this failure. Older Debian PostgreSQL runtimes are refused before mutation and require a separately verified backup/restore migration.
 
