@@ -18,7 +18,7 @@ license onboarding, because it expires quickly. The compiled Agent verifies the
 live parent and signed receipt before starting. Interrupted joins reuse saved
 private recovery state; existing enrolled Hosts use the separate handover flow.
 Checking an address does not delegate control, enroll a Host or activate a license.
-Prior release assets remain immutable; publication verification is recorded below.
+Testing 14 publication, all fifteen asset sizes/digests and seven anonymous latest downloads are verified. Prior release assets remain immutable.
 
 ## Installation roles in testing 12
 
@@ -48,7 +48,7 @@ Palworld and Space Engineers download/create engine fixes are included, but thei
 
 ## Current testing download
 
-[Customer testing 13](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.13) is published with matched compiled Controller/web/PostgreSQL and Linux Host Agent, explicit node roles/pairing, the signed five-target Java catalog, checksums, scans and verification receipts. All fifteen uploaded sizes/digests and seven full anonymous latest downloads matched. Fresh locked-role setup and migrations passed over verified local HTTPS; three image scans reported zero HIGH/CRITICAL vulnerabilities and no detected secrets. Build, typecheck, least-privilege pairing/recovery and role-aware browser checks passed. No paid services, signup or billing/spending changes were used.
+[Customer testing 14](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.14) is published with matched compiled panel images and Linux Host Agent, the step-04 Controller connection guide, signed five-target Java catalog, checksums, scans and verification receipts. All fifteen uploaded sizes/digests and seven full anonymous latest downloads matched. Fresh migrations/locked-role setup passed over verified local HTTPS. Three final image scans reported zero HIGH/CRITICAL vulnerabilities and no detected secrets. Full build/typecheck, 33 installer checks, 14 least-privilege pairing HTTP/database checkpoints, compiled recovery and desktop/mobile guide checks passed. No paid service or signup was used; customer VM and real game/player acceptance remain separate.
 
 It includes an independent-versus-parent choice during Instance setup, direct verified joining without local enrollment, role-aware local/remote Host setup, persistent identities and preserved existing Host handover, plus source-map-js 1.2.2. Older release assets remain immutable. Actual customer Host and game startup/player/lifecycle acceptance remain separate.
 
