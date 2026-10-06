@@ -8,8 +8,8 @@ The terminal asks for this Instance's URL, its private setup ticket and a fresh
 Host pairing code generated on the parent. It verifies a signed parent receipt
 before starting the Agent. Interrupted joins reuse their private saved receipt;
 existing enrolled Hosts must use the separate reviewed handover flow. No local
-Host code or licensing key is used to join a parent. Testing 13 publication is
-being verified; prior release assets remain immutable.
+Host code or licensing key is used to join a parent. Testing 13 publication and anonymous downloads are
+verified; prior release assets remain immutable.
 
 ## Installation roles in testing 12
 
@@ -39,9 +39,9 @@ Palworld and Space Engineers download/create engine fixes are included, but thei
 
 ## Current testing download
 
-[Customer testing 12](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.12) is published with matched compiled Controller/web/PostgreSQL and Linux Host Agent, explicit node roles/pairing, the signed five-target Java catalog, checksums, scans and verification receipts. All fifteen uploaded sizes/digests and seven full anonymous latest downloads matched. Fresh locked-role setup and migrations passed over verified local HTTPS; three image scans reported zero HIGH/CRITICAL vulnerabilities and no detected secrets. Build, typecheck, least-privilege pairing/recovery and role-aware browser checks passed. No paid services, signup or billing/spending changes were used.
+[Customer testing 13](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.13) is published with matched compiled Controller/web/PostgreSQL and Linux Host Agent, explicit node roles/pairing, the signed five-target Java catalog, checksums, scans and verification receipts. All fifteen uploaded sizes/digests and seven full anonymous latest downloads matched. Fresh locked-role setup and migrations passed over verified local HTTPS; three image scans reported zero HIGH/CRITICAL vulnerabilities and no detected secrets. Build, typecheck, least-privilege pairing/recovery and role-aware browser checks passed. No paid services, signup or billing/spending changes were used.
 
-It includes role-aware local/remote Host setup, persistent identities and safe Instance-to-Controller handover, plus source-map-js 1.2.2. Older release assets remain immutable. Actual customer Host and game startup/player/lifecycle acceptance remain separate.
+It includes an independent-versus-parent choice during Instance setup, direct verified joining without local enrollment, role-aware local/remote Host setup, persistent identities and preserved existing Host handover, plus source-map-js 1.2.2. Older release assets remain immutable. Actual customer Host and game startup/player/lifecycle acceptance remain separate.
 
 Compatible Alpine PostgreSQL 17 updates preserve accounts, secrets, data and existing local provisioning catalog/trust/policy. Updating the Controller does not silently update a Host Agent or replace its approved game policy. Fresh Hosts can explicitly approve the included signed Java catalog; existing Hosts need their separate update and policy migration review. Real vendor-game acceptance and public Windows distribution remain pending.
 
