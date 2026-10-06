@@ -1,3 +1,7 @@
+## 2026-10-05 - Matched node-role testing 12 candidate
+
+Testing 11 published with fifteen verified assets; seven anonymous latest downloads and public main bootstrap matched. Testing 12 carries the same verified node/pairing implementation and corrects the remaining Hosts guide and fleet card to explain Instance-local and Hybrid-local/remote setup. The private master deployed d062016 successfully and its signed-in Controller identity was verified. Testing 11 remains immutable. New exact-source package/scan/download verification is pending; no customer Host, game, paid service or signing key changed.
+
 ## 2026-10-05 - Testing 11 node-role installer candidate
 
 Adds explicit Controller, standalone Instance node and Hybrid panel roles; Host Agent-only installation remains separate. The chosen role and machine hostname are recorded in new panel configuration. Existing updates preserve configuration and do not convert a fleet. The immutable updater pin is 04645cb2f98a4401f2cfd8f1618427631e430df6 with SHA-256 ec2509175a7f1d56a182fbafdb150e52eac5804cff2a89a72f4f0604352d86d6. Matched compiled panel/Host build, scans, HTTPS verification and publication are in progress. Preserve testing 10 assets and the public main bootstrap until testing 11 assets have been verified. No private source/signing keys or paid service is distributed.
