@@ -157,3 +157,8 @@ The patched Debian 12 PostgreSQL image still reported 16 CRITICAL and 102 HIGH f
 Testing 7 is published and verified; earlier release assets remain unchanged. The compiled Agent upgrade path stages a versioned package, validates current profiles/jobs, preserves credentials and game data, and restores the old unit after failed service validation. Use `bash install.sh --host --upgrade` on an enrolled Linux Host after draining/reconciling active jobs. `--re-enroll` additionally requires revoking the old Host, explicit confirmation and a fresh code from the same Controller. Signed generic Linux OCI provisioning and failure tests passed; real games, Windows provisioning and automatic VM creation are separate acceptance or future work.
 
 Customer Compose mounts `config/provisioning-catalog.json` and `config/provisioning-trust.json` read-only. Defaults are empty: descriptive Steam/Blueprint drafts cannot execute. An operator must install reviewed signed definitions/public publisher keys in the Controller and independently approve them on each Host through packaged `dist/configure-provisioning.js`. Publisher private keys stay offline. Never edit a Host config while the Agent is running; stop it, validate the private policy/catalog, preserve the backup key, then restart. No VM provisioning or universal Linux/game support is implied.
+
+
+## Documentation
+
+Use the [documentation index](docs/README.md) and [operator guide](docs/USER_GUIDE.md) for role selection, installation, enrollment, updates, and day-to-day operations. Check the release notes for the current testing-build boundaries.

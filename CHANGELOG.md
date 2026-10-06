@@ -1,3 +1,8 @@
+## Public operator documentation expansion - 2026-10-06
+
+- Added a detailed Controller and Host Agent operator guide under `docs/` and linked it from the README.
+- Documented role-specific prerequisites, enrollment, safe update/recovery, routine operations, and the boundary between test evidence and real host/game acceptance.
+
 ## 2026-10-06 - Testing 14 published and deployed; Controller connection guide verified
 
 Published [controlled testing 14](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.14) from private runtime source 577cb6692c8ae7cc8fb4a08b43544f14548fb8aa and public packaging source 225286b0f8fe0e7d4125015a856e8931b636b476. All fifteen uploaded sizes/digests and seven full anonymous latest downloads matched; public main bootstrap matches the release. Prior assets remain immutable and both main histories retain other contributors' commits.
