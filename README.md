@@ -1,3 +1,16 @@
+## Instance parent pairing in testing 13
+
+When installing `--instance`, choose **Use independently** for local management
+or **Join an existing Controller** during panel setup. Joining asks for the parent
+HTTPS address and independently verified public identity. Complete the join under
+the separately prepared game-service account with `bash install.sh --host --join-instance`.
+The terminal asks for this Instance's URL, its private setup ticket and a fresh
+Host pairing code generated on the parent. It verifies a signed parent receipt
+before starting the Agent. Interrupted joins reuse their private saved receipt;
+existing enrolled Hosts must use the separate reviewed handover flow. No local
+Host code or licensing key is used to join a parent. Testing 13 publication is
+being verified; prior release assets remain immutable.
+
 ## Installation roles in testing 12
 
 Choose `--controller`, `--instance` or `--hybrid` when installing a panel. `--host` installs only the game Host Agent and joins the explicitly selected Controller. A Bifrost node, its free-license installation and each game server have separate identities. A standalone Instance enrolls its own local Host; Hybrid can enroll local and remote Hosts. The game-service account, Node.js 24 and rootless Podman still require separate preparation.

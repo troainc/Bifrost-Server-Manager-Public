@@ -16,6 +16,9 @@ class NodeRoles(unittest.TestCase):
    result=self.select('--'+role,'--reinstall');self.assertEqual(result.returncode,0,result.stderr);self.assertEqual(result.stdout.strip(),role+':1:0')
  def test_host_only_is_not_a_new_controller(self):
   result=self.select('--host','--upgrade');self.assertEqual(result.returncode,0,result.stderr);self.assertEqual(result.stdout.strip(),'host:--upgrade')
+ def test_fresh_join_is_distinct_and_cannot_replace_existing_host(self):
+  result=self.select('--host','--join-instance');self.assertEqual(result.returncode,0,result.stderr);self.assertEqual(result.stdout.strip(),'host:--join-instance')
+  for flags in [('--host','--join-instance','--upgrade'),('--host','--join-instance','--re-enroll')]:self.assertNotEqual(self.select(*flags).returncode,0)
  def test_unknown_flags_fail_before_installation(self):
   for flags in [('--instance','--host'),('--hybrid','--unknown'),('--host','--reinstall')]:self.assertNotEqual(self.select(*flags).returncode,0)
  def test_generated_panel_configuration_records_chosen_role(self):

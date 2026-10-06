@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.12
+VERSION=v0.1.0-installtest.13
 # Matched testing release updater; immutable source + digest.
-UPDATER_SOURCE_REF=406c597918e56d57be18f3b21035fb6cf1ed175c
-UPDATER_SHA256=bdcde7fa4defd3b4ef11c3d6124da9ab1967e938348d8b0aaaf71c5d597e5ce3
+UPDATER_SOURCE_REF=004e1f746b8b3657a1b9e2117a860d30d15505fd
+UPDATER_SHA256=0fe58ba3484b9381dcd83b350b96b04d0c92a326b8affab4b7d764ae512509f0
 INSTALL_DIR="${BIFROST_INSTALL_DIR:-$HOME/.local/share/bifrost}"
 # Terminal presentation: readable without color, animation, or a wide terminal.
 UI_RESET='' UI_BLUE='' UI_GREEN='' UI_GOLD='' UI_DIM='' UI_BOLD=''
@@ -272,7 +272,11 @@ HOST_ZIP_PY
   digest=$(sha256sum "$stage/bifrost-linux-host-agent.zip" | awk '{print $1}')
   printf '%s\n' "$digest" > "$package/.bifrost-package-sha256"
   chmod 0600 "$package/.bifrost-package-sha256"
-  printf '\nCreate a fresh one-use code in the Controller under Hosts → Add host. The Host Agent will ask for the Controller panel HTTPS URL and that code.\n'
+  if [[ "${HOST_FLAGS[*]}" == *--join-instance* ]]; then
+    printf '\nUse the private join ticket from this Instance setup, plus a fresh Host code generated on its chosen parent Controller. The Agent will ask for this Instance panel URL first.\n'
+  else
+    printf '\nCreate a fresh one-use code in the Controller under Hosts → Add host. The Host Agent will ask for the Controller panel HTTPS URL and that code.\n'
+  fi
   bash "$package/install-agent.sh" "$package" "${HOST_FLAGS[@]}"
   rm -rf -- "$stage"
   ui_ok 'Instance Host enrolled and its user service is enabled.'
@@ -289,14 +293,15 @@ if [[ "${1:-}" == --update ]]; then
   rm -f "$update_stage/update.sh"; rmdir "$update_stage"
   exit 0
 fi
-[[ "${1:-}" != --help ]] || { echo 'Run bash install.sh to choose Controller, standalone Instance node, or Hybrid. Pass --controller, --instance, or --hybrid; --host installs only an Agent for an existing Controller. Existing Hosts can use --host --upgrade; revoked Hosts can use --host --upgrade --re-enroll.'; exit 0; }
+[[ "${1:-}" != --help ]] || { echo 'Run bash install.sh to choose Controller, standalone Instance node, or Hybrid. Pass --controller, --instance, or --hybrid; --host installs only an Agent for an existing Controller. Fresh Instances joining a chosen parent use --host --join-instance. Existing Hosts can use --host --upgrade; revoked Hosts can use --host --upgrade --re-enroll.'; exit 0; }
 HOST_FLAGS=()
 if [[ "${1:-}" == --host ]]; then
   BIFROST_INSTALL_ROLE=host
   shift
   while [[ $# -gt 0 ]]; do
-    case "$1" in --upgrade|--re-enroll) HOST_FLAGS+=("$1"); shift;; *) fail 'Host accepts only --upgrade and --re-enroll.';; esac
+    case "$1" in --upgrade|--re-enroll|--join-instance) HOST_FLAGS+=("$1"); shift;; *) fail 'Host accepts only --upgrade, --re-enroll and --join-instance.';; esac
   done
+  [[ ${#HOST_FLAGS[@]} -le 1 || "${HOST_FLAGS[*]}" != *--join-instance* ]] || fail 'Fresh joining cannot be combined with upgrade or re-enrollment.'
 elif [[ "${1:-}" == --controller || "${1:-}" == --instance || "${1:-}" == --hybrid ]]; then
   BIFROST_INSTALL_ROLE="${1#--}"
   shift
@@ -311,7 +316,7 @@ elif [[ -z "${BIFROST_INSTALL_ROLE:-}" ]]; then
   printf "\n  1) Controller — central fleet panel; separate game Hosts\n  2) Standalone Instance node — local panel and local game Host; can pair later\n  3) Hybrid — fleet Controller plus a local game Host\n  4) Host Agent only — join an existing Controller; no new panel\n\n"
   printf '  A game instance is one server created later in the Controller panel.\n'
   printf '  For one game server, you still need a Controller and an enrolled Host.\n'
-  printf '  Instance and Hybrid panels require a separately prepared local Host Agent account.\n  Complete panel setup and licensing, then enroll that local Agent before creating games.\n\n'
+  printf '  Instance and Hybrid panels require a separately prepared local Host Agent account.\n  Complete panel setup and licensing, then enroll its local Agent or choose a verified parent Controller.\n\n'
   read -r -p 'Select 1, 2, 3 or 4: ' install_choice </dev/tty
   case "$install_choice" in 1) BIFROST_INSTALL_ROLE=controller;; 2) BIFROST_INSTALL_ROLE=instance;; 3) BIFROST_INSTALL_ROLE=hybrid;; 4) BIFROST_INSTALL_ROLE=host;; *) fail 'Choose a displayed node role or Host Agent only.';; esac
 fi
@@ -617,7 +622,7 @@ run_task 'Start and check all panel services' docker compose up -d --wait --wait
 ui_step 'YOUR BIFROST PANEL IS READY' 'Open the panel to confirm its node role and begin onboarding.'
 printf '\n  Node role: %s\n' "$BIFROST_INSTALL_ROLE"
 if [[ "$BIFROST_INSTALL_ROLE" == instance || "$BIFROST_INSTALL_ROLE" == hybrid ]]; then
-  printf '  Next: prepare a separate non-root game-service account with Node.js 24 and rootless Podman.\n  After panel setup and license activation, use Hosts → Add host to pair that local Agent.\n  Run bash install.sh --host as the prepared game account, using this panel URL.\n  Standalone Instance nodes later use an explicit ownership handover to a parent Controller.\n'
+  printf '  Next: prepare a separate non-root game-service account with Node.js 24 and rootless Podman.\n  After panel setup and license activation, use Hosts → Add host to pair that local Agent.\n  Run bash install.sh --host as the prepared game account, using this panel URL.\n  Or choose Join an existing Controller in Instance setup, verify its identity and use --host --join-instance.\n  Existing enrolled Hosts use the separate ownership handover flow.\n'
 fi
 printf '\n  Panel     https://%s:%s/install\n  Account   bifrost (non-root)\n  Files     %s\n\n  Your test HTTPS certificate is self-signed.\n  Your browser will ask you to confirm it.\n\n  Support   discord.gg/troainc\n\n' "$address" "$port" "$INSTALL_DIR"
 ui_rule
