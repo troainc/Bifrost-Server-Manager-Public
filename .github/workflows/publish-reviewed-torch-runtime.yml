@@ -1,0 +1,128 @@
+name: Publish exact reviewed Torch Wine runtime
+on:
+  workflow_dispatch:
+    inputs:
+      archive_asset_id:
+        description: Reviewed dependency-only image asset in this repository
+        required: true
+        type: string
+      archive_sha256:
+        description: Independently verified SHA256 of the compressed image archive
+        required: true
+        type: string
+      scan_asset_id:
+        description: Exact local runtime scan asset
+        required: true
+        type: string
+      scan_sha256:
+        description: Independently verified scan SHA256
+        required: true
+        type: string
+      smoke_asset_id:
+        description: Actual reviewed non-root read-only Torch startup evidence
+        required: true
+        type: string
+      smoke_sha256:
+        description: Independently verified startup evidence SHA256
+        required: true
+        type: string
+      image_config_sha256:
+        description: Exact reviewed OCI configuration SHA256
+        required: true
+        type: string
+      reviewed_source_sha:
+        description: Exact private runtime build source commit
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  publish:
+    # Public repository's standard runner; no paid security service or runner signup.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ARCHIVE_ID: ${{ inputs.archive_asset_id }}
+      ARCHIVE_SHA: ${{ inputs.archive_sha256 }}
+      SCAN_ID: ${{ inputs.scan_asset_id }}
+      SCAN_SHA: ${{ inputs.scan_sha256 }}
+      SMOKE_ID: ${{ inputs.smoke_asset_id }}
+      SMOKE_SHA: ${{ inputs.smoke_sha256 }}
+      CONFIG_SHA: ${{ inputs.image_config_sha256 }}
+      SOURCE_SHA: ${{ inputs.reviewed_source_sha }}
+    steps:
+      - name: Fetch only exact assets from this repository
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_REPOSITORY" == troainc/Bifrost-Server-Manager-Public ]]
+          for id in "$ARCHIVE_ID" "$SCAN_ID" "$SMOKE_ID"; do [[ "$id" =~ ^[1-9][0-9]*$ ]]; done
+          for digest in "$ARCHIVE_SHA" "$SCAN_SHA" "$SMOKE_SHA" "$CONFIG_SHA"; do [[ "$digest" =~ ^[a-f0-9]{64}$ ]]; done
+          [[ "$SOURCE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/releases/assets/$ARCHIVE_ID" > archive-asset.json
+          gh api "repos/$GITHUB_REPOSITORY/releases/assets/$SCAN_ID" > scan-asset.json
+          gh api "repos/$GITHUB_REPOSITORY/releases/assets/$SMOKE_ID" > smoke-asset.json
+          python3 - <<'PY'
+          import os,json
+          for file,digest,name in [('archive',os.environ['ARCHIVE_SHA'],'torch-wine-reviewed.tar.gz'),('scan',os.environ['SCAN_SHA'],'torch-wine-scan.json'),('smoke',os.environ['SMOKE_SHA'],'torch-wine-startup.txt')]:
+              a=json.load(open(file+'-asset.json'));assert a['name']==name and a['state']=='uploaded' and 0<a['size']<2*1024**3 and a['digest']=='sha256:'+digest
+          PY
+          gh api --header 'Accept: application/octet-stream' "repos/$GITHUB_REPOSITORY/releases/assets/$ARCHIVE_ID" > runtime.tar.gz
+          gh api --header 'Accept: application/octet-stream' "repos/$GITHUB_REPOSITORY/releases/assets/$SCAN_ID" > scan.json
+          gh api --header 'Accept: application/octet-stream' "repos/$GITHUB_REPOSITORY/releases/assets/$SMOKE_ID" > smoke.txt
+          printf '%s  runtime.tar.gz\n%s  scan.json\n%s  smoke.txt\n' "$ARCHIVE_SHA" "$SCAN_SHA" "$SMOKE_SHA" | sha256sum --check
+      - name: Verify reviewed configuration, scan and startup evidence
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import tarfile,json,os,hashlib
+          with tarfile.open('runtime.tar.gz','r|gz') as archive:
+              matched=False
+              for member in archive:
+                  if member.name=='blobs/sha256/'+os.environ['CONFIG_SHA'] or member.name==os.environ['CONFIG_SHA']+'.json':
+                      assert member.isfile() and member.size<1024*1024
+                      b=archive.extractfile(member).read();assert hashlib.sha256(b).hexdigest()==os.environ['CONFIG_SHA']
+                      c=json.loads(b);assert c['architecture']=='amd64' and c['os']=='linux' and c['config']['User']=='1000:1000' and c['config']['Entrypoint']==['/usr/local/bin/bifrost-torch'];matched=True
+              assert matched
+          findings=[f for r in json.load(open('scan.json')).get('Results',[]) for field in ['Vulnerabilities','Secrets','Misconfigurations'] for f in (r.get(field) or []) if f.get('Severity') in ['HIGH','CRITICAL']]
+          assert not findings
+          assert 'Keen: Game ready...' in open('smoke.txt').read()
+          PY
+          docker load --input runtime.tar.gz
+          source=bifrost/torch-wine:candidate-20261007
+          docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges --user 1000:1000 --entrypoint /bin/sh "$source" -c 'test "$(id -u)" = 1000 && test ! -e /app && test ! -e /workspace && test ! -e /run/secrets && test -x /usr/bin/tini && test -x /usr/local/bin/bifrost-torch && wine --version'
+      - name: Publish the same reviewed image without rebuilding
+        run: |
+          set -euo pipefail
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          target="ghcr.io/troainc/bifrost-game-torch-wine:source-$SOURCE_SHA"
+          if docker manifest inspect "$target" > existing-manifest.json 2> manifest-error.txt; then echo 'Tag already exists; inspect it rather than replacing it.'; exit 1; fi
+          grep -qi 'manifest unknown\|no such manifest' manifest-error.txt
+          docker tag bifrost/torch-wine:candidate-20261007 "$target"
+          docker push --platform linux/amd64 "$target" | tee push-receipt.txt
+          digest="$(sed -n 's/.*digest: \(sha256:[a-f0-9]\{64\}\).*/\1/p' push-receipt.txt | tail -1)"
+          [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]]
+          docker buildx imagetools inspect --raw "ghcr.io/troainc/bifrost-game-torch-wine@$digest" > published-manifest.json
+          RUNTIME_DIGEST="$digest" python3 - <<'PY'
+          import json,os,hashlib,pathlib
+          b=pathlib.Path('published-manifest.json').read_bytes();m=json.loads(b)
+          assert any('sha256:'+hashlib.sha256(v).hexdigest()==os.environ['RUNTIME_DIGEST'] for v in [b,b.rstrip(b'\n')])
+          # A saved image publishes one platform manifest, independent of the local Docker image store.
+          assert m['config']['digest']=='sha256:'+os.environ['CONFIG_SHA']
+          pathlib.Path('published-runtime.json').write_text(json.dumps({'schemaVersion':1,'scope':'torch-wine-controlled-testing','sourceSha':os.environ['SOURCE_SHA'],'image':'ghcr.io/troainc/bifrost-game-torch-wine@'+os.environ['RUNTIME_DIGEST'],'imageId':'sha256:'+os.environ['CONFIG_SHA'],'architecture':'x64','archiveDigest':'sha256:'+os.environ['ARCHIVE_SHA'],'scanDigest':'sha256:'+os.environ['SCAN_SHA'],'smokeDigest':'sha256:'+os.environ['SMOKE_SHA'],'highCriticalFindings':0,'anonymousPullVerified':False},indent=2)+'\n')
+          PY
+          docker logout ghcr.io
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        with:
+          name: published-torch-runtime-${{ github.run_id }}
+          path: |
+            published-runtime.json
+            published-manifest.json
+            archive-asset.json
+            scan-asset.json
+            smoke-asset.json
+          if-no-files-found: error
+          retention-days: 30

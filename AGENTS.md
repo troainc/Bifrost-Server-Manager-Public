@@ -1,3 +1,6 @@
+## 2026-10-07 - Free reviewed Torch runtime publishing preparation
+
+The owner authorized preparing Space Engineers Torch on Linux Wine alongside the existing Java targets. The manual public workflow publishes only an independently hashed dependency-only Docker archive and verified scan/startup evidence. It validates exact configuration, UID 1000, zero HIGH/CRITICAL findings, observed game readiness and an immutable source tag before publishing the same amd64 image. It does not rebuild, sign recipes, accept game terms, enable paid services or replace current installer assets. Anonymous digest access and catalog signing remain required afterward. Current bootstrap stays on testing 14 until the matched next release passes verification. Preserve the operator guide contributed at f9b7312.
 ## 2026-10-06 - Testing 14 published and deployed; Controller connection guide verified
 
 Published [controlled testing 14](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.14) from private runtime source 577cb6692c8ae7cc8fb4a08b43544f14548fb8aa and public packaging source 225286b0f8fe0e7d4125015a856e8931b636b476. All fifteen uploaded sizes/digests and seven full anonymous latest downloads matched; public main bootstrap matches the release. Prior assets remain immutable and both main histories retain other contributors' commits.
