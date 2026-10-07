@@ -1,3 +1,8 @@
+## Testing 15 candidate: simpler Controller connection
+
+The candidate Instance setup displays this machine's Node ID and collects the chosen Controller's HTTPS hostname or IP/port. Check that destination with its administrator, activate the installation's separate free license, then enter the Controller's five-digit Hosts → Add host code. It is encrypted and expires after five minutes. Complete the one-time Host setup under the prepared non-root game account using the displayed command and private setup ticket. The Agent verifies the parent and saves its signed receipt before the machine appears connected. An expired code is requested again in the terminal. Existing Host transfers use the separate advanced handover flow.
+
+Hosts keeps machine status and connection controls visible and collapses setup guidance, network discovery and advanced identity/role settings. Torch Wine distribution is being verified alongside the existing five signed Minecraft Java targets. This candidate is not published yet; use the previous published release until its verification record is complete.
 ## Instance onboarding in testing 14
 
 Choose **Run independently** to manage local games or **Connect to a Controller**
