@@ -77,7 +77,7 @@ Only accept catalog inputs from the private publisher's cryptographic packager a
 
 # Repository instructions
 
-Current matched download is published testing 12, verified from private runtime b0e1a2d and public packaging source 61795cd. Current CONTEXT/LOGS entries supersede historical pending notes below. Keep prior release assets immutable. Publishable assets remain compiled-only; a passed generic Linux test does not approve a vendor game or update a remote customer VM.
+Current matched download is published testing 15, verified from private runtime f6f9c35 and public packaging source 58e1c5e. It includes six signed Linux targets: reviewed Torch Wine plus five unchanged Java recipes. Real customer player/lifecycle acceptance remains separate. Current CONTEXT/LOGS entries supersede historical pending notes below. Keep prior release assets immutable. Publishable assets remain compiled-only; a passed generic Linux test does not approve a vendor game or update a remote customer VM.
 
 Keep Linux support claims role-specific: automatic Controller preparation currently checks Debian/Ubuntu x86_64; the separate Host Agent checks Linux plus Node.js 24 at /usr/bin/node, user systemd and rootless Podman. Other compatible distributions are candidates for recorded acceptance testing, not universally supported or verified. Do not remove prerequisite guards merely to advertise broader support.
 

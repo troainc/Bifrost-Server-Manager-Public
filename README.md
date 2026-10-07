@@ -1,9 +1,9 @@
-## Testing 15 candidate: simpler Controller connection
+## Testing 15: simpler Controller connection
 
-The candidate Instance setup displays this machine's Node ID and collects the chosen Controller's HTTPS hostname or IP/port. Check that destination with its administrator, activate the installation's separate free license, then enter the Controller's five-digit Hosts → Add host code. It is encrypted and expires after five minutes. Complete the one-time Host setup under the prepared non-root game account using the displayed command and private setup ticket. The Agent verifies the parent and saves its signed receipt before the machine appears connected. An expired code is requested again in the terminal. Existing Host transfers use the separate advanced handover flow.
+Instance setup displays this machine's Node ID and collects the chosen Controller's HTTPS hostname or IP/port. Check that destination with its administrator, activate the installation's separate free license, then enter the Controller's five-digit Hosts → Add host code. It is encrypted and expires after five minutes. Complete the one-time Host setup under the prepared non-root game account using the displayed command and private setup ticket. The Agent verifies the parent and saves its signed receipt before the machine appears connected. An expired code is requested again in the terminal. Existing Host transfers use the separate advanced handover flow.
 
-Hosts keeps machine status and connection controls visible and collapses setup guidance, network discovery and advanced identity/role settings. Torch Wine distribution is being verified alongside the existing five signed Minecraft Java targets. This candidate is not published yet; use the previous published release until its verification record is complete.
-## Instance onboarding in testing 14
+Hosts keeps machine status and connection controls visible and collapses setup guidance, network discovery and advanced identity/role settings. Testing 15 is published with reviewed Torch Wine and the existing five signed Minecraft Java targets. The six-target catalog and matching Controller/Host package are verified; customer player and lifecycle acceptance remain separate.
+## Previous Instance onboarding in testing 14
 
 Choose **Run independently** to manage local games or **Connect to a Controller**
 to use a parent fleet panel. The installed Instance role is displayed separately.
@@ -53,11 +53,11 @@ Palworld and Space Engineers download/create engine fixes are included, but thei
 
 ## Current testing download
 
-[Customer testing 14](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.14) is published with matched compiled panel images and Linux Host Agent, the step-04 Controller connection guide, signed five-target Java catalog, checksums, scans and verification receipts. All fifteen uploaded sizes/digests and seven full anonymous latest downloads matched. Fresh migrations/locked-role setup passed over verified local HTTPS. Three final image scans reported zero HIGH/CRITICAL vulnerabilities and no detected secrets. Full build/typecheck, 33 installer checks, 14 least-privilege pairing HTTP/database checkpoints, compiled recovery and desktop/mobile guide checks passed. No paid service or signup was used; customer VM and real game/player acceptance remain separate.
+[Customer testing 15](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.15) is published with matched compiled panel images and Linux Host Agent, simplified Controller connection and Hosts pages, six signed Linux recipes, checksums, scans and verification receipts. All 22 uploaded asset sizes/digests and nine anonymous downloads match. Fresh migrations and locked-role setup passed over verified local HTTPS; 33 installer checks, 15 authorization/pairing HTTP checkpoints and compiled non-root join/handover recovery passed. Three final customer image scans and the Torch dependency-runtime scan reported zero HIGH/CRITICAL findings and detected secrets. No paid services or signup were used.
 
-It includes an independent-versus-parent choice during Instance setup, direct verified joining without local enrollment, role-aware local/remote Host setup, persistent identities and preserved existing Host handover, plus source-map-js 1.2.2. Older release assets remain immutable. Actual customer Host and game startup/player/lifecycle acceptance remain separate.
+Space Engineers **Torch on Linux Wine**, rather than vanilla, reached `Game ready` in a fresh non-root, read-only sandbox. The immutable public runtime was pulled without registry credentials. Five Minecraft Java 1.21.1 recipes (vanilla, Paper, Fabric, Forge and NeoForge) retain their exact previous signatures. Real customer player connectivity, save/stop/restart, backup/restore and failure recovery remain to be tested. Palworld, Bedrock, vanilla SE and signed Windows distribution have separate pending requirements.
 
-Compatible Alpine PostgreSQL 17 updates preserve accounts, secrets, data and existing local provisioning catalog/trust/policy. Updating the Controller does not silently update a Host Agent or replace its approved game policy. Fresh Hosts can explicitly approve the included signed Java catalog; existing Hosts need their separate update and policy migration review. Real vendor-game acceptance and public Windows distribution remain pending.
+Compatible Alpine PostgreSQL 17 updates preserve accounts, secrets, data and existing local provisioning catalog/trust/policy. Updating the panel does not silently update a Host Agent or replace its approved game policy. Fresh Hosts can explicitly approve the included six-target catalog; existing Hosts need their separate update and policy migration review. See [Torch controlled-test guide](docs/Torch-Wine-Controlled-Testing.md).
 
 ## Linux install
 
@@ -84,7 +84,7 @@ wget --output-document=install.sh https://raw.githubusercontent.com/troainc/Bifr
 
 The wizard asks for the VM IP/hostname and HTTPS port, downloads the application, checks its checksum, generates configuration and credentials, and starts the panel. Default port: **8443**. Create your administrator in the browser.
 
-The testing 12 bootstrap and release installer support all four role choices. From **Hosts -> Add host**, create a fresh one-use machine pairing code. Host setup verifies its matching package and asks for the Controller panel HTTPS URL and code. Local Instance/Hybrid setup also supplies that panel's Node ID, as shown in its guide. The licensing URL is different; enrollment connects a machine and does not install a game. Choose a reviewed signed Blueprint afterward.
+The testing 15 bootstrap and release installer support all four role choices. From **Hosts -> Add host**, create a fresh one-use machine pairing code. Host setup verifies its matching package and asks for the Controller panel HTTPS URL and code. Local Instance/Hybrid setup also supplies that panel's Node ID, as shown in its guide. The licensing URL is different; enrollment connects a machine and does not install a game. Choose a reviewed signed Blueprint afterward.
 
 The installer/updater recognizes Docker classic/containerd image identities only when they match the checksummed archive and locked configuration. Earlier release attachments remain unchanged.
 

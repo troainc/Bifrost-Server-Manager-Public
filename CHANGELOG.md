@@ -1,3 +1,11 @@
+## 2026-10-07 - Testing 15 published; simpler pairing and Torch Wine
+
+Published testing 15 from private application source f6f9c35fefdcd42188c3d4f9c48ab1b3c9613df5 and public packaging source 58e1c5ef2b8de638b2243ded6344877292aee672. All 22 release asset sizes/digests and nine cookie-free latest downloads match; public main installer is byte-identical. Fresh verified loopback HTTPS/database/first-admin setup, 33 installer checks, six signed catalog checks, 15 HTTP authorization/pairing checkpoints, compiled non-root fresh join and handover/recovery passed. Final customer image scans are archive-bound and report zero HIGH/CRITICAL findings or detected secrets; sharp is patched to 0.35.5.
+
+Instance setup shows its actual Node ID and Copy, accepts HTTPS hostname or IP/port and a parent five-digit code, and collapses advanced identity/recovery. The code is encrypted, Controller-bound and expires; no browser persistent storage holds it. A signed Host receipt remains required before Connected. Licensing, node joining, Host enrollment and game creation are separate.
+
+The six-target catalog adds reviewed Torch Wine and preserves all five Java signatures. Public immutable runtime ghcr.io/troainc/bifrost-game-torch-wine@sha256:20149486ed2836668432e4f311fdc22ca92172c428c05f3a2e3e4320a9f891bd was published by free public workflow 37578562603 and pulled anonymously. Official Steam build 24675709 and Torch v1.3.1.347-master reached Game ready under fresh non-root, read-only Wine policy with actual 64 MiB tmp/PID limits. Real customer player, lifecycle, backup/recovery acceptance remains pending. Palworld, Bedrock, vanilla SE and signed Windows distribution remain separate. No private key/source, paid service, billing change or remote VM update is implied. Prior release assets remain immutable.
+
 ## Public operator documentation expansion - 2026-10-06
 
 - Added a detailed Controller and Host Agent operator guide under `docs/` and linked it from the README.
