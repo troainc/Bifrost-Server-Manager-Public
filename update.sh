@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.16
+VERSION=v0.1.0-installtest.17
 # Terminal presentation: readable without color, animation, or a wide terminal.
 UI_RESET='' UI_BLUE='' UI_GREEN='' UI_GOLD='' UI_DIM='' UI_BOLD=''
 if [[ -t 1 && -z "${NO_COLOR:-}" && "${TERM:-dumb}" != dumb ]]; then
@@ -233,6 +233,8 @@ cd "$root"
 backup="update-backups/$(date -u +%Y%m%dT%H%M%SZ)";mkdir -p "$backup"
 cp -a .env compose.yaml config "$backup/"
 # Database volumes, passwords, signing keys and TLS certificate are preserved.
+if [[ ! -e secrets/local-host-bootstrap.json ]]; then printf '{"enabled":false}\n' > secrets/local-host-bootstrap.json; chmod 0644 secrets/local-host-bootstrap.json; fi
+[[ ! -L secrets/local-host-bootstrap.json ]] || fail 'Unsafe local Host bootstrap secret.'
 cp "$scratch/package/compose.yaml" compose.yaml
 for file in "$scratch/package/config"/*; do
   name=$(basename "$file")
