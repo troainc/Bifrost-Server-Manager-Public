@@ -13,6 +13,8 @@ jobs:
         run: bash -n install.sh && bash -n update.sh && bash -n scripts/build-release-bundle.sh
       - name: Check license URL and key rejection using temporary files
         run: python3 -m unittest discover -s tests -v
+      - name: Check read-only Host diagnostic redaction
+        run: node --test tests/diagnose-local-host.test.mjs
       - name: Verify the pinned public updater download without executing it
         run: |
           python3 - <<'PY'
