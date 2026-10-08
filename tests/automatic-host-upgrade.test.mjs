@@ -27,6 +27,9 @@ test('exact compiled package updates only the known unit, preserves enrollment a
 test('wrong archive and custom unit refuse before stopping the existing service',async()=>{
  const f=await fixture();try{await assert.rejects(upgradeAutomaticHost({...f.options,packageBytes:async()=>Buffer.from('WRONG')}),/checksum/);assert.equal(f.actions.length,0);await writeFile(f.unit,managedUnit(f.home,OLD)+'# custom\n');await assert.rejects(upgradeAutomaticHost(f.options),/exact testing 18/);assert.equal(f.actions.length,0);}finally{await f.cleanup();}
 });
+test('diagnostic mode verifies download and current preflight without staging or service changes',async()=>{
+ const f=await fixture();try{await writeFile(join(f.old,'dist-placeholder'),'retained',{mode:0o600});const stages=[];const before=await readFile(f.unit);const result=await upgradeAutomaticHost({...f.options,diagnoseOnly:true,onStage:s=>stages.push(s),preflight:async()=>{}});assert.equal(result.readOnly,true);assert.equal(result.packageDestinationPresent,false);assert.deepEqual(f.actions,['is-active']);assert.deepEqual(await readFile(f.unit),before);await assert.rejects(lstat(join(f.home,'.local/opt',`bifrost-host-agent-${NEW}`)),{code:'ENOENT'});assert.ok(stages.includes('matched-package-download'));assert.ok(stages.includes('existing-compiled-preflight'));}finally{await f.cleanup();}
+});
 test('real compiled preflight refuses a running ledger before service stop',async()=>{
  const f=await fixture();try{await writeFile(f.ledger,JSON.stringify({[randomUUID()]:'running'}));await assert.rejects(upgradeAutomaticHost(f.options));assert.equal(f.actions.length,0);assert.equal(await readFile(f.unit,'utf8'),managedUnit(f.home,OLD));}finally{await f.cleanup();}
 });
