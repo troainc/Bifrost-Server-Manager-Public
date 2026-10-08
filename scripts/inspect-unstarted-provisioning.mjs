@@ -9,7 +9,16 @@ import assert from 'node:assert/strict';
 const exec=promisify(execFile),home='/home/bifrost-games';
 const hashes=['9408da9bac948edc3063fbd5e97019e07c99d30084d961d390d68f8191969504','be6b513956e2c89b0160e4152c87c2b926512e6e36f9e25ad220929763861178'];
 const NODE='/opt/bifrost-node-v24.19.0/bin/node';
-export function neverStarted(state){return state?.Status==='initialized'&&state.Running===false&&state.Paused===false&&state.Restarting===false&&state.Pid===0&&/^0001-01-01T00:00:00(?:\.0+)?Z$/.test(state.StartedAt)&&/^0001-01-01T00:00:00(?:\.0+)?Z$/.test(state.FinishedAt);}
+export function neverStartedFailures(state){
+ // Podman init creates the OCI init process and records its PID before start.
+ // A positive init PID is not proof that the installer workload has executed.
+ // Keep explicit initialized/non-running flags and zero lifecycle timestamps;
+ // the full OCI identity, process and sandbox checks still follow separately.
+ const zeroTime=value=>typeof value==='string'&&/^0001-01-01T00:00:00(?:\.0+)?Z$/.test(value);
+ const checks={Status:state?.Status==='initialized',Running:state?.Running===false,Paused:state?.Paused===false,Restarting:state?.Restarting===false,Pid:Number.isSafeInteger(state?.Pid)&&state.Pid>=0&&state.Pid<=2147483647,StartedAt:zeroTime(state?.StartedAt),FinishedAt:zeroTime(state?.FinishedAt)};
+ return Object.keys(checks).filter(key=>!checks[key]);
+}
+export function neverStarted(state){return neverStartedFailures(state).length===0;}
 export function retainedRequest(manifest){
  // canonicalProvision returns an object, as stored by the shipped Agent.
  const request=manifest?.request;
@@ -45,7 +54,7 @@ export async function inspectUnstarted(instanceId,digest,onStage=()=>{}){
  const temporary={...p,containerName:`bifrost-install-${instanceId}`,sandbox:{...expected,publishedPorts:[],mounts:[{source:join(root,'server'),destination:'/bifrost/server',readOnly:false},{source:join(root,'downloads'),destination:'/bifrost/downloads',readOnly:false}],tmpfs:[{destination:'/tmp',maxSizeBytes:1073741824},{destination:'/run',maxSizeBytes:16777216}]}};
  const podman=async args=>(await exec('/usr/bin/podman',args,{timeout:15000,maxBuffer:1024*1024})).stdout;
  onStage('installer-inspection');const raw=await podman(['container','inspect',temporary.containerName]);const values=JSON.parse(raw);assert.equal(values.length,1);const c=values[0];
- onStage('installer-never-started');assert.ok(neverStarted(c.State));
+ onStage('installer-never-started');const failedStateChecks=neverStartedFailures(c.State);if(failedStateChecks.length)throw Object.assign(new Error('Installer pre-start state was not established.'),{failedStateChecks});
  onStage('installer-oci-identity');assert.match(c.Id,/^[a-f0-9]{64}$/);assert.ok(c.OCIConfigPath.endsWith(`/overlay-containers/${c.Id}/userdata/config.json`));
  onStage('pinned-node-oci-reader');
  const confinement=await podman(['unshare',process.execPath,join(pkg,'dist/oci-confinement-reader.js'),c.OCIConfigPath,c.Id,String(process.getuid())]);
@@ -56,10 +65,14 @@ export async function inspectUnstarted(instanceId,digest,onStage=()=>{}){
  onStage('retained-directory-counts');const counts={};for(const name of ['server','downloads']){await assertNoSymlinkDirectory(join(root,name));counts[name]=(await readdir(join(root,name))).length;}
  onStage('retained-lock-binding');
  const lock=JSON.parse(await readPrivateFile(join(config.provisioning.root,'.provision-lock.json'),'Provisioning lock'));assert.equal(lock.instanceId,instanceId);assert.equal(lock.blueprintDigest,digest);
- return {readOnly:true,reviewPassed:true,instanceId,approvedTorchManifest:true,initializedInstallerNeverStarted:true,fullContainerSandboxVerified:true,zeroOciCapabilitiesVerified:true,activePinnedNodeReaderWorks:true,gameContainerAbsent:true,profileCount:0,retainedLockMatches:true,retainedDirectoryEntryCounts:counts};
+ return {readOnly:true,reviewPassed:true,instanceId,approvedTorchManifest:true,initializedInstallerNeverStarted:true,installerInitPidPresent:c.State.Pid>0,fullContainerSandboxVerified:true,zeroOciCapabilitiesVerified:true,activePinnedNodeReaderWorks:true,gameContainerAbsent:true,profileCount:0,retainedLockMatches:true,retainedDirectoryEntryCounts:counts};
 }
 const stages=new Set(['arguments','operator-runtime','protected-service-unit','matched-package','protected-host-config','retained-manifest','approved-torch-recipe','retained-profile','retained-sandbox','installer-inspection','installer-never-started','installer-oci-identity','pinned-node-oci-reader','oci-process-confinement','installer-container-sandbox','game-container-absence','retained-directory-counts','retained-lock-binding']);
-export function reviewFailure(stage,error){return {readOnly:true,reviewPassed:false,stage:stages.has(stage)?stage:'unknown-check',code:['ENOENT','EACCES','EPERM'].includes(error?.code)?error.code:'REVIEW_REFUSED'};}
+export function reviewFailure(stage,error){
+ const allowedStateFields=new Set(['Status','Running','Paused','Restarting','Pid','StartedAt','FinishedAt']);
+ const failedStateChecks=stage==='installer-never-started'&&Array.isArray(error?.failedStateChecks)&&error.failedStateChecks.length>0&&error.failedStateChecks.length<=7&&error.failedStateChecks.every(key=>allowedStateFields.has(key))?error.failedStateChecks:undefined;
+ return {readOnly:true,reviewPassed:false,stage:stages.has(stage)?stage:'unknown-check',code:['ENOENT','EACCES','EPERM'].includes(error?.code)?error.code:'REVIEW_REFUSED',...(failedStateChecks?{failedStateChecks}:{})};
+}
 if(process.argv[1]==='-'||process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){
  let stage='arguments';
  try{assert.equal(process.argv.length,4);console.log(JSON.stringify(await inspectUnstarted(process.argv[2],process.argv[3],value=>{stage=value;}),null,2));}
