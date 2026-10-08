@@ -1,3 +1,7 @@
+## 2026-10-08 - Non-login administrator recovery PATH correction
+
+The tester authenticated as root through non-login su, but inherited a PATH without /usr/sbin; Host recovery stopped at visudo before downloading the Agent. Local read-only reproduction confirms visudo is hidden by /usr/bin:/bin and resolves at /usr/sbin/visudo with the administrator PATH. Automatic Host preparation now normalizes trusted administrator command directories for both fresh and resumed setup, and checks for visudo before writing game-account sudo policy. The existing release-version correction is retained. All 39 normal installer regressions pass; three disposable-root-only tests remain skipped in this run. Existing root/non-root boundaries, installed panel data, Host credentials, games, catalog and immutable release assets remain unchanged. The bifrost panel and bifrost-games Agent are non-root service accounts; only one-time OS preparation runs as the VM administrator. Resume interrupted pre-join preparation instead of reinstalling the healthy panel. Actual tester Host/game acceptance is pending.
+
 ## 2026-10-08 - Testing 17 administrator bootstrap correction
 
 - Read the Debian/Ubuntu OS identifier in a subshell; keep the matched Bifrost release version for the automatic Host package and checksum URLs after panel installation.

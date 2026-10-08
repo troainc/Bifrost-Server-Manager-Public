@@ -179,6 +179,9 @@ assert_service_account() {
 
 prepare_automatic_instance_host() {
   [[ $(id -u) -eq 0 ]] || fail 'Local Host preparation requires the initial VM administrator.'
+  # A non-login su session can retain the ordinary user's PATH. Both fresh
+  # preparation and recovery need administrator tools such as visudo/useradd.
+  export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
   local game=bifrost-games game_home game_uid panel_home panel_uid stage package_root digest node_root
   panel_home=$(getent passwd bifrost | cut -d: -f6); panel_uid=$(id -u bifrost)
   if ! id "$game" >/dev/null 2>&1; then useradd --create-home --user-group --shell /usr/sbin/nologin --comment 'Bifrost isolated game Host' "$game"; fi
@@ -186,6 +189,7 @@ prepare_automatic_instance_host() {
   [[ "$game_uid" -ne 0 && "$game_uid" -ne "$panel_uid" && "$game_home" == /home/bifrost-games && -d "$game_home" && ! -L "$game_home" && $(stat -c %u "$game_home") -eq "$game_uid" ]] || fail 'Unsafe game-service account; preserving existing state.'
   for group in $(id -nG "$game" | tr ' ' '\n'); do case "$group" in sudo|wheel|docker|lxd|incus-admin) fail 'The game-service account has privileged group membership.';; esac; done
   if command -v sudo >/dev/null; then
+    command -v visudo >/dev/null || fail 'sudo is present but visudo is missing; cannot validate the game-service account policy.'
     [[ ! -L /etc/sudoers.d/zz-bifrost-games-deny ]] || fail 'Unsafe game sudo policy.'
     printf 'bifrost-games ALL=(ALL:ALL) !ALL\n' > /etc/sudoers.d/zz-bifrost-games-deny
     chmod 0440 /etc/sudoers.d/zz-bifrost-games-deny
