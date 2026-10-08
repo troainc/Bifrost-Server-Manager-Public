@@ -377,8 +377,11 @@ automated_bootstrap() {
   [[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || fail 'Linux x86_64 is required.'
   [[ -r /etc/os-release ]] || fail 'Cannot identify the VM operating system.'
   export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-  . /etc/os-release
-  case "${ID:-}" in debian|ubuntu) ;; *) fail 'Automatic VM preparation currently supports Debian and Ubuntu.';; esac
+  # os-release defines VERSION too. Read only ID in a subshell so the
+  # subsequent local Host downloads retain this installer's matched release.
+  local os_id
+  os_id=$(. /etc/os-release; printf '%s' "${ID:-}")
+  case "$os_id" in debian|ubuntu) ;; *) fail 'Automatic VM preparation currently supports Debian and Ubuntu.';; esac
   printf '\nPreparing VM prerequisites (the Bifrost application will run only as bifrost).\n'
   ui_banner
   ui_step 'VM PREPARATION' 'One-time administrator setup; the application runs as bifrost.'

@@ -1,3 +1,9 @@
+## 2026-10-08 - Testing 17 administrator bootstrap correction
+
+- Read the Debian/Ubuntu OS identifier in a subshell; keep the matched Bifrost release version for the automatic Host package and checksum URLs after panel installation.
+- Added executable regression coverage with Debian/Ubuntu version descriptions containing spaces, retained caller variables and unsupported/missing OS identifiers.
+- Keep original testing 17 release assets, package digests, catalog/runtime approvals and immutable updater unchanged. Corrected installer source can resume interrupted pre-join Host preparation as root with `--resume-local-host`; no panel wipe or game reset is required.
+
 ## Testing 16 candidate
 
 - Master-side reviewed connection requests with explicit administrator Accept/Deny and reasons.

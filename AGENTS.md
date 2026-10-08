@@ -1,3 +1,7 @@
+## 2026-10-08 - Testing 17 administrator bootstrap correction
+
+The tester's panel installed but automatic Host preparation stopped at a malformed GitHub URL. Sourcing /etc/os-release into the administrator shell replaced the release VERSION with the OS description. Parse only ID in an isolated subshell; do not change existing compiled testing 17 assets, updater pins, catalog or credentials. Keep original releases immutable. Debian/Ubuntu collision regressions and all normal installer checks pass (37 passed, three disposable-root-only checks skipped here). Use the corrected installer source with root-only --resume-local-host to finish this interrupted pre-join preparation; existing Host credentials/receipts/ledger remain refusal conditions. Real tester systemd/Host/game acceptance is still pending. No paid services or remote customer mutation.
+
 ## 2026-10-07 - Testing 17 publication verified
 
 Published [testing 17](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.17) with 24 exact size/digest-verified assets and eleven matching cookie-free latest downloads. Public main/install.sh matches the shipped installer. Public compiled packaging source is 043bb2fcbe91da5fb3d11ceb20f7e86f83dbe951; private compiled source is 03b9da381e38e1b23b468f41fb5d9e86bfe2abca. Immutable updater edf58beb861d958eaa0fe51c39ab85295c4d4ca2 hashes to a066159d4d531e53925b517c4fd0db2b20cf88e95df896bad1b5a51c78bcabbf.

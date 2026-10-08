@@ -1,3 +1,9 @@
+## Testing 17 administrator bootstrap correction - 2026-10-08
+
+The corrected main-branch installer isolates `/etc/os-release` parsing so Debian/Ubuntu's `VERSION` cannot replace the Bifrost release tag used by automatic Host downloads. It still downloads the exact existing testing 17 packages; published release assets and the verified updater remain unchanged. Use the corrected main/immutable-source installer for fresh installation, rather than the original testing 17 release's `install.sh` asset.
+
+If testing 17 reported the panel ready, installed local game Host prerequisites, then stopped with `curl: (3) URL rejected: Malformed input to a URL function`, preserve the installed panel. As the VM administrator, run the corrected installer with `--resume-local-host` only. This completes interrupted pre-join Host preparation without reinstalling the panel, changing its administrator/license or deleting games. The command refuses existing Host credentials, join receipts and job state; those require recovery instead of fresh preparation. Finish browser Controller joining and master acceptance, then wait for the Agent heartbeat. Real tester VM and game acceptance remain separate.
+
 ## Fresh testing 17 Instance flow
 
 On Debian/Ubuntu amd64, fresh `bash install.sh --instance` also prepares the isolated `bifrost-games` account, rootless Podman, pinned Node 24 and automatic Host service. Choose the intended Controller HTTPS hostname or IPv4/port and enter its code in browser setup. Its administrator accepts the request under Hosts. Bifrost completes the signed join and starts the Agent automatically; wait for its heartbeat, then create the game in the parent panel. Game terms are still explicit at creation. The reviewed catalog includes five Minecraft Java variants and Space Engineers Torch Wine; other targets remain gated.
