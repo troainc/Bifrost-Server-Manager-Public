@@ -18,7 +18,7 @@ export function summarizeLedger(ledger){
 }
 export function summarizeContainer(value,id){
  const item=Array.isArray(value)&&value.length===1?value[0]:undefined;
- const states=['created','configured','running','paused','restarting','stopping','stopped','exited','dead'];
+ const states=['initialized','created','configured','running','paused','restarting','stopping','stopped','exited','dead'];
  return {present:!!item,state:states.includes(item?.State?.Status)?item.State.Status:'unknown',exitCode:Number.isSafeInteger(item?.State?.ExitCode)?item.State.ExitCode:null,matchesManagedIdentity:item?.Config?.Labels?.['io.bifrost.instance-id']===id&&item?.Config?.Labels?.['io.bifrost.managed-by']==='bifrost'};
 }
 export function summarizeManifest(value){
