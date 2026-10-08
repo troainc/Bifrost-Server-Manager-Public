@@ -1,3 +1,8 @@
+## 2026-10-08 - Preparing testing 22 fresh Torch installation
+
+The owner authorizes a matched fresh installation release that integrates fixes from both Bifrost chats. Torch's new signed recipe minimum is 20 GiB, superseding the earlier 40 GiB generic staging floor; retain actual filesystem capacity, the 0.5 GiB margin and queued reservations. Other game recipe floors remain unchanged. Port2750 is a site selection, not the distributed default.
+
+The new reviewed dependency runtime initializes both new-world multiplayer fields from dedicated configuration before first launch and preserves an existing world. The matching compiled Agent resolves publisher-approved selected internal game/Steam ports so configuration and Host/container bindings agree. Runtime/catalog/customer package verification is in progress; testing22 is a draft, not yet installed on a customer Host. Existing releases remain immutable. A panel-only reinstall does not replace the automatic Host; preserve the current working customer game pending a reviewed full-reset scope or fresh VM decision.
 ## 2026-10-08 - Torch port helper stopped-workload handling
 
 The helper now stops and verifies the game before stopping its user Agent, while holding the Agent ledger lock. An already exited game skips the redundant stop command. Separate inspection, confinement and stopped-state stages identify the failing check; command failures expose only bounded command names, numeric exit status and timeout flags. Existing private backups, rollback, signed profile validation and world preservation remain enforced.
