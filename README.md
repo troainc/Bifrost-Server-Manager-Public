@@ -323,3 +323,7 @@ Customer Compose mounts `config/provisioning-catalog.json` and `config/provision
 ## Documentation
 
 Use the [documentation index](docs/README.md) and [operator guide](docs/USER_GUIDE.md) for role selection, installation, enrollment, updates, and day-to-day operations. Check the release notes for the current testing-build boundaries.
+
+## Committed Torch port changes
+
+The separately pinned operator helper scripts/change-torch-game-port.mjs changes the dedicated game port and its Host/container allocation together on an existing automatic testing21 installation. It preserves the world and credentials, retains rollback state, and verifies readiness. Run only for an operator-approved maintenance restart as the existing non-root game account, with the existing instance UUID and approved Blueprint digest. This does not implement the Settings UI or change global recipe defaults. Historical Controller provisioning reservations are retained; new Host heartbeats advertise the actual occupied ports. Public reachability and player joining must be verified separately.
