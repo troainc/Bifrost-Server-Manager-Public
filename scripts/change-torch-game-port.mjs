@@ -17,7 +17,10 @@ const service='bifrost-host-agent.service',exec=promisify(execFile);
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 const run=async(executable,args,timeout=20000)=>(await exec(executable,args,{cwd:'/',timeout,maxBuffer:1024*1024})).stdout;
 const podman=(args,timeout)=>run('/usr/bin/podman',args,timeout);
-const systemctl=args=>run('/usr/bin/systemctl',['--user',...args]);
+const systemctl=async args=>{
+  try{return await run('/usr/bin/systemctl',['--user',...args],120000);}
+  catch(error){if(error.killed)error.portCode='SERVICE_TIMEOUT';throw error;}
+};
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 
 export function changeServerPort(bytes,oldPort,newPort){
@@ -95,7 +98,7 @@ export async function changeTorchPort(instanceId,digest,newPort,report=()=>{}){
   assert.equal((await systemctl(['is-active',service])).trim(),'active');
   at('exclusive-agent-ledger');const release=await acquireLedgerLock(config.ledgerFile);assert.ok(release,'Agent is busy; preserve its lock.');
   const backupRef=randomUUID(),retainedName=`bifrost-port-backup-${instanceId}-${backupRef}`;
-  let agentStopped=false,renameAttempted=false,newAttempted=false,newId,committed=false,backupSaved=false;
+  let agentStopped=false,renameAttempted=false,newAttempted=false,newId,committed=false,backupSaved=false,failure;
   try{
     assert.equal(hash(await readPrivateFile(config.ledgerFile,'Agent ledger')),ledgerHash);
     assert.ok(!Object.values(JSON.parse(await readPrivateFile(config.ledgerFile,'Agent ledger'))).includes('running'));
@@ -125,6 +128,7 @@ export async function changeTorchPort(instanceId,digest,newPort,report=()=>{}){
     at('restarting-agent');await systemctl(['start',service]);assert.equal((await systemctl(['is-active',service])).trim(),'active');agentStopped=false;
     return {portChanged:true,gameReady:true,gamePort:newPort,containerPort:newPort,serviceActive:true,worldPreserved:true,enrollmentPreserved:true,jobLedgerUnchanged:true,originalContainerRetained:true,backupRef,heartbeatVerificationPending:true};
   }catch(error){
+    const failureStage=stage;
     let rollbackCompleted=!backupSaved;
     if(!committed&&backupSaved){try{
       at('rolling-back');
@@ -135,13 +139,15 @@ export async function changeTorchPort(instanceId,digest,newPort,report=()=>{}){
       for(const entry of [...entries].reverse()){const current=hash((await safeFile(entry.path)).bytes);if(current===hash(entry.after))await replaceFile(entry,entry.after,entry.bytes,entry.validate);else assert.equal(current,hash(entry.bytes),'Concurrent change prevents rollback.');}
       await loadConfig(configPath);const restored=await inspectBifrostContainer(await podman(['container','inspect',oldRuntime.id]),oldProfile);if(oldRuntime.state==='running'&&restored.state!=='running')await podman(['start',oldRuntime.id]);rollbackCompleted=true;
     }catch{rollbackCompleted=false;}}
-    throw Object.assign(error,{stage,rollbackCompleted,committed,backupRef:backupSaved?backupRef:undefined});
+    failure=Object.assign(error,{stage:failureStage,rollbackCompleted,committed,backupRef:backupSaved?backupRef:undefined});throw failure;
   }finally{
-    await release();
-    if(agentStopped){await systemctl(['start',service]);assert.equal((await systemctl(['is-active',service])).trim(),'active');}
+    let cleanupError;
+    try{await release();}catch(error){if(failure)failure.ledgerReleaseCompleted=false;else cleanupError=Object.assign(error,{stage:'ledger-release',backupRef,committed});}
+    if(agentStopped){try{await systemctl(['start',service]);assert.equal((await systemctl(['is-active',service])).trim(),'active');if(failure)failure.serviceRestored=true;}catch(error){if(failure)failure.serviceRestored=false;else cleanupError=Object.assign(error,{stage:'service-restart',backupRef,committed});}}
+    if(cleanupError)throw cleanupError;
   }
 }
 if(process.argv[2]){
   try{assert.equal(process.argv.length,6);assert.equal(process.argv[2],'--set-game-port');const result=await changeTorchPort(process.argv[3],process.argv[4],Number(process.argv[5]),report=>console.log(JSON.stringify(report)));console.log(JSON.stringify(result,null,2));}
-  catch(error){console.log(JSON.stringify({portChanged:false,stage:error.stage??'preflight',code:['ENOENT','EACCES','EPERM','EEXIST'].includes(error.code)?error.code:'PORT_CHANGE_REFUSED',...(error.backupRef?{backupRef:error.backupRef,rollbackCompleted:error.rollbackCompleted,committed:error.committed}:{})}));process.exitCode=1;}
+  catch(error){console.log(JSON.stringify({portChanged:false,stage:error.stage??'preflight',code:error.portCode==='SERVICE_TIMEOUT'?'SERVICE_TIMEOUT':['ENOENT','EACCES','EPERM','EEXIST'].includes(error.code)?error.code:'PORT_CHANGE_REFUSED',...(error.backupRef?{backupRef:error.backupRef,rollbackCompleted:error.rollbackCompleted,committed:error.committed}:{}),...(error.serviceRestored===undefined?{}:{serviceRestored:error.serviceRestored}),...(error.ledgerReleaseCompleted===undefined?{}:{ledgerReleaseCompleted:error.ledgerReleaseCompleted})}));process.exitCode=1;}
 }
