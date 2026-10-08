@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.17
+VERSION=v0.1.0-installtest.18
 # Terminal presentation: readable without color, animation, or a wide terminal.
 UI_RESET='' UI_BLUE='' UI_GREEN='' UI_GOLD='' UI_DIM='' UI_BOLD=''
 if [[ -t 1 && -z "${NO_COLOR:-}" && "${TERM:-dumb}" != dumb ]]; then
@@ -41,6 +41,7 @@ if [[ $(id -un) != bifrost ]]; then
     printf -v line 'exec bash %q' "$script"; exec su -s /bin/bash -c "$line" root
   fi
   export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+  cd / || fail 'Cannot select a safe update working directory.'
   command -v runuser >/dev/null || fail 'The VM is missing runuser (util-linux package).'
   uid=$(id -u bifrost); home=$(getent passwd bifrost | cut -d: -f6)
   [[ "$uid" != 0 ]] || fail 'bifrost must be non-root.'
