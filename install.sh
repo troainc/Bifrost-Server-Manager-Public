@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.17
+VERSION=v0.1.0-installtest.18
 # Matched testing release updater; immutable source + digest.
-UPDATER_SOURCE_REF=edf58beb861d958eaa0fe51c39ab85295c4d4ca2
-UPDATER_SHA256=a066159d4d531e53925b517c4fd0db2b20cf88e95df896bad1b5a51c78bcabbf
+UPDATER_SOURCE_REF=8d013df35f94e9ea8997aa025313fc97f2e2592a
+UPDATER_SHA256=fece4382431c35556ed6751f7fed8b16cdb1471dbdfd9c0907da790d6f70463f
 INSTALL_DIR="${BIFROST_INSTALL_DIR:-$HOME/.local/share/bifrost}"
 # Terminal presentation: readable without color, animation, or a wide terminal.
 UI_RESET='' UI_BLUE='' UI_GREEN='' UI_GOLD='' UI_DIM='' UI_BOLD=''
@@ -200,7 +200,9 @@ prepare_automatic_instance_host() {
     if LC_ALL=C sudo -l -U "$game" 2>&1 | awk '/^[[:space:]]*\(/ {sub(/^[[:space:]]*\([^)]*\)[[:space:]]*/, ""); if ($0 != "!ALL") grant=1} END {exit !grant}'; then fail 'Another sudo policy grants the game account commands.'; fi
   fi
   chmod 0700 "$game_home"
-  [[ ! -e "$game_home/.config/bifrost-host-agent/host-agent.json" && ! -e "$game_home/.local/state/bifrost-host-agent/instance-join.json" && ! -e "$game_home/.local/state/bifrost-host-agent/job-ledger.json" ]] || fail 'An existing game Host requires recovery or handover; it will not be overwritten.'
+  for existing_state in "$game_home/.config/bifrost-host-agent/host-agent.json" "$game_home/.local/state/bifrost-host-agent/instance-join.json" "$game_home/.local/state/bifrost-host-agent/host.token" "$game_home/.local/state/bifrost-host-agent/job-ledger.json"; do
+    [[ ! -e "$existing_state" && ! -L "$existing_state" ]] || fail 'An existing game Host requires recovery or handover; it will not be overwritten.'
+  done
   grep -q "^$game:" /etc/subuid && grep -q "^$game:" /etc/subgid || fail 'The game account requires subordinate UID/GID ranges for rootless Podman.'
   run_task 'Install local game Host prerequisites' env DEBIAN_FRONTEND=noninteractive apt-get -q install -y podman slirp4netns fuse-overlayfs xz-utils
   loginctl enable-linger "$game"
@@ -320,17 +322,36 @@ if old=={'enabled':False}:
 
 AUTO_HOST_CONFIG_PY
   retain_game_unit() {
-    runuser -u "$game" -- python3 -c 'import os,pathlib,stat,sys
+    runuser -u "$game" -- python3 -c 'import hashlib,os,pathlib,re,stat,sys,tempfile
 p=pathlib.Path(sys.argv[1]);data=sys.stdin.buffer.read(8192)
 if p.parent.resolve()!=p.parent or p.is_symlink():raise SystemExit("Unsafe user service path.")
+upgrade=sys.argv[2]=="1";check=sys.argv[3]=="check"
 if p.exists():
     info=p.stat()
-    if not stat.S_ISREG(info.st_mode) or info.st_uid!=os.getuid() or info.st_nlink!=1 or p.read_bytes()!=data:raise SystemExit("Existing user service differs; it was preserved.")
+    if not stat.S_ISREG(info.st_mode) or info.st_uid!=os.getuid() or info.st_nlink!=1 or info.st_mode&0o077 or info.st_size>8192:raise SystemExit("Unsafe retained user service.")
+    old=p.read_bytes()
+    if old!=data:
+        pattern=rb"/home/bifrost-games/\.local/opt/bifrost-host-agent-[a-f0-9]{64}"
+        paths=set(re.findall(pattern,old));new_paths=set(re.findall(pattern,data))
+        if not upgrade or len(paths)!=1 or len(new_paths)!=1 or old.replace(next(iter(paths)),next(iter(new_paths)))!=data:raise SystemExit("Existing user service differs; it was preserved.")
+        if not check:
+            backup=p.with_name(p.name+".prejoin-"+hashlib.sha256(old).hexdigest())
+            if backup.exists() or backup.is_symlink():
+                info=backup.lstat()
+                if not stat.S_ISREG(info.st_mode) or info.st_uid!=os.getuid() or info.st_nlink!=1 or info.st_mode&0o077 or backup.read_bytes()!=old:raise SystemExit("Unsafe retained service backup.")
+            else:
+                fd=os.open(backup,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
+                with os.fdopen(fd,"wb") as f:f.write(old);f.flush();os.fsync(f.fileno())
+            fd,temporary=tempfile.mkstemp(prefix=".bifrost-unit-",dir=p.parent)
+            with os.fdopen(fd,"wb") as f:f.write(data);f.flush();os.fsync(f.fileno())
+            os.replace(temporary,p)
 else:
+    if upgrade:raise SystemExit("A prepared Host upgrade requires both original managed services.")
+    if check:sys.exit(0)
     fd=os.open(p,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
-    with os.fdopen(fd,"wb") as f:f.write(data);f.flush();os.fsync(f.fileno())' "$1"
+    with os.fdopen(fd,"wb") as f:f.write(data);f.flush();os.fsync(f.fileno())' "$1" "${BIFROST_PREJOIN_UPGRADE:-0}" "$2"
   }
-  retain_game_unit "$game_home/.config/systemd/user/bifrost-host-agent.service" <<UNIT
+  cat > "$stage/bifrost-host-agent.service" <<UNIT
 [Unit]
 Description=Bifrost local game Host Agent
 [Service]
@@ -342,7 +363,7 @@ UMask=0077
 [Install]
 WantedBy=default.target
 UNIT
-  retain_game_unit "$game_home/.config/systemd/user/bifrost-instance-setup.service" <<UNIT
+  cat > "$stage/bifrost-instance-setup.service" <<UNIT
 [Unit]
 Description=Bifrost automatic Instance connection
 [Service]
@@ -355,6 +376,18 @@ NoNewPrivileges=true
 [Install]
 WantedBy=default.target
 UNIT
+  chmod 0644 "$stage/bifrost-host-agent.service" "$stage/bifrost-instance-setup.service"
+  # Check both fixed templates before stopping the worker or changing either
+  # unit. A prepared upgrade changes only the matched package path, preserves
+  # the previous unit bytes, and never runs a service as root.
+  for unit in bifrost-host-agent.service bifrost-instance-setup.service; do retain_game_unit "$game_home/.config/systemd/user/$unit" check < "$stage/$unit"; done
+  if [[ ${BIFROST_PREJOIN_UPGRADE:-0} == 1 ]]; then
+    runuser -u "$game" -- env -i HOME="$game_home" USER="$game" PATH=/usr/bin:/bin XDG_RUNTIME_DIR="/run/user/$game_uid" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$game_uid/bus" systemctl --user stop bifrost-instance-setup.service
+    for existing_state in "$game_home/.config/bifrost-host-agent/host-agent.json" "$game_home/.local/state/bifrost-host-agent/instance-join.json" "$game_home/.local/state/bifrost-host-agent/host.token" "$game_home/.local/state/bifrost-host-agent/job-ledger.json"; do
+      [[ ! -e "$existing_state" && ! -L "$existing_state" ]] || fail 'Host setup advanced while upgrading; existing services and credentials were preserved.'
+    done
+  fi
+  for unit in bifrost-host-agent.service bifrost-instance-setup.service; do retain_game_unit "$game_home/.config/systemd/user/$unit" write < "$stage/$unit"; done
   runuser -u "$game" -- chmod 0600 "$game_home/.config/systemd/user/bifrost-host-agent.service" "$game_home/.config/systemd/user/bifrost-instance-setup.service"
   runuser -u "$game" -- env -i HOME="$game_home" USER="$game" PATH=/usr/bin:/bin XDG_RUNTIME_DIR="/run/user/$game_uid" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$game_uid/bus" podman info --format '{{.Host.Security.Rootless}}' | grep -qx true || fail 'The prepared game account cannot run rootless Podman.'
   runuser -u "$game" -- env -i HOME="$game_home" USER="$game" PATH=/usr/bin:/bin XDG_RUNTIME_DIR="/run/user/$game_uid" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$game_uid/bus" systemctl --user daemon-reload
@@ -502,7 +535,8 @@ if [[ "${1:-}" == --update ]]; then
 fi
 [[ "${1:-}" != --help ]] || { echo 'Run bash install.sh to choose Controller, standalone Instance node, or Hybrid. Pass --controller, --instance, or --hybrid; --host installs only an Agent for an existing Controller. Fresh amd64 Instances joining a chosen parent prepare their Host automatically after master acceptance. Earlier/manual Installs can use --host --join-instance. --resume-local-host resumes interrupted fresh pre-join preparation as root. Existing Hosts can use --host --upgrade; revoked Hosts can use --host --upgrade --re-enroll.'; exit 0; }
 if [[ "${1:-}" == --resume-local-host ]]; then
-  [[ $# -eq 1 && $(id -u) -eq 0 ]] || fail 'Resume local Host preparation as the VM administrator. This does not reinstall or wipe the panel.'
+  [[ $(id -u) -eq 0 && ( $# -eq 1 || ( $# -eq 2 && "$2" == --upgrade ) ) ]] || fail 'Resume local Host preparation as the VM administrator. Optional --upgrade updates only its prepared pre-join services; this does not reinstall or wipe the panel.'
+  BIFROST_PREJOIN_UPGRADE=0; [[ ${2:-} != --upgrade ]] || BIFROST_PREJOIN_UPGRADE=1
   [[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || fail 'Linux x86_64 is required.'
   prepare_automatic_instance_host
   exit 0
