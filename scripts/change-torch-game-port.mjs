@@ -15,7 +15,10 @@ const pkg=join(home,'.local/opt/bifrost-host-agent-be6b513956e2c89b0160e4152c87c
 const configPath=join(home,'.config/bifrost-host-agent/host-agent.json');
 const service='bifrost-host-agent.service',exec=promisify(execFile);
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
-const run=async(executable,args,timeout=20000)=>(await exec(executable,args,{cwd:'/',timeout,maxBuffer:1024*1024})).stdout;
+const run=async(executable,args,timeout=20000)=>{
+  try{return (await exec(executable,args,{cwd:'/',timeout,maxBuffer:1024*1024})).stdout;}
+  catch(error){error.failedCommand=executable==='/usr/bin/systemctl'?`service-${args[1]}`:executable==='/usr/bin/podman'?`podman-${args[0]}`:'runtime-command';if(typeof error.code==='number')error.commandExit=error.code;if(error.killed)error.commandTimedOut=true;throw error;}
+};
 const podman=(args,timeout)=>run('/usr/bin/podman',args,timeout);
 const systemctl=async args=>{
   try{return await run('/usr/bin/systemctl',['--user',...args],120000);}
@@ -105,10 +108,14 @@ export async function changeTorchPort(instanceId,digest,newPort,report=()=>{}){
     at('preserving-control-state');const evidenceRoot=join(home,'.local/state/bifrost-host-agent/port-changes');await ensurePrivateStateDirectory(evidenceRoot);const evidence=join(evidenceRoot,backupRef);await mkdir(evidence,{mode:0o700});await ensurePrivateStateDirectory(evidence);
     for(const [index,entry] of entries.entries())await writeNew(join(evidence,`${index}.original`),entry.bytes,entry.mode);
     await writeNew(join(evidence,'change.json'),Buffer.from(JSON.stringify({instanceId,oldPort,newPort,oldContainerId:oldRuntime.id,retainedName,files:entries.map(entry=>({path:entry.path,originalSha256:hash(entry.bytes),replacementSha256:hash(entry.after)}))},null,2)));await syncDir(evidence);await syncDir(evidenceRoot);backupSaved=true;
-    at('stopping-agent');agentStopped=true;await systemctl(['stop',service]);
-    at('stopping-game');await podman(['stop','--time','60',oldRuntime.id],90000);
-    const stoppedRaw=await podman(['container','inspect',oldRuntime.id]),stopped=JSON.parse(stoppedRaw)[0].State;await inspectBifrostContainer(stoppedRaw,oldProfile);
+    at('stopping-game');if(oldRuntime.state==='running')await podman(['stop','--time','60',oldRuntime.id],90000);
+    at('inspecting-stopped-game');const stoppedRaw=await podman(['container','inspect',oldRuntime.id]),stopped=JSON.parse(stoppedRaw)[0].State;
+    at('verifying-stopped-container');await inspectBifrostContainer(stoppedRaw,oldProfile);
+    at('verifying-stopped-state');
     assert.ok(['exited','stopped'].includes(stopped.Status)&&stopped.Running===false&&stopped.Paused===false&&stopped.Restarting===false&&stopped.Pid===0);
+    // Quiesce the workload while its original user-service context still exists.
+    // The ledger lock already prevents the Agent from leasing another action.
+    at('stopping-agent');agentStopped=true;await systemctl(['stop',service]);
     // Torch may persist its dedicated config during graceful shutdown. Preserve
     // those final bytes; only its ServerPort changes.
     entries[0]={...await safeFile(dedicated.path)};entries[0].after=changeServerPort(entries[0].bytes,oldPort,newPort);
@@ -149,5 +156,5 @@ export async function changeTorchPort(instanceId,digest,newPort,report=()=>{}){
 }
 if(process.argv[2]){
   try{assert.equal(process.argv.length,6);assert.equal(process.argv[2],'--set-game-port');const result=await changeTorchPort(process.argv[3],process.argv[4],Number(process.argv[5]),report=>console.log(JSON.stringify(report)));console.log(JSON.stringify(result,null,2));}
-  catch(error){console.log(JSON.stringify({portChanged:false,stage:error.stage??'preflight',code:error.portCode==='SERVICE_TIMEOUT'?'SERVICE_TIMEOUT':['ENOENT','EACCES','EPERM','EEXIST'].includes(error.code)?error.code:'PORT_CHANGE_REFUSED',...(error.backupRef?{backupRef:error.backupRef,rollbackCompleted:error.rollbackCompleted,committed:error.committed}:{}),...(error.serviceRestored===undefined?{}:{serviceRestored:error.serviceRestored}),...(error.ledgerReleaseCompleted===undefined?{}:{ledgerReleaseCompleted:error.ledgerReleaseCompleted})}));process.exitCode=1;}
+  catch(error){console.log(JSON.stringify({portChanged:false,stage:error.stage??'preflight',code:error.portCode==='SERVICE_TIMEOUT'?'SERVICE_TIMEOUT':['ENOENT','EACCES','EPERM','EEXIST'].includes(error.code)?error.code:'PORT_CHANGE_REFUSED',...(error.backupRef?{backupRef:error.backupRef,rollbackCompleted:error.rollbackCompleted,committed:error.committed}:{}),...(error.failedCommand?{failedCommand:error.failedCommand}:{}),...(error.commandExit===undefined?{}:{commandExit:error.commandExit}),...(error.commandTimedOut?{commandTimedOut:true}:{}),...(error.serviceRestored===undefined?{}:{serviceRestored:error.serviceRestored}),...(error.ledgerReleaseCompleted===undefined?{}:{ledgerReleaseCompleted:error.ledgerReleaseCompleted})}));process.exitCode=1;}
 }

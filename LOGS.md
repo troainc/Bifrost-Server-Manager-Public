@@ -1,3 +1,9 @@
+## 2026-10-08 - Torch port helper stopped-workload handling
+
+The helper now stops and verifies the game before stopping its user Agent, while holding the Agent ledger lock. An already exited game skips the redundant stop command. Separate inspection, confinement and stopped-state stages identify the failing check; command failures expose only bounded command names, numeric exit status and timeout flags. Existing private backups, rollback, signed profile validation and world preservation remain enforced.
+
+Twelve non-root disposable checks pass, including an already stopped game, workload-before-Agent ordering, service refusal restoration, startup rollback and the real 25-second child-process shutdown regression. Podman and systemd boundaries are simulated. A manual Host stop succeeded; this does not establish the exact cause of the prior coarse stopping-game refusal. Actual port application, readiness, heartbeat and player joining require separate verification. Existing release assets are unchanged; no customer identifiers, addresses, logs or secrets are published.
+
 ## 2026-10-08 - Torch port helper service-wait correction
 
 The port helper now allows120seconds for user-service control, matching the established recovery helper. The original20-second subprocess limit could reject a graceful Agent shutdown while a heartbeat/provider call was still completing. Cleanup now preserves the original failed stage and rollback/evidence metadata, and reports whether service restoration succeeded rather than replacing the useful failure with a generic preflight error.
