@@ -11,7 +11,7 @@ const exec = promisify(execFile);
 const OLD = 'f6603eff0b696a2841d2cc51d4362e21f5fcd04f674ab5cc2052f611534fbea1';
 const NEW = '9408da9bac948edc3063fbd5e97019e07c99d30084d961d390d68f8191969504';
 const NODE = '/opt/bifrost-node-v24.19.0/bin/node';
-const URL = 'https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/v0.1.0-installtest.20/bifrost-linux-host-agent.zip';
+const PACKAGE_URL = 'https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/v0.1.0-installtest.20/bifrost-linux-host-agent.zip';
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 export const managedUnit = (home, digest) => `[Unit]\nDescription=Bifrost local game Host Agent\n[Service]\nExecStart=${NODE} ${home}/.local/opt/bifrost-host-agent-${digest}/dist/main.js\nEnvironment=BIFROST_HOST_AGENT_CONFIG=${home}/.config/bifrost-host-agent/host-agent.json\nRestart=on-failure\nRestartSec=10\nUMask=0077\n[Install]\nWantedBy=default.target\n`;
 async function privatePath(path, directory = false) {
@@ -26,9 +26,10 @@ async function atomic(path, bytes) {
   try { await fd.writeFile(bytes); await fd.sync(); } finally { await fd.close(); }
   await rename(temporary, path);
 }
-async function download() {
-  const r = await fetch(URL, { signal: AbortSignal.timeout(120000) });
-  if (!r.ok || !['github.com', 'release-assets.githubusercontent.com', 'objects.githubusercontent.com'].includes(new URL(r.url).hostname)) throw new Error('Matched HTTPS package download failed.');
+export async function downloadMatchedPackage(fetchPackage = fetch) {
+  const r = await fetchPackage(PACKAGE_URL, { signal: AbortSignal.timeout(120000) });
+  const finalUrl = new URL(r.url);
+  if (!r.ok || finalUrl.protocol !== 'https:' || finalUrl.username || finalUrl.password || !['github.com', 'release-assets.githubusercontent.com', 'objects.githubusercontent.com'].includes(finalUrl.hostname)) throw new Error('Matched HTTPS package download failed.');
   const chunks = []; let size = 0;
   for await (const chunk of r.body) { size += chunk.length; if (size > 2 * 1024 * 1024) throw new Error('Host package exceeds the download bound.'); chunks.push(chunk); }
   return Buffer.concat(chunks);
@@ -52,7 +53,7 @@ with zipfile.ZipFile(archive) as z:
   p.chmod(0o600)
 `;
 // Options are dependency injection for disposable tests, not command-line input.
-export async function upgradeAutomaticHost({ home = '/home/bifrost-games', node = NODE, packageBytes = download, diagnoseOnly = false, onStage = () => {}, systemctl = async args => { await exec('/usr/bin/systemctl', ['--user', ...args], { timeout: 120000, maxBuffer: 4096 }); }, preflight = async (packageRoot, config) => { await exec(node, [join(packageRoot, 'dist/preflight-upgrade.js'), config], { timeout: 30000, maxBuffer: 4096 }); } } = {}) {
+export async function upgradeAutomaticHost({ home = '/home/bifrost-games', node = NODE, packageBytes = downloadMatchedPackage, diagnoseOnly = false, onStage = () => {}, systemctl = async args => { await exec('/usr/bin/systemctl', ['--user', ...args], { timeout: 120000, maxBuffer: 4096 }); }, preflight = async (packageRoot, config) => { await exec(node, [join(packageRoot, 'dist/preflight-upgrade.js'), config], { timeout: 30000, maxBuffer: 4096 }); } } = {}) {
   onStage('private-path-validation');
   const unit = join(home, '.config/systemd/user/bifrost-host-agent.service');
   const config = join(home, '.config/bifrost-host-agent/host-agent.json');

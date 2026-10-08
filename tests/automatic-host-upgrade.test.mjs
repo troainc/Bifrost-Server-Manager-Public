@@ -8,8 +8,13 @@ import { randomUUID } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
-import { upgradeAutomaticHost, managedUnit } from '../scripts/upgrade-automatic-host-testing20.mjs';
+import { upgradeAutomaticHost, managedUnit, downloadMatchedPackage } from '../scripts/upgrade-automatic-host-testing20.mjs';
 const OLD='f6603eff0b696a2841d2cc51d4362e21f5fcd04f674ab5cc2052f611534fbea1',NEW='9408da9bac948edc3063fbd5e97019e07c99d30084d961d390d68f8191969504';
+test('production download adapter parses the GitHub HTTPS redirect and enforces response and size bounds',async()=>{
+ const bytes=await readFile(process.env.BIFROST_TEST20_HOST_ARCHIVE);
+ const downloaded=await downloadMatchedPackage(async(url,options)=>{assert.equal(url,'https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/v0.1.0-installtest.20/bifrost-linux-host-agent.zip');assert.ok(options.signal instanceof AbortSignal);return {ok:true,url:'https://release-assets.githubusercontent.com/verified-host.zip',body:[bytes.subarray(0,100),bytes.subarray(100)]};});assert.deepEqual(downloaded,bytes);
+ for(const response of [{ok:false,url:'https://github.com/error',body:[]},{ok:true,url:'https://unrecognized.invalid/host.zip',body:[]},{ok:true,url:'http://github.com/host.zip',body:[]},{ok:true,url:'https://embedded:credential@github.com/host.zip',body:[]},{ok:true,url:'https://github.com/host.zip',body:[Buffer.alloc(2*1024*1024+1)]}])await assert.rejects(downloadMatchedPackage(async()=>response));
+});
 async function fixture() {
  const home=await mkdtemp(join(tmpdir(),'.bifrost-auto-upgrade-'));
  for(const p of ['.config','.config/systemd','.config/systemd/user','.config/bifrost-host-agent','.local','.local/opt','.local/state','.local/state/bifrost-host-agent'])await mkdir(join(home,p),{mode:0o700});
