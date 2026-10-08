@@ -1,10 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {validateRecoveryLedger,validateRecoveryNetwork,recoveryFailure} from '../scripts/recover-unstarted-provisioning.mjs';
+import {validateRecoveryLedger,validateRecoveryNetwork,recoveryFailure,assertNoOtherAgentProcess} from '../scripts/recover-unstarted-provisioning.mjs';
+import {mkdtemp,mkdir,writeFile,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 const id='11111111-1111-4111-8111-111111111111';
 test('recovery never clears a running, completed or malformed local job ledger',()=>{
  assert.doesNotThrow(()=>validateRecoveryLedger({}));
  for(const value of [null,undefined,[],{[id]:'running'},{[id]:'complete'},'{}'])assert.throws(()=>validateRecoveryLedger(value));
+});
+test('process guard reads same-account command lines without executable links and still refuses another Agent',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'bifrost-process-guard-'));
+ try{
+  const other=join(root,'1234');await mkdir(other);await mkdir(join(other,'exe'));
+  await writeFile(join(other,'cmdline'),'podman\0system\0pause\0');
+  const uid=process.getuid?.()??0;await assert.doesNotReject(assertNoOtherAgentProcess({procRoot:root,uid,pid:9999}));
+  await writeFile(join(other,'cmdline'),'node\0/private/package/dist/main.js\0');
+  await assert.rejects(assertNoOtherAgentProcess({procRoot:root,uid,pid:9999}));
+  await writeFile(join(other,'cmdline'),'');await assert.doesNotReject(assertNoOtherAgentProcess({procRoot:root,uid,pid:9999}));
+  await rm(join(other,'cmdline'));await mkdir(join(other,'cmdline'));await assert.rejects(assertNoOtherAgentProcess({procRoot:root,uid,pid:9999}));
+ }finally{await rm(root,{recursive:true,force:true});}
 });
 test('network recovery requires exact identity, owned instance label, bridge driver and no foreign workload',()=>{
  const network={id:'a'.repeat(64),name:`bifrost-${id}`,driver:'bridge',labels:{'io.bifrost.instance-id':id}};

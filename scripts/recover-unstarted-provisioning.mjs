@@ -77,8 +77,8 @@ export function reviewFailure(stage,error){
 
 // Recovery additions to the separately reviewed public read-only reviewer above.
 import {createHash, randomUUID} from 'node:crypto';
-import {open, mkdir, rename, readlink} from 'node:fs/promises';
-import {dirname, basename} from 'node:path';
+import {open, mkdir, rename} from 'node:fs/promises';
+import {dirname} from 'node:path';
 import {userInfo} from 'node:os';
 const RECOVERY_PACKAGE=join(home,'.local/opt',`bifrost-host-agent-${hashes[1]}`);
 const CONFIG_PATH=join(home,'.config/bifrost-host-agent/host-agent.json');
@@ -161,12 +161,16 @@ export async function planUnstartedRecovery(instanceId,digest,onStage=()=>{}){
  assert.equal((await lstat(instanceRoot)).dev,(await lstat(stateRoot)).dev);
  return {summary:{readOnly:true,reviewPassed:true,recoveryReady:true,instanceId,neverStartedInstallerVerified:true,emptyInstallerDirectories:true,onlyRetainedInstallerPresent:true,ownedNetworkNoOtherWorkloads:true,installerNetworkAttachmentPresent:Object.keys(networks[0].containers??{}).length===1,jobLedgerEmpty:true,retainedFilesWillBeArchived:true},bindings,instanceRoot,operationRoot,lockPath,lock,tree,control:await controlFingerprints(),installer,network:networks[0],unit};
 }
-async function assertNoOtherAgentProcess(){
- for(const name of await readdir('/proc')){
-  if(!/^\d+$/.test(name)||Number(name)===process.pid)continue;const path=join('/proc',name);
-  try{if((await lstat(path)).uid!==process.getuid())continue;const executable=await readlink(join(path,'exe'));
-   if(!['node','nodejs'].includes(basename(executable)))continue;
-   const argv=(await readFile(join(path,'cmdline'),'utf8')).split('\0');assert.ok(!argv.some(arg=>arg.endsWith('/dist/main.js')));
+export async function assertNoOtherAgentProcess({procRoot='/proc',uid=process.getuid(),pid=process.pid}={}){
+ // Test-only path/identity injection is not exposed through CLI arguments.
+ // /proc/PID/exe is ptrace-gated even for some same-UID rootless processes.
+ // Check every same-UID command line directly; do not silently skip EACCES
+ // or require executable-link access to detect another Agent main script.
+ for(const name of await readdir(procRoot)){
+  if(!/^\d+$/.test(name)||Number(name)===pid)continue;const path=join(procRoot,name);
+  try{if((await lstat(path)).uid!==uid)continue;
+   const raw=await readFile(join(path,'cmdline'),'utf8');assert.ok(Buffer.byteLength(raw)<=1024*1024);
+   const argv=raw.split('\0');assert.ok(!argv.some(arg=>arg.endsWith('/dist/main.js')),'Another Agent main script remains present.');
   }catch(error){if(['ENOENT','ESRCH'].includes(error.code))continue;throw error;}
  }
 }
