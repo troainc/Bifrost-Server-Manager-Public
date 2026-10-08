@@ -1,3 +1,11 @@
+## Testing 16 candidate
+
+- Master-side reviewed connection requests with explicit administrator Accept/Deny and reasons.
+- Distinct pending approval, accepted Host setup, signed connection and heartbeat states.
+- Private resumable enrollment requests; explicit self-signed Instance public-certificate trust without TLS bypass.
+- Separate status-poll and code-attempt rate buckets; legacy remote clients require a matched update.
+- Preserve six signed Java/Torch Wine targets and all earlier immutable releases. Publication pending final verification.
+
 ## 2026-10-07 - Testing 15 published; simpler pairing and Torch Wine
 
 Published testing 15 from private application source f6f9c35fefdcd42188c3d4f9c48ab1b3c9613df5 and public packaging source 58e1c5ef2b8de638b2243ded6344877292aee672. All 22 release asset sizes/digests and nine cookie-free latest downloads match; public main installer is byte-identical. Fresh verified loopback HTTPS/database/first-admin setup, 33 installer checks, six signed catalog checks, 15 HTTP authorization/pairing checkpoints, compiled non-root fresh join and handover/recovery passed. Final customer image scans are archive-bound and report zero HIGH/CRITICAL findings or detected secrets; sharp is patched to 0.35.5.

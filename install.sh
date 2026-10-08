@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.15
+VERSION=v0.1.0-installtest.16
 # Matched testing release updater; immutable source + digest.
-UPDATER_SOURCE_REF=96f4a9a3c6fef9a6bfde415adf6647995fc78251
-UPDATER_SHA256=8544705b8006d3b6cffad4191e30a4757e3cc1a1ca4115e5501ecc92c8d3b0ac
+UPDATER_SOURCE_REF=4f82a663fd5507584d4d57ef969823b5d2635239
+UPDATER_SHA256=8afb14408de8c6c1bb3c3751a9d5601c2a6fd19cc529be9f673caadbee2f8087
 INSTALL_DIR="${BIFROST_INSTALL_DIR:-$HOME/.local/share/bifrost}"
 # Terminal presentation: readable without color, animation, or a wide terminal.
 UI_RESET='' UI_BLUE='' UI_GREEN='' UI_GOLD='' UI_DIM='' UI_BOLD=''

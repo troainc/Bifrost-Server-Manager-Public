@@ -1,3 +1,11 @@
+## Testing 16 candidate: reviewed Controller connections
+
+Enter the chosen Controller address and five-digit code in the Instance setup screen, then choose **Send connection request**. On the master, an administrator opens **Hosts → Connection requests**, compares the displayed Node ID and chooses **Accept** or **Deny** with a reason. Approval does not install a game or start the Agent. After acceptance, complete the one-time Host setup under the separately prepared non-root game account using the displayed Instance URL and private setup ticket. A recent valid heartbeat establishes that the Host is online.
+
+For a self-signed Instance panel, the Host terminal asks for its public certificate PEM and independently confirmed SHA-256 fingerprint. Browser certificate acceptance alone is insufficient. Never supply the panel private key or disable TLS verification. Interrupted setup resumes the same private request or saved receipt. Denied/expired requests without issued credentials can renew; already-issued credentials need reconciliation. Existing game files/profiles stay on the Host.
+
+Testing 16 publication is pending verification. The six signed Java/Torch Wine targets are retained without changing runtime approval. Controller and Linux Host packages must match; older remote clients cannot bypass acceptance. No paid services or new game/player acceptance is implied.
+
 ## Testing 15: simpler Controller connection
 
 Instance setup displays this machine's Node ID and collects the chosen Controller's HTTPS hostname or IP/port. Check that destination with its administrator, activate the installation's separate free license, then enter the Controller's five-digit Hosts → Add host code. It is encrypted and expires after five minutes. Complete the one-time Host setup under the prepared non-root game account using the displayed command and private setup ticket. The Agent verifies the parent and saves its signed receipt before the machine appears connected. An expired code is requested again in the terminal. Existing Host transfers use the separate advanced handover flow.
