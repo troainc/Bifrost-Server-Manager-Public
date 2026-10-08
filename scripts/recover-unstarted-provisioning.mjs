@@ -123,12 +123,17 @@ export function validateRecoveryLedger(value){
  // Never erase a replay marker, running job, or unrelated completed job.
  assert.deepEqual(Object.keys(value),[]);
 }
-export function validateRecoveryNetwork(network,instanceId){
- assert.ok(network&&network.name===`bifrost-${instanceId}`&&/^[a-f0-9]{64}$/.test(network.id));
- assert.equal(network.labels?.['io.bifrost.instance-id'],instanceId);assert.equal(network.driver,'bridge');
- const attached=Object.hasOwn(network,'containers')?network.containers:{};assert.ok(attached&&typeof attached==='object'&&!Array.isArray(attached));
- // An initialized installer has not joined a running workload network.
- assert.deepEqual(Object.keys(attached),[]);
+export function validateRecoveryNetwork(network,instanceId,installer=null){
+ const attached=network&&Object.hasOwn(network,'containers')?network.containers:{};
+ const isMap=attached&&typeof attached==='object'&&!Array.isArray(attached);
+ const ids=isMap?Object.keys(attached):[];
+ // Podman init prepares networking before the installer workload starts.
+ // Permit only that exact, already reviewed never-started installer. After its
+ // removal callers omit installer, requiring a completely empty network.
+ const soleInstaller=isMap&&ids.length===1&&installer&&neverStarted(installer.State)&&/^[a-f0-9]{64}$/.test(installer.Id)&&ids[0]===installer.Id&&attached[installer.Id]?.name===`bifrost-install-${instanceId}`;
+ const checks={name:network?.name===`bifrost-${instanceId}`,id:typeof network?.id==='string'&&/^[a-f0-9]{64}$/.test(network.id),ownershipLabel:network?.labels?.['io.bifrost.instance-id']===instanceId,driver:network?.driver==='bridge',attachments:Boolean(isMap&&(ids.length===0||soleInstaller))};
+ const failedNetworkChecks=Object.keys(checks).filter(key=>!checks[key]);
+ if(failedNetworkChecks.length)throw Object.assign(new Error('Network ownership or attachment binding was not established.'),{failedNetworkChecks});
 }
 export async function planUnstartedRecovery(instanceId,digest,onStage=()=>{}){
  onStage('complete-read-only-review');const reviewed=await inspectUnstarted(instanceId,digest);
@@ -151,10 +156,10 @@ export async function planUnstartedRecovery(instanceId,digest,onStage=()=>{}){
  const all=(await podmanRecovery(['ps','--all','--external','--no-trunc','--format','{{.ID}}'])).trim().split(/\r?\n/).filter(Boolean);
  assert.deepEqual(all,[installer.Id]);
  onStage('unused-owned-network');
- const networks=JSON.parse(await podmanRecovery(['network','inspect',`bifrost-${instanceId}`]));assert.equal(networks.length,1);validateRecoveryNetwork(networks[0],instanceId);
+ const networks=JSON.parse(await podmanRecovery(['network','inspect',`bifrost-${instanceId}`]));assert.equal(networks.length,1);validateRecoveryNetwork(networks[0],instanceId,installer);
  onStage('same-filesystem-evidence');const stateRoot=dirname(LEDGER_PATH);await bindings.assertNoSymlinkDirectory(stateRoot);
  assert.equal((await lstat(instanceRoot)).dev,(await lstat(stateRoot)).dev);
- return {summary:{readOnly:true,reviewPassed:true,recoveryReady:true,instanceId,neverStartedInstallerVerified:true,emptyInstallerDirectories:true,onlyRetainedInstallerPresent:true,ownedNetworkUnused:true,jobLedgerEmpty:true,retainedFilesWillBeArchived:true},bindings,instanceRoot,operationRoot,lockPath,lock,tree,control:await controlFingerprints(),installer,network:networks[0],unit};
+ return {summary:{readOnly:true,reviewPassed:true,recoveryReady:true,instanceId,neverStartedInstallerVerified:true,emptyInstallerDirectories:true,onlyRetainedInstallerPresent:true,ownedNetworkNoOtherWorkloads:true,installerNetworkAttachmentPresent:Object.keys(networks[0].containers??{}).length===1,jobLedgerEmpty:true,retainedFilesWillBeArchived:true},bindings,instanceRoot,operationRoot,lockPath,lock,tree,control:await controlFingerprints(),installer,network:networks[0],unit};
 }
 async function assertNoOtherAgentProcess(){
  for(const name of await readdir('/proc')){
@@ -192,7 +197,10 @@ export async function recoverUnstarted(instanceId,digest,{onStage=()=>{},systemc
   onStage('installer-remove');await podmanRecovery(['rm','--force',current.installer.Id]);await verifyAbsent(['container','exists',current.installer.Id]);await verifyAbsent(['container','exists',`bifrost-${instanceId}`]);
   onStage('network-remove');assert.equal((await podmanRecovery(['ps','--all','--external','--no-trunc','--format','{{.ID}}'])).trim(),'');
   const networks=JSON.parse(await podmanRecovery(['network','inspect',`bifrost-${instanceId}`]));assert.equal(networks.length,1);validateRecoveryNetwork(networks[0],instanceId);assert.equal(networks[0].id,current.network.id);
-  await podmanRecovery(['network','rm',current.network.id]);await verifyAbsent(['network','exists',`bifrost-${instanceId}`]);
+  // Podman 5.4.2's non-force associated-container guard compares network names.
+  // The full immutable ID was just rechecked; use its exact name for removal
+  // so Podman's own last-moment in-use guard also applies.
+  await podmanRecovery(['network','rm',current.network.name]);await verifyAbsent(['network','exists',`bifrost-${instanceId}`]);
   onStage('retained-tree-archive');assert.deepEqual(await controlFingerprints(),initial.control);assert.deepEqual(await treeFingerprint(current.instanceRoot),initial.tree);assert.deepEqual(await privateBytes(current.lockPath),initial.lock);
   await rename(current.instanceRoot,join(evidence,'instance'));await syncRecoveryDirectory(dirname(current.instanceRoot));await syncRecoveryDirectory(evidence);
   if(current.operationRoot){assert.deepEqual(await readdir(current.operationRoot),[]);await rename(current.operationRoot,join(evidence,'operations'));await syncRecoveryDirectory(dirname(current.operationRoot));await syncRecoveryDirectory(evidence);}
@@ -206,8 +214,10 @@ export async function recoverUnstarted(instanceId,digest,{onStage=()=>{},systemc
 }
 export function recoveryFailure(stage,error,applyRequested=false){
  const failureStage=error?.recoveryStage??stage;
+ const allowedNetworkChecks=new Set(['name','id','ownershipLabel','driver','attachments']);
+ const failedNetworkChecks=['unused-owned-network','network-remove'].includes(failureStage)&&Array.isArray(error?.failedNetworkChecks)&&error.failedNetworkChecks.length>0&&error.failedNetworkChecks.length<=5&&error.failedNetworkChecks.every(key=>allowedNetworkChecks.has(key))?error.failedNetworkChecks:undefined;
  const evidenceRef=typeof error?.recoveryEvidenceRef==='string'&&/^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}-[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/.test(error.recoveryEvidenceRef)?error.recoveryEvidenceRef:undefined;
- return {readOnly:!applyRequested,recoveryCompleted:false,stage:recoveryStageNames.has(failureStage)?failureStage:'complete-read-only-review',code:['ENOENT','EACCES','EPERM','ENOSPC'].includes(error?.code)?error.code:'RECOVERY_REFUSED',...(applyRequested?{runtimeRecoveryCompleted:error?.runtimeRecoveryCompleted===true,serviceStateVerificationRequired:true}:{}),...(evidenceRef?{evidenceRef}:{})};
+ return {readOnly:!applyRequested,recoveryCompleted:false,stage:recoveryStageNames.has(failureStage)?failureStage:'complete-read-only-review',code:['ENOENT','EACCES','EPERM','ENOSPC'].includes(error?.code)?error.code:'RECOVERY_REFUSED',...(applyRequested?{runtimeRecoveryCompleted:error?.runtimeRecoveryCompleted===true,serviceStateVerificationRequired:true}:{}),...(evidenceRef?{evidenceRef}:{}),...(failedNetworkChecks?{failedNetworkChecks}:{})};
 }
 if(process.argv[1]==='-'||process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){
  let stage='arguments',applyRequested=false;
