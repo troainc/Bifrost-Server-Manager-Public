@@ -1,3 +1,11 @@
+## 2026-10-08 - Testing22 published and reset command prepared
+
+Controlled prerelease v0.1.0-installtest.22 is published with30 checksum-bound assets. All asset metadata and29 complete anonymous downloads, including the customer archive and Host ZIP, match. Three customer image scans and the reviewed Torch runtime report zero HIGH/CRITICAL findings. Supported Linux installer tests passed51 non-root plus3 administrator-bootstrap checks, including9 reset regressions. Compiled HTTPS onboarding/approval/authenticated heartbeat and real rootless selected-port provisioning/rollback passed locally. Private hosted jobs did not start because of the account billing gate; no hosted success is claimed. Fresh customer download/reinstall/player acceptance remains pending.
+
+Torch1.0.1 initializes new worlds PUBLIC and uses selected internal/Host ports. Defaults remain27016/8766; normal storage floor20GiB plus0.5GiB margin and queued reservations. Existing worlds are preserved on restart. Full reset is separate from updates and requires WIPE ALL; prepare a root-owned0755 staging directory with0644 helper so dedicated owners can read it. Reset removes the local panel/database/enrollment/worlds/managed backups but preserves unrelated workloads and router settings. Never perform a blanket runtime prune/reset.
+
+Installer SHA25605b97640cc0c5175f42199012b2f4c38cf8fcd61397e588eaddba6ac1c793865; published reset helper90110fe65f0531120608cf1e9bf29fc13b71c7acb53cad921849f70a7d00858a. Immutable raw helper55aba7f24584c539f16b15e8f4e119e4db06c533cf391716daccc1d169d07285 differs only by line endings; verify exact chosen download, not an interchangeable hash. Earlier release assets remain unchanged.
+
 ## 2026-10-08 - Explicit standard automatic Instance full reset
 
 Owner selected resetting the existing installation, including panel, automatic Host enrollment and test world. A separate checksum-pinned reset helper now provides read-only review and interactive WIPE ALL apply before a fresh matched installer. No live reset has been executed. Root only coordinates dedicated users; workload and filesystem changes are non-root, canonical, reviewed and non-force. Foreign/shared resources, custom services, unfinished ledger work and linked targets refuse. Includes managed local backups; normal20GiB Torch policy and site-selected ports are preserved.
