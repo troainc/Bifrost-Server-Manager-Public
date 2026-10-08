@@ -62,6 +62,7 @@ services:
       BIFROST_BLUEPRINT_CATALOG_FILE: /run/bifrost/provisioning-catalog.json
       BIFROST_BLUEPRINT_TRUSTED_KEYS_FILE: /run/bifrost/provisioning-trust.json
       BIFROST_VERSION: ${BIFROST_VERSION}
+      BIFROST_LOCAL_HOST_BOOTSTRAP_FILE: /run/secrets/local_host_bootstrap
       BIFROST_NODE_ROLE: ${BIFROST_NODE_ROLE:-controller}
       BIFROST_NODE_HOSTNAME: ${BIFROST_NODE_HOSTNAME:-}
       BIFROST_DISCOVERY_CIDRS: ${BIFROST_DISCOVERY_CIDRS:-}
@@ -77,7 +78,7 @@ services:
       BIFROST_AGENT_JOB_SIGNING_PRIVATE_KEY_FILE: /run/secrets/agent_job_signing_private
       BIFROST_BRANDING_DIR: /var/lib/bifrost/branding
       MFA_REQUIRED_ADMINS: "true"
-    secrets: [bifrost_app_password, rate_limit_pepper, mfa_encryption_key, agent_job_signing_private]
+    secrets: [bifrost_app_password, rate_limit_pepper, mfa_encryption_key, agent_job_signing_private, local_host_bootstrap]
     depends_on:
       postgres: {condition: service_healthy}
       migrate: {condition: service_completed_successfully}
@@ -179,3 +180,6 @@ secrets:
   agent_job_signing_private:
     file: ./secrets/agent-job-signing-private.pem
 
+
+  local_host_bootstrap:
+    file: ./secrets/local-host-bootstrap.json

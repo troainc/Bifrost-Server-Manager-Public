@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.16
+VERSION=v0.1.0-installtest.17
 # Matched testing release updater; immutable source + digest.
 UPDATER_SOURCE_REF=4f82a663fd5507584d4d57ef969823b5d2635239
 UPDATER_SHA256=8afb14408de8c6c1bb3c3751a9d5601c2a6fd19cc529be9f673caadbee2f8087
@@ -134,7 +134,7 @@ prepare_account() {
   fi
   [[ $(id -u bifrost) -ne 0 ]] || fail 'The existing bifrost account has UID 0. Refusing to use it.'
   local group
-  for group in $(id -nG bifrost); do
+  for group in $(id -nG bifrost | tr ' ' '\n'); do
     case "$group" in sudo|wheel|docker|lxd|incus-admin) fail "Existing bifrost account belongs to privileged group $group. Remove that membership before continuing.";; esac
   done
   if command -v sudo >/dev/null; then
@@ -165,7 +165,7 @@ prepare_account() {
 assert_service_account() {
   [[ $(id -un) == bifrost && $(id -u) -ne 0 ]] || fail 'Run the application installer as bifrost. A VM administrator first runs bash install.sh --prepare-account, then sets its password with passwd bifrost. Log in directly as bifrost.'
   local group
-  for group in $(id -nG); do
+  for group in $(id -nG | tr ' ' '\n'); do
     case "$group" in sudo|wheel|docker|lxd|incus-admin) fail "bifrost has privileged group membership: $group. Remove it before installing.";; esac
   done
   if command -v sudo >/dev/null; then
@@ -175,6 +175,187 @@ assert_service_account() {
       fail 'bifrost has a sudo policy grant. Remove it before installing.'
     fi
   fi
+}
+
+prepare_automatic_instance_host() {
+  [[ $(id -u) -eq 0 ]] || fail 'Local Host preparation requires the initial VM administrator.'
+  local game=bifrost-games game_home game_uid panel_home panel_uid stage package_root digest node_root
+  panel_home=$(getent passwd bifrost | cut -d: -f6); panel_uid=$(id -u bifrost)
+  if ! id "$game" >/dev/null 2>&1; then useradd --create-home --user-group --shell /usr/sbin/nologin --comment 'Bifrost isolated game Host' "$game"; fi
+  game_uid=$(id -u "$game"); game_home=$(getent passwd "$game" | cut -d: -f6)
+  [[ "$game_uid" -ne 0 && "$game_uid" -ne "$panel_uid" && "$game_home" == /home/bifrost-games && -d "$game_home" && ! -L "$game_home" && $(stat -c %u "$game_home") -eq "$game_uid" ]] || fail 'Unsafe game-service account; preserving existing state.'
+  for group in $(id -nG "$game" | tr ' ' '\n'); do case "$group" in sudo|wheel|docker|lxd|incus-admin) fail 'The game-service account has privileged group membership.';; esac; done
+  if command -v sudo >/dev/null; then
+    [[ ! -L /etc/sudoers.d/zz-bifrost-games-deny ]] || fail 'Unsafe game sudo policy.'
+    printf 'bifrost-games ALL=(ALL:ALL) !ALL\n' > /etc/sudoers.d/zz-bifrost-games-deny
+    chmod 0440 /etc/sudoers.d/zz-bifrost-games-deny
+    visudo -c >/dev/null || fail 'Invalid game-account sudo policy.'
+    if LC_ALL=C sudo -l -U "$game" 2>&1 | awk '/^[[:space:]]*\(/ {sub(/^[[:space:]]*\([^)]*\)[[:space:]]*/, ""); if ($0 != "!ALL") grant=1} END {exit !grant}'; then fail 'Another sudo policy grants the game account commands.'; fi
+  fi
+  chmod 0700 "$game_home"
+  [[ ! -e "$game_home/.config/bifrost-host-agent/host-agent.json" && ! -e "$game_home/.local/state/bifrost-host-agent/instance-join.json" && ! -e "$game_home/.local/state/bifrost-host-agent/job-ledger.json" ]] || fail 'An existing game Host requires recovery or handover; it will not be overwritten.'
+  grep -q "^$game:" /etc/subuid && grep -q "^$game:" /etc/subgid || fail 'The game account requires subordinate UID/GID ranges for rootless Podman.'
+  run_task 'Install local game Host prerequisites' env DEBIAN_FRONTEND=noninteractive apt-get -q install -y podman slirp4netns fuse-overlayfs xz-utils
+  loginctl enable-linger "$game"
+  systemctl start "user@$game_uid.service"
+  [[ -S "/run/user/$game_uid/bus" ]] || fail 'Game-account user session failed to start.'
+  node_root=/opt/bifrost-node-v24.19.0
+  stage=$(mktemp -d /tmp/bifrost-auto-host.XXXXXX)
+  chmod 0755 "$stage"
+  if [[ ! -e "$node_root" ]]; then
+    fetch 'https://nodejs.org/dist/v24.19.0/node-v24.19.0-linux-x64.tar.xz' "$stage/node.tar.xz"
+    (cd "$stage" && printf '%s  node.tar.xz\n' '14b342e71204f811bde6153be8e04b62aef63c236fef92b55f9c83154b409647' | sha256sum --check --status) || fail 'Pinned Node runtime checksum failed.'
+    install -d -m 0755 -o root -g root "$node_root"
+    tar -xJf "$stage/node.tar.xz" -C "$node_root" --strip-components=1 --no-same-owner
+    chmod -R go-w "$node_root"
+  fi
+  python3 - "$node_root" <<'NODE_RUNTIME_PY'
+import os,pathlib,stat,sys
+root=pathlib.Path(sys.argv[1])
+if root.resolve()!=root or root.is_symlink():raise SystemExit('Unsafe pinned Node runtime root.')
+for path in [root,*root.rglob('*')]:
+    info=path.lstat()
+    if info.st_uid!=0 or (not path.is_symlink() and info.st_mode&0o022):raise SystemExit('Pinned Node runtime must be root-owned and protected from service-account writes.')
+    if path.is_symlink() and not path.resolve().is_relative_to(root):raise SystemExit('Pinned Node runtime link escapes its root.')
+NODE_RUNTIME_PY
+  "$node_root/bin/node" -e 'if(process.versions.node!=="24.19.0")process.exit(1)' || fail 'Pinned Node runtime identity mismatch.'
+  fetch "https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION/bifrost-linux-host-agent.zip" "$stage/host.zip"
+  fetch "https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION/SHA256SUMS" "$stage/SHA256SUMS"
+  (cd "$stage" && sed 's/  bifrost-linux-host-agent.zip$/  host.zip/' SHA256SUMS | grep -E '^[a-f0-9]{64}  host.zip$' | sha256sum --check --status) || fail 'Matched Host package checksum failed.'
+  digest=$(sha256sum "$stage/host.zip" | awk '{print $1}')
+  chmod 0644 "$stage/host.zip"
+  package_root="$game_home/.local/opt/bifrost-host-agent-$digest"
+  runuser -u "$game" -- mkdir -p -m 0700 "$game_home/.local/opt" "$game_home/.config/systemd/user" "$game_home/.config/bifrost-host-agent"
+  runuser -u "$game" -- python3 - "$stage/host.zip" "$package_root" <<'AUTO_HOST_ZIP_PY'
+import os,pathlib,stat,sys,zipfile,tempfile,hashlib
+archive,destination=sys.argv[1:]
+final=pathlib.Path(destination)
+if final.parent.resolve()!=final.parent or final.is_symlink():raise SystemExit("Unsafe Host package destination.")
+existing=final.exists()
+root=final.resolve(strict=True) if existing else pathlib.Path(tempfile.mkdtemp(prefix=".bifrost-package-",dir=final.parent));seen=set();total=0
+with zipfile.ZipFile(archive) as source:
+    entries=source.infolist()
+    if not entries or len(entries)>10000:raise SystemExit('Invalid Host Agent package entry count.')
+    for entry in entries:
+        name=entry.filename;path=pathlib.PurePosixPath(name);mode=entry.external_attr>>16;kind=stat.S_IFMT(mode)
+        if not name or name.startswith('/') or '\\' in name or ':' in name or any(part in ('','.','..') for part in name.rstrip('/').split('/')):raise SystemExit('Unsafe Host Agent package path.')
+        if name.casefold() in seen:raise SystemExit('Duplicate Host Agent package path.')
+        seen.add(name.casefold())
+        if kind not in (0,stat.S_IFREG,stat.S_IFDIR):raise SystemExit('Host Agent package contains a link or special file.')
+        total+=entry.file_size
+        if entry.file_size>512*1024*1024 or total>1024*1024*1024:raise SystemExit('Host Agent package exceeds its extraction limit.')
+    for entry in entries:
+        target=root.joinpath(*pathlib.PurePosixPath(entry.filename).parts)
+        if os.path.commonpath((str(root),str(target.resolve(strict=False))))!=str(root):raise SystemExit('Host Agent package path escapes its staging directory.')
+        if existing:
+            if target.is_symlink() or target.resolve()!=target:raise SystemExit('Unsafe retained Host package file.')
+            if entry.is_dir():
+                if not target.is_dir():raise SystemExit('Incomplete retained Host package.')
+                continue
+            if not target.is_file() or target.stat().st_uid!=os.getuid() or target.stat().st_nlink!=1 or target.stat().st_size!=entry.file_size:raise SystemExit('Invalid retained Host package.')
+            with target.open('rb') as current,source.open(entry) as expected:
+                if hashlib.file_digest(current,'sha256').digest()!=hashlib.file_digest(expected,'sha256').digest():raise SystemExit('Retained Host package differs; it was preserved.')
+            continue
+        if entry.is_dir():target.mkdir(mode=0o700,parents=True,exist_ok=True);continue
+        target.parent.mkdir(mode=0o700,parents=True,exist_ok=True)
+        fd=os.open(target,os.O_WRONLY|os.O_CREAT|os.O_EXCL|getattr(os,'O_NOFOLLOW',0),0o600)
+        with os.fdopen(fd,'wb') as out,source.open(entry) as inp:
+            while True:
+                chunk=inp.read(1024*1024)
+                if not chunk:break
+                out.write(chunk)
+            out.flush();os.fsync(out.fileno())
+if not existing:os.rename(root,final)
+AUTO_HOST_ZIP_PY
+  [[ -f "$package_root/dist/automatic-instance-setup.js" && -f "$package_root/dist/main.js" ]] || fail 'The matched release does not contain automatic Instance setup.'
+  python3 - "$panel_home/.local/share/bifrost" "$panel_uid" "$game_home" "$game_uid" <<'AUTO_HOST_CONFIG_PY'
+import pathlib,os,json,secrets,stat,sys,urllib.parse,subprocess
+panel=pathlib.Path(sys.argv[1]);uid=int(sys.argv[2]);game=pathlib.Path(sys.argv[3]);gameuid=int(sys.argv[4])
+def safe(path,owner,limit):
+    if path.is_symlink() or path.resolve()!=path or not path.is_file():raise SystemExit('Unsafe local Host setup input.')
+    fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW)
+    with os.fdopen(fd,'rb') as f:
+        info=os.fstat(f.fileno())
+        if info.st_uid!=owner or info.st_nlink!=1 or info.st_size>limit:raise SystemExit('Invalid local Host setup input.')
+        return f.read(limit+1)
+values=dict(line.split('=',1) for line in safe(panel/'.env',uid,65536).decode().splitlines() if '=' in line and not line.startswith('#'))
+url=values.get('BIFROST_PUBLIC_URL','');parsed=urllib.parse.urlsplit(url)
+if values.get('BIFROST_NODE_ROLE')!='instance' or parsed.scheme!='https' or not parsed.hostname or parsed.username or parsed.password or parsed.path or parsed.query or parsed.fragment:raise SystemExit('Use the fresh Instance HTTPS origin.')
+cert=safe(panel/'secrets/panel-cert.pem',uid,32768).decode()
+if 'PRIVATE KEY' in cert or 'BEGIN CERTIFICATE' not in cert:raise SystemExit('Use only the installer-provisioned public certificate.')
+secret=panel/'secrets/local-host-bootstrap.json'
+old=json.loads(safe(secret,uid,1024))
+bootstrap=game/'.config/bifrost-host-agent/local-bootstrap.json'
+if bootstrap.parent.resolve()!=bootstrap.parent:raise SystemExit('Unsafe game bootstrap directory.')
+existing=json.loads(safe(bootstrap,gameuid,32768)) if bootstrap.exists() else None
+if existing:
+    if stat.S_IMODE(bootstrap.stat().st_mode)!=0o600 or existing.get('version')!=1 or existing.get('local')!=url or existing.get('certificate')!=cert or existing.get('enableReviewedCatalog') is not True:raise SystemExit('Retained bootstrap differs; it was preserved.')
+    token=existing.get('token','')
+    if len(token)!=64 or not all(c.isascii() and (c.isalnum() or c in '_-') for c in token):raise SystemExit('Invalid retained bootstrap capability.')
+else:
+    if old!={'enabled':False}:raise SystemExit('Existing panel capability has no matching game-account bootstrap; preserve and reconcile it.')
+    token=secrets.token_urlsafe(48)
+if old not in ({'enabled':False},{'enabled':True,'token':token}):raise SystemExit('Existing bootstrap capabilities differ; both were preserved.')
+# All filesystem writes in service-account trees execute as their non-root owner.
+writer="""import os,sys,pathlib
+p=pathlib.Path(sys.argv[1])
+if p.resolve()!=p or p.is_symlink():raise SystemExit('Unsafe bootstrap secret.')
+flags=os.O_WRONLY|os.O_NOFOLLOW|(os.O_TRUNC if sys.argv[2]=='panel' else os.O_CREAT|os.O_EXCL)
+fd=os.open(p,flags,0o600)
+with os.fdopen(fd,'w') as f:
+    f.write(sys.stdin.read(32768));f.flush();os.fsync(f.fileno())
+os.chmod(p,0o644 if sys.argv[2]=='panel' else 0o600)
+"""
+if not existing:
+    subprocess.run(['/usr/sbin/runuser','-u','bifrost-games','--','/usr/bin/python3','-c',writer,str(bootstrap),'game'],input=json.dumps(dict(version=1,local=url,token=token,certificate=cert,enableReviewedCatalog=True)),text=True,check=True)
+if old=={'enabled':False}:
+    subprocess.run(['/usr/sbin/runuser','-u','bifrost','--','/usr/bin/python3','-c',writer,str(secret),'panel'],input=json.dumps(dict(enabled=True,token=token)),text=True,check=True)
+
+AUTO_HOST_CONFIG_PY
+  retain_game_unit() {
+    runuser -u "$game" -- python3 -c 'import os,pathlib,stat,sys
+p=pathlib.Path(sys.argv[1]);data=sys.stdin.buffer.read(8192)
+if p.parent.resolve()!=p.parent or p.is_symlink():raise SystemExit("Unsafe user service path.")
+if p.exists():
+    info=p.stat()
+    if not stat.S_ISREG(info.st_mode) or info.st_uid!=os.getuid() or info.st_nlink!=1 or p.read_bytes()!=data:raise SystemExit("Existing user service differs; it was preserved.")
+else:
+    fd=os.open(p,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
+    with os.fdopen(fd,"wb") as f:f.write(data);f.flush();os.fsync(f.fileno())' "$1"
+  }
+  retain_game_unit "$game_home/.config/systemd/user/bifrost-host-agent.service" <<UNIT
+[Unit]
+Description=Bifrost local game Host Agent
+[Service]
+ExecStart=$node_root/bin/node $package_root/dist/main.js
+Environment=BIFROST_HOST_AGENT_CONFIG=$game_home/.config/bifrost-host-agent/host-agent.json
+Restart=on-failure
+RestartSec=10
+UMask=0077
+[Install]
+WantedBy=default.target
+UNIT
+  retain_game_unit "$game_home/.config/systemd/user/bifrost-instance-setup.service" <<UNIT
+[Unit]
+Description=Bifrost automatic Instance connection
+[Service]
+ExecStart=$node_root/bin/node $package_root/dist/automatic-instance-setup.js $game_home/.config/bifrost-host-agent/local-bootstrap.json
+WorkingDirectory=$package_root
+Restart=on-failure
+RestartSec=10
+UMask=0077
+NoNewPrivileges=true
+[Install]
+WantedBy=default.target
+UNIT
+  runuser -u "$game" -- chmod 0600 "$game_home/.config/systemd/user/bifrost-host-agent.service" "$game_home/.config/systemd/user/bifrost-instance-setup.service"
+  runuser -u "$game" -- env -i HOME="$game_home" USER="$game" PATH=/usr/bin:/bin XDG_RUNTIME_DIR="/run/user/$game_uid" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$game_uid/bus" podman info --format '{{.Host.Security.Rootless}}' | grep -qx true || fail 'The prepared game account cannot run rootless Podman.'
+  runuser -u "$game" -- env -i HOME="$game_home" USER="$game" PATH=/usr/bin:/bin XDG_RUNTIME_DIR="/run/user/$game_uid" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$game_uid/bus" systemctl --user daemon-reload
+  runuser -u "$game" -- env -i HOME="$game_home" USER="$game" PATH=/usr/bin:/bin XDG_RUNTIME_DIR="/run/user/$game_uid" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$game_uid/bus" systemctl --user enable --now bifrost-instance-setup.service
+  # Exact checked staging tree only; never remove Host state or game storage.
+  [[ "$stage" == /tmp/bifrost-auto-host.* && $(stat -c %u "$stage") -eq 0 ]] || fail 'Unsafe preparation staging path.'
+  rm -rf -- "$stage"
+  ui_ok 'Local Host prepared. Finish the browser wizard; master acceptance starts its connection automatically.'
 }
 
 automated_bootstrap() {
@@ -206,6 +387,7 @@ automated_bootstrap() {
   modprobe nf_tables
   printf 'nf_tables\n' > /etc/modules-load.d/bifrost-rootless.conf
   prepare_account
+  if [[ "${BIFROST_INSTALL_ROLE:-controller}" == instance && -e /home/bifrost-games/.config/bifrost-host-agent/host-agent.json ]]; then fail 'An automatic local Host already exists. Preserve its credentials and games; use the update/recovery path instead of wiping its panel.'; fi
   local uid account_home copied
   uid=$(id -u bifrost); account_home=$(getent passwd bifrost | cut -d: -f6)
   # Start the user manager independently of an SSH login; no account password is required.
@@ -215,7 +397,9 @@ automated_bootstrap() {
   copied="$account_home/.local/share/bifrost-bootstrap/install.sh"
   [[ "$script" == "$copied" ]] || install -m 0700 -o bifrost -g "$(id -gn bifrost)" "$script" "$copied"
   printf '\nVM preparation complete. Continuing installation as bifrost (UID %s).\n' "$uid"
-  exec runuser -u bifrost -- env -i HOME="$account_home" USER=bifrost LOGNAME=bifrost PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin XDG_RUNTIME_DIR="/run/user/$uid" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" TERM="${TERM:-xterm}" BIFROST_REINSTALL="${BIFROST_REINSTALL:-0}" BIFROST_RESUME="${BIFROST_RESUME:-0}" BIFROST_INSTALL_ROLE="${BIFROST_INSTALL_ROLE:-controller}" bash "$copied"
+  runuser -u bifrost -- env -i HOME="$account_home" USER=bifrost LOGNAME=bifrost PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin XDG_RUNTIME_DIR="/run/user/$uid" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" TERM="${TERM:-xterm}" BIFROST_REINSTALL="${BIFROST_REINSTALL:-0}" BIFROST_RESUME="${BIFROST_RESUME:-0}" BIFROST_INSTALL_ROLE="${BIFROST_INSTALL_ROLE:-controller}" bash "$copied"
+  if [[ "${BIFROST_INSTALL_ROLE:-controller}" == instance ]]; then prepare_automatic_instance_host; fi
+  exit 0
 }
 
 require_host_runtime() {
@@ -242,9 +426,12 @@ install_instance_host() {
   (cd "$stage" && sha256sum --check bifrost-linux-host-agent.zip.sha256) || fail 'Host Agent package checksum failed.'
   mkdir -m 0700 "$package"
   python3 - "$stage/bifrost-linux-host-agent.zip" "$package" <<'HOST_ZIP_PY'
-import os,pathlib,stat,sys,zipfile
+import os,pathlib,stat,sys,zipfile,tempfile,hashlib
 archive,destination=sys.argv[1:]
-root=pathlib.Path(destination).resolve(strict=True);seen=set();total=0
+final=pathlib.Path(destination)
+if final.parent.resolve()!=final.parent or final.is_symlink():raise SystemExit("Unsafe Host package destination.")
+existing=final.exists()
+root=final.resolve(strict=True) if existing else pathlib.Path(tempfile.mkdtemp(prefix=".bifrost-package-",dir=final.parent));seen=set();total=0
 with zipfile.ZipFile(archive) as source:
     entries=source.infolist()
     if not entries or len(entries)>10000:raise SystemExit('Invalid Host Agent package entry count.')
@@ -259,6 +446,15 @@ with zipfile.ZipFile(archive) as source:
     for entry in entries:
         target=root.joinpath(*pathlib.PurePosixPath(entry.filename).parts)
         if os.path.commonpath((str(root),str(target.resolve(strict=False))))!=str(root):raise SystemExit('Host Agent package path escapes its staging directory.')
+        if existing:
+            if target.is_symlink() or target.resolve()!=target:raise SystemExit('Unsafe retained Host package file.')
+            if entry.is_dir():
+                if not target.is_dir():raise SystemExit('Incomplete retained Host package.')
+                continue
+            if not target.is_file() or target.stat().st_uid!=os.getuid() or target.stat().st_nlink!=1 or target.stat().st_size!=entry.file_size:raise SystemExit('Invalid retained Host package.')
+            with target.open('rb') as current,source.open(entry) as expected:
+                if hashlib.file_digest(current,'sha256').digest()!=hashlib.file_digest(expected,'sha256').digest():raise SystemExit('Retained Host package differs; it was preserved.')
+            continue
         if entry.is_dir():target.mkdir(mode=0o700,parents=True,exist_ok=True);continue
         target.parent.mkdir(mode=0o700,parents=True,exist_ok=True)
         fd=os.open(target,os.O_WRONLY|os.O_CREAT|os.O_EXCL|getattr(os,'O_NOFOLLOW',0),0o600)
@@ -275,7 +471,7 @@ HOST_ZIP_PY
   if [[ "${HOST_FLAGS[*]}" == *--join-instance* ]]; then
     printf '\nUse the private join ticket from this Instance setup, plus a fresh Host code generated on its chosen parent Controller. The Agent will ask for this Instance panel URL first.\n'
   else
-    printf '\nCreate a fresh one-use code in the Controller under Hosts → Add host. The Host Agent will ask for the Controller panel HTTPS URL and that code.\n'
+    printf '\nCreate a fresh one-use code in the Controller under Hosts â†’ Add host. The Host Agent will ask for the Controller panel HTTPS URL and that code.\n'
   fi
   bash "$package/install-agent.sh" "$package" "${HOST_FLAGS[@]}"
   rm -rf -- "$stage"
@@ -293,7 +489,13 @@ if [[ "${1:-}" == --update ]]; then
   rm -f "$update_stage/update.sh"; rmdir "$update_stage"
   exit 0
 fi
-[[ "${1:-}" != --help ]] || { echo 'Run bash install.sh to choose Controller, standalone Instance node, or Hybrid. Pass --controller, --instance, or --hybrid; --host installs only an Agent for an existing Controller. Fresh Instances joining a chosen parent use --host --join-instance. Existing Hosts can use --host --upgrade; revoked Hosts can use --host --upgrade --re-enroll.'; exit 0; }
+[[ "${1:-}" != --help ]] || { echo 'Run bash install.sh to choose Controller, standalone Instance node, or Hybrid. Pass --controller, --instance, or --hybrid; --host installs only an Agent for an existing Controller. Fresh amd64 Instances joining a chosen parent prepare their Host automatically after master acceptance. Earlier/manual Installs can use --host --join-instance. --resume-local-host resumes interrupted fresh pre-join preparation as root. Existing Hosts can use --host --upgrade; revoked Hosts can use --host --upgrade --re-enroll.'; exit 0; }
+if [[ "${1:-}" == --resume-local-host ]]; then
+  [[ $# -eq 1 && $(id -u) -eq 0 ]] || fail 'Resume local Host preparation as the VM administrator. This does not reinstall or wipe the panel.'
+  [[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || fail 'Linux x86_64 is required.'
+  prepare_automatic_instance_host
+  exit 0
+fi
 HOST_FLAGS=()
 if [[ "${1:-}" == --host ]]; then
   BIFROST_INSTALL_ROLE=host
@@ -312,11 +514,11 @@ elif [[ "${1:-}" == --reinstall || "${1:-}" == --resume || "${1:-}" == --prepare
 elif [[ -z "${BIFROST_INSTALL_ROLE:-}" ]]; then
   [[ -r /dev/tty ]] || fail 'Choose --controller, --instance, --hybrid or --host when running without a terminal.'
   ui_banner
-  ui_step '01 / 06   Choose this machine’s role' 'Controller manages a fleet. Instance manages this machine. Hybrid does both.'
-  printf "\n  1) Controller — central fleet panel; separate game Hosts\n  2) Standalone Instance node — local panel and local game Host; can pair later\n  3) Hybrid — fleet Controller plus a local game Host\n  4) Host Agent only — join an existing Controller; no new panel\n\n"
+  ui_step '01 / 06   Choose this machineâ€™s role' 'Controller manages a fleet. Instance manages this machine. Hybrid does both.'
+  printf "\n  1) Controller â€” central fleet panel; separate game Hosts\n  2) Standalone Instance node â€” local panel and local game Host; can pair later\n  3) Hybrid â€” fleet Controller plus a local game Host\n  4) Host Agent only â€” join an existing Controller; no new panel\n\n"
   printf '  A game instance is one server created later in the Controller panel.\n'
   printf '  For one game server, you still need a Controller and an enrolled Host.\n'
-  printf '  Instance and Hybrid panels require a separately prepared local Host Agent account.\n  Complete panel setup and licensing, then enroll its local Agent or choose a verified parent Controller.\n\n'
+  printf '  The Instance bootstrap prepares an isolated local Host automatically for joining a parent. Hybrid local Hosts still use separate account preparation.\n  Complete panel setup and licensing, then enroll its local Agent or choose a verified parent Controller.\n\n'
   read -r -p 'Select 1, 2, 3 or 4: ' install_choice </dev/tty
   case "$install_choice" in 1) BIFROST_INSTALL_ROLE=controller;; 2) BIFROST_INSTALL_ROLE=instance;; 3) BIFROST_INSTALL_ROLE=hybrid;; 4) BIFROST_INSTALL_ROLE=host;; *) fail 'Choose a displayed node role or Host Agent only.';; esac
 fi
@@ -410,6 +612,7 @@ san="DNS:$address"
 [[ "$address" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && san="IP:$address"
 openssl req -x509 -newkey rsa:3072 -nodes -days 365 -subj "/CN=$address" -addext "subjectAltName=$san" -keyout "$INSTALL_DIR/secrets/panel-key.pem" -out "$INSTALL_DIR/secrets/panel-cert.pem" >/dev/null 2>&1
 # The 0700 parent protects these files on the host; service-specific read-only mounts allow non-root container identities to read them.
+printf '{"enabled":false}\n' > "$INSTALL_DIR/secrets/local-host-bootstrap.json"
 chmod 0644 "$INSTALL_DIR"/secrets/*
 else
   printf '\nResuming configuration with existing package and credentials.\n'
@@ -622,7 +825,7 @@ run_task 'Start and check all panel services' docker compose up -d --wait --wait
 ui_step 'YOUR BIFROST PANEL IS READY' 'Open the panel to confirm its node role and begin onboarding.'
 printf '\n  Node role: %s\n' "$BIFROST_INSTALL_ROLE"
 if [[ "$BIFROST_INSTALL_ROLE" == instance || "$BIFROST_INSTALL_ROLE" == hybrid ]]; then
-  printf '  Next: prepare a separate non-root game-service account with Node.js 24 and rootless Podman.\n  After panel setup and license activation, use Hosts → Add host to pair that local Agent.\n  Run bash install.sh --host as the prepared game account, using this panel URL.\n  Or choose Join an existing Controller in Instance setup, verify its identity and use --host --join-instance.\n  Existing enrolled Hosts use the separate ownership handover flow.\n'
+  printf '  Instance installations through the initial VM bootstrap prepare their local Agent automatically.\n  Manual or Hybrid installs: prepare a separate non-root game-service account with Node.js 24 and rootless Podman.\n  After panel setup and license activation, use Hosts â†’ Add host to pair that local Agent.\n  Run bash install.sh --host as the prepared game account, using this panel URL.\n  Or choose Join an existing Controller in Instance setup, verify its identity and use --host --join-instance.\n  Existing enrolled Hosts use the separate ownership handover flow.\n'
 fi
 printf '\n  Panel     https://%s:%s/install\n  Account   bifrost (non-root)\n  Files     %s\n\n  Your test HTTPS certificate is self-signed.\n  Your browser will ask you to confirm it.\n\n  Support   discord.gg/troainc\n\n' "$address" "$port" "$INSTALL_DIR"
 ui_rule

@@ -1,3 +1,9 @@
+## Fresh testing 17 Instance flow
+
+On Debian/Ubuntu amd64, fresh `bash install.sh --instance` also prepares the isolated `bifrost-games` account, rootless Podman, pinned Node 24 and automatic Host service. Choose the intended Controller HTTPS hostname or IPv4/port and enter its code in browser setup. Its administrator accepts the request under Hosts. Bifrost completes the signed join and starts the Agent automatically; wait for its heartbeat, then create the game in the parent panel. Game terms are still explicit at creation. The reviewed catalog includes five Minecraft Java variants and Space Engineers Torch Wine; other targets remain gated.
+
+Existing Host credentials, receipts and game/job state are preserved and refuse fresh preparation. Do not wipe a Host to retry joining. `sudo bash install.sh --resume-local-host` can resume only interrupted pre-join preparation on the same fresh Instance and requires exact matching files. The normal updater preserves existing configuration and does not retroactively provision this bootstrap. Independent local/Hybrid and manual Agent-only installs retain their explicit setup. Actual clean VM/systemd/game acceptance remains pending despite disposable compiled and installer checks.
+
 ## Testing 16 candidate: reviewed Controller connections
 
 Enter the chosen Controller address and five-digit code in the Instance setup screen, then choose **Send connection request**. On the master, an administrator opens **Hosts → Connection requests**, compares the displayed Node ID and chooses **Accept** or **Deny** with a reason. Approval does not install a game or start the Agent. After acceptance, complete the one-time Host setup under the separately prepared non-root game account using the displayed Instance URL and private setup ticket. A recent valid heartbeat establishes that the Host is online.

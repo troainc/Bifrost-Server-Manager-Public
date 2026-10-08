@@ -1,3 +1,9 @@
+## 2026-10-07 - Testing 17 automatic Instance Host candidate
+
+Fresh Debian/Ubuntu amd64 Instance bootstrap prepares a separate non-root bifrost-games account, rootless Podman, pinned Node 24, the matched Host package and fixed automatic setup service. Parent URL/code in the browser creates a master-side review request. After administrator acceptance, the worker retains the signed receipt, configures the six reviewed recipes and starts the Agent; the panel reports Connected only after its heartbeat. No separate terminal command, private key copying, TLS bypass or game EULA acceptance is part of this fresh joining path. Independent/Hybrid/manual and existing handover stay separate.
+
+Preparation refuses existing Host credentials, receipt or ledger before panel reinstall. --resume-local-host is root-only interrupted pre-join preparation; exact package bytes and retained bootstrap capabilities must match. Disposable checks cover atomic bounded extraction, exact retries, interrupted panel capability activation, mismatch preservation, private-key and symlink refusal. Full matched release/package/live rollout and actual tester VM/systemd/game acceptance remain pending. No paid services or billing changes. Previous releases remain immutable.
+
 ## 2026-10-07 - Testing 16 published; administrator Host connection approval
 
 Published [testing 16](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.16) from private compiled source b51db5bdf513ccfe47f28c7051058b639983d8e1 and public packaging source 78c5febe126cf00d88065e9ff950244293d2f6cc. All 22 uploaded asset sizes/digests and nine full cookie-free latest downloads matched; public main bootstrap is byte-identical. Updater pin: 4f82a663fd5507584d4d57ef969823b5d2635239; SHA256 8afb14408de8c6c1bb3c3751a9d5601c2a6fd19cc529be9f673caadbee2f8087. Prior assets are immutable and other contributors' main commits are retained.
