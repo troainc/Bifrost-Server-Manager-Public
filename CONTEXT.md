@@ -1,3 +1,9 @@
+## 2026-10-08 - Explicit standard automatic Instance full reset
+
+Owner selected resetting the existing installation, including panel, automatic Host enrollment and test world. A separate checksum-pinned reset helper now provides read-only review and interactive WIPE ALL apply before a fresh matched installer. No live reset has been executed. Root only coordinates dedicated users; workload and filesystem changes are non-root, canonical, reviewed and non-force. Foreign/shared resources, custom services, unfinished ledger work and linked targets refuse. Includes managed local backups; normal20GiB Torch policy and site-selected ports are preserved.
+
+Nine Linux disposable reset regressions pass as a non-root account with simulated runtime boundaries. Real customer full reset/download/pairing/game/player acceptance remains pending. See Docs/Full-Automatic-Instance-Reset.md.
+
 ## 2026-10-08 - Preparing testing 22 fresh Torch installation
 
 The owner authorizes a matched fresh installation release that integrates fixes from both Bifrost chats. Torch's new signed recipe minimum is 20 GiB, superseding the earlier 40 GiB generic staging floor; retain actual filesystem capacity, the 0.5 GiB margin and queued reservations. Other game recipe floors remain unchanged. Port2750 is a site selection, not the distributed default.
