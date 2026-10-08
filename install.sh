@@ -182,6 +182,9 @@ prepare_automatic_instance_host() {
   # A non-login su session can retain the ordinary user's PATH. Both fresh
   # preparation and recovery need administrator tools such as visudo/useradd.
   export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+  # Service accounts must not inherit the invoking administrator's private
+  # home as their working directory. All preparation paths below are absolute.
+  cd / || fail 'Cannot select a safe local Host preparation directory.'
   local game=bifrost-games game_home game_uid panel_home panel_uid stage package_root digest node_root
   panel_home=$(getent passwd bifrost | cut -d: -f6); panel_uid=$(id -u bifrost)
   if ! id "$game" >/dev/null 2>&1; then useradd --create-home --user-group --shell /usr/sbin/nologin --comment 'Bifrost isolated game Host' "$game"; fi
@@ -381,6 +384,7 @@ automated_bootstrap() {
   [[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || fail 'Linux x86_64 is required.'
   [[ -r /etc/os-release ]] || fail 'Cannot identify the VM operating system.'
   export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+  cd / || fail 'Cannot select a safe VM preparation directory.'
   # os-release defines VERSION too. Read only ID in a subshell so the
   # subsequent local Host downloads retain this installer's matched release.
   local os_id
