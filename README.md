@@ -1,3 +1,7 @@
+## 2026-10-08 - Existing Torch world multiplayer repair
+
+The explicit scripts/enable-torch-world-multiplayer.mjs helper enables PUBLIC in both XML settings of an approved, stopped existing Torch test world. It preserves both originals privately under the game-service account world-multiplayer-repairs evidence directory before replacement, and refuses running/foreign runtimes, active jobs, competing locks or changed state. Start and stop remain Controller operations. Ten local Linux checks pass, with Podman boundaries simulated; actual repair, restart and player joining remain separate. Future seed initialization requires a separately reviewed runtime change. Existing release assets are unchanged.
+
 ## 2026-10-08 - Recovery process visibility correction
 
 The stopped-service guard no longer reads every same-account /proc/PID/exe link before checking Agent arguments. Linux ptrace credential checks can deny executable-link reads even when the process directory has the expected effective UID. The guard now checks every same-account command line directly for another Agent main script. Unreadable command lines still refuse; only vanished processes are skipped. No procfs, ptrace, service account or isolation policy is changed.
