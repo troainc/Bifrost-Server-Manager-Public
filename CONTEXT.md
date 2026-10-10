@@ -1,3 +1,9 @@
+## 2026-10-09 - Testing23 distribution preparation
+
+Owner authorized a matched testing23 installation release with current main UI and action-state corrections. Version23 installer/updater/image references remain matched. Preserve the separate bounded full-reset helper, WIPE ALL terminal confirmation, dedicated-owner operation and refusal of foreign/shared/unfinished resources. Normal Torch20GiB policy and user-selected ports stay in the signed private publisher handoff; site2750 is not a global default. Earlier release assets remain immutable.
+
+No customer reset is executed here. Build/scan/startup/package/checksum and anonymous-download evidence must pass before publishing this controlled prerelease or providing the final reset/install command. Fresh bfsm download, complete setup/approval/game creation and real player acceptance remain owner-run checks after publication.
+
 ## 2026-10-08 - Testing22 published and reset command prepared
 
 Controlled prerelease v0.1.0-installtest.22 is published with30 checksum-bound assets. All asset metadata and29 complete anonymous downloads, including the customer archive and Host ZIP, match. Three customer image scans and the reviewed Torch runtime report zero HIGH/CRITICAL findings. Supported Linux installer tests passed51 non-root plus3 administrator-bootstrap checks, including9 reset regressions. Compiled HTTPS onboarding/approval/authenticated heartbeat and real rootless selected-port provisioning/rollback passed locally. Private hosted jobs did not start because of the account billing gate; no hosted success is claimed. Fresh customer download/reinstall/player acceptance remains pending.
