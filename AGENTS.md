@@ -1,3 +1,7 @@
+## 2026-10-11 - Testing26 browser license authorization
+
+The owner authorizes a matched Ubuntu licensing correction. Preserve the default closed testing-intake setting: administrators can explicitly authorize disclosed license testing in browser setup or License & privacy when they skipped the terminal opt-in. Customer and private source must share the same activation policy, persisted consent, pending feedback and bounded failures. Optional analytics, issuer policy, administrator/MFA/CSRF checks, and the separate full reset confirmation remain unchanged. Earlier releases stay immutable; publish test26 only after exact package verification.
+
 ## 2026-10-11 - Install-test 25 Ubuntu client bundle
 
 The owner authorized a new Ubuntu-only `.25` client bundle after the Ubuntu 24.04.4 install exposed public config files with owner-only modes. Keep `umask 077` for secrets; after installing the package, set only `config/` to `0755` and its regular public files to `0644`. Build from the private customer source and keep the prior `.24` release assets immutable.

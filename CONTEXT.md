@@ -1,3 +1,7 @@
+## 2026-10-11 - Testing26 browser license authorization
+
+The owner authorizes a matched Ubuntu licensing correction. Preserve the default closed testing-intake setting: administrators can explicitly authorize disclosed license testing in browser setup or License & privacy when they skipped the terminal opt-in. Customer and private source must share the same activation policy, persisted consent, pending feedback and bounded failures. Optional analytics, issuer policy, administrator/MFA/CSRF checks, and the separate full reset confirmation remain unchanged. Earlier releases stay immutable; publish test26 only after exact package verification.
+
 ## 2026-10-11 - Install-test 24 checksum compatibility
 
 The public `.24` client prerelease remains immutable. The `.25` Ubuntu installer and Linux customer bundle are published at https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.25. It normalizes installed public config permissions while retaining private secret modes, addressing non-root container read failures observed on Ubuntu 24.04. Customer VM acceptance remains pending. Release checksum manifests use portable two-space lines.

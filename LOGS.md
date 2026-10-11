@@ -1,3 +1,7 @@
+## 2026-10-11 - Testing26 browser license authorization
+
+The owner authorizes a matched Ubuntu licensing correction. Preserve the default closed testing-intake setting: administrators can explicitly authorize disclosed license testing in browser setup or License & privacy when they skipped the terminal opt-in. Customer and private source must share the same activation policy, persisted consent, pending feedback and bounded failures. Optional analytics, issuer policy, administrator/MFA/CSRF checks, and the separate full reset confirmation remain unchanged. Earlier releases stay immutable; publish test26 only after exact package verification.
+
 ## 2026-10-11 - Prepare install-test 25 Ubuntu permissions fix
 
 Published Ubuntu x86_64 prerelease `v0.1.0-installtest.25` with the matched customer bundle, installer, updater, images, and Linux Host Agent. The installer makes installed public config files readable to rootless container processes while leaving restrictive umask and generated secrets unchanged. Installer SHA-256 `04ee83809abc41490b2c6b0c421e1eb899745452cceb76068312164e6e644460`; bundle SHA-256 `7bb35bebfc1d4ea6491a6aac9bc48a28b1105a6f4bfdf22e117321333a103d24`. GitHub asset digests match local files; checksum manifest and final tar modes were verified. Ubuntu customer VM acceptance remains pending.

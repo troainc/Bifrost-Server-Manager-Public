@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.25
+VERSION=v0.1.0-installtest.26
 # Matched testing release updater; immutable source + digest.
 UPDATER_SOURCE_REF=b7d601a0a54e6d1c13fe275b0cf3fc165aab0875
 UPDATER_SHA256=e9d1c5d9a2a3d3866e6405d20c5eac1358b045b9e323441a99555af08f994353
@@ -726,7 +726,7 @@ else
   printf 'License configuration skipped. You can configure it later with the updater; game management remains gated.\n'
 fi
 
-printf '\nThis is a testing release. Qualified deployment review is still pending.\n'
+printf '\nThis is a testing release. Deployment review remains pending. You can authorize license testing here or later in the browser License & privacy page.\n'
 read -r -p 'Enable license testing before completing your local review? [y/N, Enter keeps setting]: ' test_intake </dev/tty
 case "$test_intake" in
   [Yy]|[Nn])
