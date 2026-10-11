@@ -1,6 +1,6 @@
 ## Install-test 26 licensing correction
 
-This testing release lets an administrator explicitly authorize license activation and check-ins in browser setup or **License & privacy**. If the terminal testing prompt was skipped, review the disclosure and separately select the testing authorization, then activate. This does not record a completed privacy review or enable optional analytics. Blocked buttons explain the missing choice; processing feedback appears only during a request. Ubuntu public-config readability and portable checksum manifests are retained. Publication and fresh customer VM acceptance are pending.
+This testing release lets an administrator explicitly authorize license activation and check-ins in browser setup or **License & privacy**. If the terminal testing prompt was skipped, review the disclosure and separately select the testing authorization, then activate. This does not record a completed privacy review or enable optional analytics. Blocked buttons explain the missing choice; processing feedback appears only during a request. Ubuntu public-config readability and portable checksum manifests are retained. Published as [test26](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.26). All24 release assets were anonymously downloaded and checksum-verified; compiled licensing integration and fresh HTTPS setup passed. Browser interaction and customer VM acceptance remain pending.
 
 ## Install-test 25 Ubuntu release
 
