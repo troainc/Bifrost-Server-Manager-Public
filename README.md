@@ -1,3 +1,7 @@
+## Install-test 24 candidate
+
+A matched `v0.1.0-installtest.24` Controller package and data-preserving updater are being prepared. Install-test clients will check the published install-test release channel; stable installs continue to check stable releases. This candidate has not been published. Existing release assets remain unchanged.
+
 ## 2026-10-08 - Preparing testing 22 fresh Torch installation
 
 The owner authorizes a matched fresh installation release that integrates fixes from both Bifrost chats. Torch's new signed recipe minimum is 20 GiB, superseding the earlier 40 GiB generic staging floor; retain actual filesystem capacity, the 0.5 GiB margin and queued reservations. Other game recipe floors remain unchanged. Port2750 is a site selection, not the distributed default.
