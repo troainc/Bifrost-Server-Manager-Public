@@ -1,3 +1,7 @@
+## Install-test 26 licensing correction
+
+This testing release lets an administrator explicitly authorize license activation and check-ins in browser setup or **License & privacy**. If the terminal testing prompt was skipped, review the disclosure and separately select the testing authorization, then activate. This does not record a completed privacy review or enable optional analytics. Blocked buttons explain the missing choice; processing feedback appears only during a request. Ubuntu public-config readability and portable checksum manifests are retained. Publication and fresh customer VM acceptance are pending.
+
 ## Install-test 25 Ubuntu release
 
 Published Ubuntu x86_64 client prerelease [`v0.1.0-installtest.25`](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.25). This release fixes rootless container access to installed public config files while keeping generated secrets private. Installer SHA-256: `04ee83809abc41490b2c6b0c421e1eb899745452cceb76068312164e6e644460`. Linux customer bundle SHA-256: `7bb35bebfc1d4ea6491a6aac9bc48a28b1105a6f4bfdf22e117321333a103d24`. Ubuntu customer VM acceptance remains pending; stable release is unchanged.
