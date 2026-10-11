@@ -1,3 +1,9 @@
+## 2026-10-11 - Test27 clean distro acceptance
+
+Clean Ubuntu24 and Debian12 x86_64 VMs completed platform bootstrap, initial administrator/MFA/legal review, explicit testing consent and signed HTTPS license, protected standalone enrollment, six approved recipes and authenticated local Host heartbeat. Both used the exact new pinned Torch1.0.2 runtime for real Steam download, Torch creation/readiness and UDP A2S response on the operator-selected port2750. No storage exception was used; the recipe floor remains20GiB plus margin. Runtime image cache/extraction also uses disk, separately from game storage.
+
+The new immutable adapter safely reuses a protected Steam client for one bounded metadata retry; actual adapter replay/link/restart-limit tests passed. Five Java recipes, publisher identity, parent pairing/handover and existing customer/production data remain preserved. Exact customer archive/scan identities have zero HIGH/CRITICAL vulnerability and secret findings. Public CI passed. Private hosted jobs could not start because of the GitHub billing/spending gate; local tests are separate evidence. Native Windows service and human player entry are not claimed. Final anonymous HTTPS commands and live deployments are verified after publication.
+
 ## 2026-10-11 - Test27 standalone Host audit fixes
 
 Owner authorized the full installation/Host UX audit fixes, matched private/public Test27 publication and master deployment, then website Debian/Ubuntu command updates. Preserve production accounts, databases, keys, Hosts and worlds; earlier releases remain immutable. Root prepares OS/accounts only; panel and games run as separate non-root accounts. Retain the 20 GiB Torch floor plus margin and operator-selected ports, without a global 2750 default.
