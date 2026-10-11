@@ -1,3 +1,7 @@
+## 2026-10-11 - Prepare install-test 25 Ubuntu permissions fix
+
+Updated the Ubuntu installer to make the installed public config directory traversable and its regular files readable after copying, while leaving the restrictive umask and generated secrets unchanged. Bumped installer, updater and sample image pins to `.25`. The matched compiled bundle and public prerelease still need to be built and published from the private customer source.
+
 ## 2026-10-11 - Repair install-test 24 checksum manifest
 
 The Ubuntu 24.04.4 client stopped at bundle checksum verification because the published `SHA256SUMS` used Git Bash's binary filename marker. Replaced that release asset with GNU-compatible two-space lines and confirmed the downloaded manifest contains the exact bundle line the installer filters for. The bundle and installer hashes did not change. Updated the release builder to emit portable checksums. No tests or scans were run.

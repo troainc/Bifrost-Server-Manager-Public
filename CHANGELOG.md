@@ -1,3 +1,7 @@
+## Install-test 25 release
+
+The Ubuntu installer keeps `umask 077` for private credentials and explicitly sets the shipped public config directory to `0755` and regular config files to `0644` after installation. This lets PostgreSQL read its init hook and SQL file and lets non-root Control Plane processes read mounted config files. The matched Linux bundle and installer are built from the private customer source; real Ubuntu client acceptance remains pending.
+
 ## 2026-10-11 - Publish install-test 24 and normalize checksums
 
 Published the matched Controller/web bundle, installer, updater, and Host Agent as prerelease `v0.1.0-installtest.24`. Corrected the release `SHA256SUMS` asset to use the two-space GNU checksum format required by the Ubuntu installer. Release bundle generation now writes this format explicitly so Git Bash's `*filename` marker cannot break future client downloads. The stable release remains unchanged.

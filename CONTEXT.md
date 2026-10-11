@@ -1,6 +1,6 @@
 ## 2026-10-11 - Install-test 24 checksum compatibility
 
-The public `.24` client prerelease is published. Its first SHA256SUMS upload used Git Bash's `*filename` marker, while the Ubuntu installer selects entries using two spaces before the filename. The published asset has been replaced with portable two-space lines. `scripts/build-release-bundle.sh` now emits those lines explicitly on Windows and Linux. Stable latest remains unchanged.
+The public `.24` client prerelease remains immutable. The `.25` Ubuntu installer explicitly normalizes installed public config permissions while retaining private secret modes, addressing non-root container read failures observed on Ubuntu 24.04. The matched customer bundle must be built from the private customer source and published as a new install-test prerelease. Release checksum manifests use portable two-space lines.
 
 ## 2026-10-09 - Testing23 distribution preparation
 
