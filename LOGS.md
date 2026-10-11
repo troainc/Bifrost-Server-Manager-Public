@@ -1,6 +1,6 @@
 ## 2026-10-11 - Prepare install-test 25 Ubuntu permissions fix
 
-Updated the Ubuntu installer to make the installed public config directory traversable and its regular files readable after copying, while leaving the restrictive umask and generated secrets unchanged. Bumped installer, updater and sample image pins to `.25`. The matched compiled bundle and public prerelease still need to be built and published from the private customer source.
+Published Ubuntu x86_64 prerelease `v0.1.0-installtest.25` with the matched customer bundle, installer, updater, images, and Linux Host Agent. The installer makes installed public config files readable to rootless container processes while leaving restrictive umask and generated secrets unchanged. Installer SHA-256 `04ee83809abc41490b2c6b0c421e1eb899745452cceb76068312164e6e644460`; bundle SHA-256 `7bb35bebfc1d4ea6491a6aac9bc48a28b1105a6f4bfdf22e117321333a103d24`. GitHub asset digests match local files; checksum manifest and final tar modes were verified. Ubuntu customer VM acceptance remains pending.
 
 ## 2026-10-11 - Repair install-test 24 checksum manifest
 

@@ -1,3 +1,7 @@
+## Install-test 25 Ubuntu release
+
+Published Ubuntu x86_64 client prerelease [`v0.1.0-installtest.25`](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.25). This release fixes rootless container access to installed public config files while keeping generated secrets private. Installer SHA-256: `04ee83809abc41490b2c6b0c421e1eb899745452cceb76068312164e6e644460`. Linux customer bundle SHA-256: `7bb35bebfc1d4ea6491a6aac9bc48a28b1105a6f4bfdf22e117321333a103d24`. Ubuntu customer VM acceptance remains pending; stable release is unchanged.
+
 ## Install-test 24 release
 
 The `v0.1.0-installtest.25` Ubuntu package and data-preserving updater correct installed config permissions for non-root container processes. Install-test clients check the install-test release channel; stable installs continue to check stable releases. Release checksum manifests use two spaces between each digest and filename so the installer can select the bundle and Host Agent entries on Ubuntu. The `.24` release remains available as a prior version.

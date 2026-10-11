@@ -1,6 +1,6 @@
-## Install-test 25 release
+## Install-test 25 release — published
 
-The Ubuntu installer keeps `umask 077` for private credentials and explicitly sets the shipped public config directory to `0755` and regular config files to `0644` after installation. This lets PostgreSQL read its init hook and SQL file and lets non-root Control Plane processes read mounted config files. The matched Linux bundle and installer are built from the private customer source; real Ubuntu client acceptance remains pending.
+The Ubuntu installer keeps `umask 077` for private credentials and explicitly sets the shipped public config directory to `0755` and regular config files to `0644` after installation. This lets PostgreSQL read its init hook and SQL file and lets non-root Control Plane processes read mounted config files. The matched Linux bundle and installer are published at [the install-test .25 prerelease](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.25). Customer VM acceptance remains pending; stable release is unchanged.
 
 ## 2026-10-11 - Publish install-test 24 and normalize checksums
 

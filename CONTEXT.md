@@ -1,6 +1,6 @@
 ## 2026-10-11 - Install-test 24 checksum compatibility
 
-The public `.24` client prerelease remains immutable. The `.25` Ubuntu installer explicitly normalizes installed public config permissions while retaining private secret modes, addressing non-root container read failures observed on Ubuntu 24.04. The matched customer bundle must be built from the private customer source and published as a new install-test prerelease. Release checksum manifests use portable two-space lines.
+The public `.24` client prerelease remains immutable. The `.25` Ubuntu installer and Linux customer bundle are published at https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.25. It normalizes installed public config permissions while retaining private secret modes, addressing non-root container read failures observed on Ubuntu 24.04. Customer VM acceptance remains pending. Release checksum manifests use portable two-space lines.
 
 ## 2026-10-09 - Testing23 distribution preparation
 
