@@ -14,6 +14,8 @@ import shutil
 import stat
 import subprocess
 import sys
+import ssl
+import urllib.parse
 
 UUID = r"[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}"
 SERVICES = {"postgres", "migrate", "control-plane", "web", "https"}
@@ -67,6 +69,98 @@ def check_game_unit(data, package, setup):
     rest = (f"WorkingDirectory={package}\n" if setup else "Environment=BIFROST_HOST_AGENT_CONFIG=/home/bifrost-games/.config/bifrost-host-agent/host-agent.json\n")
     expected = prefix + command + rest + "Restart=on-failure\nRestartSec=10\nUMask=0077\n" + ("NoNewPrivileges=true\n" if setup else "") + "[Install]\nWantedBy=default.target\n"
     require(data.decode() == expected, "Custom Host service; preserve it")
+
+
+def bootstrap_binding(value):
+    require(isinstance(value, dict) and isinstance(value.get("local"), str), "Invalid local bootstrap")
+    url = urllib.parse.urlsplit(value["local"])
+    require(url.scheme == "https" and url.hostname and not url.username and not url.password and
+            not url.path and not url.query and not url.fragment, "Invalid local bootstrap origin")
+    require(isinstance(value.get("token"), str) and re.fullmatch(r"[A-Za-z0-9_-]{64}", value["token"]), "Invalid local bootstrap capability")
+    certificate = value.get("certificate", "")
+    require(isinstance(certificate, str) and "PRIVATE KEY" not in certificate, "Invalid public bootstrap certificate")
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    context.load_verify_locations(cadata=certificate)
+    return hashlib.sha256(json.dumps({key: value[key] for key in ("local", "token", "certificate")},
+                                    sort_keys=True).encode()).hexdigest()
+
+
+def prejoin_review(home, uid):
+    """Only the installer-prepared Host before any enrollment or game data."""
+    config_dir = home / ".config/bifrost-host-agent"
+    state_dir = home / ".local/state/bifrost-host-agent"
+    root = home / ".local/share/bifrost-instances"
+    for path in (config_dir / "host-agent.json", state_dir / "instance-join.json", state_dir / "host.token",
+                 state_dir / "job-ledger.json", state_dir / "job-ledger.json.lock"):
+        require(not os.path.lexists(path), "Host enrollment or work has started; pre-join reset refused")
+    data = private_file(config_dir / "local-bootstrap.json", uid, 32768)
+    bootstrap = json.loads(data)
+    require(isinstance(bootstrap, dict) and bootstrap.get("version") == 1 and bootstrap.get("enableReviewedCatalog") is True,
+            "Unrecognized installer bootstrap")
+    binding = bootstrap_binding(bootstrap)
+    require({path.name for path in config_dir.iterdir()} == {"local-bootstrap.json"}, "Unknown Host configuration; preserve it")
+    trees = [optional_tree(path, uid) for path in (root, config_dir, state_dir)]
+    for path in (root, state_dir):
+        if path.exists():
+            require(not any(path.iterdir()), "Existing Host data; pre-join reset refused")
+    fingerprint = hashlib.sha256(data).hexdigest()
+    units = []
+    for unit in UNITS:
+        path = home / ".config/systemd/user" / unit
+        data = private_file(path, uid, 8192)
+        packages = set(re.findall(rb"/home/bifrost-games/\.local/opt/bifrost-host-agent-[a-f0-9]{64}", data))
+        require(len(packages) == 1, "Unrecognized Host service package")
+        package = packages.pop().decode()
+        safe_directory(pathlib.Path(package), uid)
+        check_game_unit(data, package, unit == UNITS[0])
+        properties = run(["/usr/bin/systemctl", "--user", "show", unit, "--property=FragmentPath,DropInPaths"]).stdout
+        properties = dict(line.split("=", 1) for line in properties.splitlines() if "=" in line)
+        require(properties.get("FragmentPath") == str(path) and properties.get("DropInPaths") == "", "Custom effective Host service")
+        fingerprint = hashlib.sha256((fingerprint + hashlib.sha256(data).hexdigest()).encode()).hexdigest()
+        units.append(str(path))
+    require(json_run(["/usr/bin/podman", "info", "--format", "json"])["host"]["security"]["rootless"] is True, "Game runtime must be rootless")
+    require(not run(["/usr/bin/podman", "ps", "--all", "--quiet", "--no-trunc"]).stdout.strip(), "Existing game containers; pre-join reset refused")
+    require(not json_run(["/usr/bin/podman", "volume", "ls", "--format", "json"]), "Existing game volumes; pre-join reset refused")
+    require(all(entry.get("name") == "podman" for entry in json_run(["/usr/bin/podman", "network", "ls", "--format", "json"])), "Foreign game network")
+    return dict(component="game-prejoin", fingerprint=fingerprint, binding=binding, containers=[],
+                trees=trees, units=units)
+
+
+def prejoin_apply(home, uid, expected):
+    require(prejoin_review(home, uid) == expected, "Pre-join reset review changed; no cleanup performed")
+    run(["/usr/bin/systemctl", "--user", "disable", "--now", *UNITS], timeout=150)
+    for unit in UNITS:
+        require(run(["/usr/bin/systemctl", "--user", "show", unit, "--property=ActiveState", "--value"]).stdout.strip() == "inactive",
+                "Host service did not stop")
+    # The connection worker may have advanced while stopping. Repeat every
+    # absence, template and runtime check after its process has exited.
+    require(prejoin_review(home, uid) == expected, "Host setup advanced during shutdown; remaining data preserved")
+    for unit in expected["units"]:
+        private_file(pathlib.Path(unit), uid, 8192)
+        pathlib.Path(unit).unlink()
+    run(["/usr/bin/systemctl", "--user", "daemon-reload"])
+    for tree in expected["trees"]:
+        delete_tree(tree, uid)
+
+
+def panel_prejoin_review(home, uid):
+    plan = panel_review(home, uid)
+    root = home / ".local/share/bifrost"
+    values = dict(line.split("=", 1) for line in private_file(root / ".env", uid, 65536).decode().splitlines()
+                  if "=" in line and not line.startswith("#"))
+    secret_bytes = private_file(root / "secrets/local-host-bootstrap.json", uid, 32768)
+    secret = json.loads(secret_bytes)
+    require(secret.get("enabled") is True, "Panel does not own a prepared local Host")
+    cert_bytes = private_file(root / "secrets/panel-cert.pem", uid, 32768)
+    plan["binding"] = bootstrap_binding(dict(local=values.get("BIFROST_PUBLIC_URL", ""), token=secret.get("token", ""),
+                                            certificate=cert_bytes.decode()))
+    plan["fingerprint"] = hashlib.sha256((plan["fingerprint"] + hashlib.sha256(secret_bytes + cert_bytes).hexdigest()).encode()).hexdigest()
+    return plan
+
+
+def panel_prejoin_apply(home, uid, expected):
+    require(panel_prejoin_review(home, uid) == expected, "Panel bootstrap review changed; remaining data preserved")
+    panel_apply(home, uid, panel_review(home, uid))
 
 
 def game_review(home, uid):
@@ -280,33 +374,40 @@ def child(account, mode, plan=None):
 
 def main():
     require(sys.platform == "linux", "Linux is required")
-    if len(sys.argv) == 2 and sys.argv[1] in ("--component-review", "--component-apply"):
+    if len(sys.argv) == 2 and sys.argv[1] in ("--component-review", "--component-apply", "--component-prejoin-review", "--component-prejoin-apply"):
         account = pwd.getpwuid(os.getuid()).pw_name
         require(os.getuid() > 0 and account in ("bifrost", "bifrost-games"), "Use dedicated non-root component owner")
         record, _ = account_environment(account)
         home = pathlib.Path(record.pw_dir)
-        review = game_review if account == "bifrost-games" else panel_review
-        if sys.argv[1] == "--component-review":
+        prejoin = "prejoin" in sys.argv[1]
+        review = (prejoin_review if prejoin else game_review) if account == "bifrost-games" else (panel_prejoin_review if prejoin else panel_review)
+        if sys.argv[1].endswith("-review"):
             return review(home, record.pw_uid)
         plan = json.load(sys.stdin)
-        (game_apply if account == "bifrost-games" else panel_apply)(home, record.pw_uid, plan)
+        apply = (prejoin_apply if prejoin else game_apply) if account == "bifrost-games" else (panel_prejoin_apply if prejoin else panel_apply)
+        apply(home, record.pw_uid, plan)
         return dict(componentReset=True, component=plan["component"])
-    require(os.getuid() == 0 and len(sys.argv) == 2 and sys.argv[1] in ("--review", "--apply-reset"),
-            "Run as VM administrator: --review or --apply-reset")
+    require(os.getuid() == 0 and len(sys.argv) == 2 and sys.argv[1] in ("--review", "--apply-reset", "--review-prejoin", "--apply-prejoin-reset"),
+            "Run as VM administrator: --review/--apply-reset or --review-prejoin/--apply-prejoin-reset")
     for account in ("bifrost", "bifrost-games"):
         record, _ = account_environment(account)
         require(pathlib.Path(f"/run/user/{record.pw_uid}/bus").exists(), "Dedicated user manager is unavailable")
-    game, panel = child("bifrost-games", "--component-review"), child("bifrost", "--component-review")
+    prejoin = "prejoin" in sys.argv[1]
+    review_mode = "--component-prejoin-review" if prejoin else "--component-review"
+    apply_mode = "--component-prejoin-apply" if prejoin else "--component-apply"
+    game, panel = child("bifrost-games", review_mode), child("bifrost", review_mode)
+    if prejoin:
+        require(game["binding"] == panel["binding"], "Prepared Host belongs to another panel; reset refused")
     summary = dict(readOnly=True, resetReady=True, gameContainers=len(game["containers"]), panelContainers=len(panel["containers"]),
                    scope="panel database, panel credentials, automatic Host enrollment and all local Bifrost test worlds")
-    if sys.argv[1] == "--review":
+    if sys.argv[1] in ("--review", "--review-prejoin"):
         return summary
     require(sys.stdin.isatty(), "Full reset requires an interactive terminal")
     print(json.dumps(summary), flush=True)
     print("Permanently remove the standard Instance panel and all its Bifrost games/enrollment. Linux accounts and router settings remain. Type WIPE ALL:", flush=True)
     require(input().strip() == "WIPE ALL", "Full reset cancelled; existing data preserved")
-    child("bifrost-games", "--component-apply", game)
-    child("bifrost", "--component-apply", panel)
+    child("bifrost-games", apply_mode, game)
+    child("bifrost", apply_mode, panel)
     return dict(resetCompleted=True, panelRemoved=True, automaticHostRemoved=True, testWorldsRemoved=True,
                 nextStep="Run the verified matched install.sh --instance as the administrator")
 
