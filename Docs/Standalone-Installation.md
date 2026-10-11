@@ -15,7 +15,7 @@ The public administrator bootstrap is for Debian/Ubuntu x86_64 with systemd. The
 
 Torch requires 6 GiB game RAM, 3 CPU reservations and 20 GiB free game-data storage plus a 0.5 GiB margin. Panel/runtime resources are additional. The fresh Host defaults reserve about 80% of machine memory/CPUs; a small VM may have insufficient Host policy capacity. Check the creation screen's effective limits and free-space report. These are safety requirements, not claimed current disk usage. Thin-provisioning the virtual disk does not increase the guest filesystem automatically.
 
-Game ports are operator choices. Torch defaults remain UDP 27016 (game) and 8766 (Steam); 2750 is one site's selection, not a global requirement. The selected Torch game port is used internally and on the Host. Players connect to the Host's LAN IP and chosen game port. Remote players need its public address and a matching router/firewall forward; panel HTTPS does not transport game UDP. Keep the Agent/database private.
+Game ports are operator choices. Torch defaults remain UDP 27016 (game) and 8766 (Steam); 2750 is one site's selection, not a global requirement. The selected Torch game port is used internally and on the Host. Players connect to the Host's LAN IP and chosen game port. Allow additional disk for runtime image cache and extraction, beyond the game storage floor. Remote players need its public address and a matching router/firewall forward; panel HTTPS does not transport game UDP. Keep the Agent/database private.
 
 ## Connecting to a separate Controller
 
