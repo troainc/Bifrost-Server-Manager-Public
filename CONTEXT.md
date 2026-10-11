@@ -1,3 +1,7 @@
+## 2026-10-11 - Install-test 24 checksum compatibility
+
+The public `.24` client prerelease is published. Its first SHA256SUMS upload used Git Bash's `*filename` marker, while the Ubuntu installer selects entries using two spaces before the filename. The published asset has been replaced with portable two-space lines. `scripts/build-release-bundle.sh` now emits those lines explicitly on Windows and Linux. Stable latest remains unchanged.
+
 ## 2026-10-09 - Testing23 distribution preparation
 
 Owner authorized a matched testing23 installation release with current main UI and action-state corrections. Version23 installer/updater/image references remain matched. Preserve the separate bounded full-reset helper, WIPE ALL terminal confirmation, dedicated-owner operation and refusal of foreign/shared/unfinished resources. Normal Torch20GiB policy and user-selected ports stay in the signed private publisher handoff; site2750 is not a global default. Earlier release assets remain immutable.

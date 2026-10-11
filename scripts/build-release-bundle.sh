@@ -53,5 +53,11 @@ python3 scripts/verify-image-archive.py "$output/package/customer-images.tar" "$
 
 tar -czf "$output/bifrost-linux-amd64-$version.tar.gz" -C "$output/package" .
 cp install.sh update.sh "$output/"
-(cd "$output" && sha256sum "bifrost-linux-amd64-$version.tar.gz" install.sh update.sh > SHA256SUMS)
+(
+  cd "$output"
+  for asset in "bifrost-linux-amd64-$version.tar.gz" install.sh update.sh; do
+    digest=$(sha256sum -- "$asset" | awk '{print $1}')
+    printf '%s  %s\n' "$digest" "$asset"
+  done > SHA256SUMS
+)
 printf 'Created compiled customer release %s; host/game acceptance remains pending.\n' "$version"

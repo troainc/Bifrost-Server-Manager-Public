@@ -1,6 +1,6 @@
-## 2026-10-11 - Preparing install-test 24
+## 2026-10-11 - Publish install-test 24 and normalize checksums
 
-The candidate advances the Controller and customer web build to `v0.1.0-installtest.24`, updates the data-preserving installer to the matched updater, and prepares clients on the install-test channel to see the newest published install-test release. This is a release candidate; no public release has been published.
+Published the matched Controller/web bundle, installer, updater, and Host Agent as prerelease `v0.1.0-installtest.24`. Corrected the release `SHA256SUMS` asset to use the two-space GNU checksum format required by the Ubuntu installer. Release bundle generation now writes this format explicitly so Git Bash's `*filename` marker cannot break future client downloads. The stable release remains unchanged.
 
 ## 2026-10-08 - Torch port helper stopped-workload handling
 

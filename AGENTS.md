@@ -1,3 +1,7 @@
+## 2026-10-11 - Release checksum formatting
+
+Release SHA256SUMS files must use GNU coreutils' two-space filename format on every build host. Do not copy sha256sum output directly: Git Bash marks filenames with `*`, which breaks the installer's exact filename filter on Ubuntu. Keep the published `.24` checksum manifest in that portable format.
+
 ## 2026-10-09 - Testing23 distribution preparation
 
 Owner authorized a matched testing23 installation release with current main UI and action-state corrections. Version23 installer/updater/image references remain matched. Preserve the separate bounded full-reset helper, WIPE ALL terminal confirmation, dedicated-owner operation and refusal of foreign/shared/unfinished resources. Normal Torch20GiB policy and user-selected ports stay in the signed private publisher handoff; site2750 is not a global default. Earlier release assets remain immutable.

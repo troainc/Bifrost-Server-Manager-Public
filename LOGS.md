@@ -1,3 +1,7 @@
+## 2026-10-11 - Repair install-test 24 checksum manifest
+
+The Ubuntu 24.04.4 client stopped at bundle checksum verification because the published `SHA256SUMS` used Git Bash's binary filename marker. Replaced that release asset with GNU-compatible two-space lines and confirmed the downloaded manifest contains the exact bundle line the installer filters for. The bundle and installer hashes did not change. Updated the release builder to emit portable checksums. No tests or scans were run.
+
 ## 2026-10-09 - Testing23 distribution preparation
 
 Owner authorized a matched testing23 installation release with current main UI and action-state corrections. Version23 installer/updater/image references remain matched. Preserve the separate bounded full-reset helper, WIPE ALL terminal confirmation, dedicated-owner operation and refusal of foreign/shared/unfinished resources. Normal Torch20GiB policy and user-selected ports stay in the signed private publisher handoff; site2750 is not a global default. Earlier release assets remain immutable.
