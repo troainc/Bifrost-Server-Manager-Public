@@ -1,3 +1,7 @@
+## Test 27 standalone onboarding
+
+Use the release-pinned Debian/Ubuntu commands on the [testing installation page](https://therealmsofasgard.com/gaming-hub/bifrost-server-manager#testing-installation). Follow [Standalone installation](Docs/Standalone-Installation.md) from administrator/MFA/licensing through explicit local Host/catalog approval and first game creation. Root only prepares the OS; applications run as isolated non-root accounts. The automatic platform/catalog is x86_64.
+
 For a standalone installation still in setup/licensing, use the separate pre-enrollment reset described in [Full automatic Instance reset](Docs/Full-Automatic-Instance-Reset.md). The original test26 release reset helper requires an enrolled Host; use the pinned corrected source helper for incomplete setup. Existing release assets are unchanged.
 
 ## Install-test 26 licensing correction
