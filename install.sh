@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.26
+VERSION=v0.1.0-installtest.27
 # Matched testing release updater; immutable source + digest.
-UPDATER_SOURCE_REF=624e26753b5f29e5cd83bc14797e9422c33d1c9a
-UPDATER_SHA256=026b651375bfb8736445cf2170fce65e236db3276da38b4dbdf809901c1d0700
+UPDATER_SOURCE_REF=143313eaf0b91de7ea0d6ff1ff3d29951d4001f4
+UPDATER_SHA256=24f250241db73a149cb7d2e58225a9922d0086072bc801bbe669529a5f2c8632
 INSTALL_DIR="${BIFROST_INSTALL_DIR:-$HOME/.local/share/bifrost}"
 # Terminal presentation: readable without color, animation, or a wide terminal.
 UI_RESET='' UI_BLUE='' UI_GREEN='' UI_GOLD='' UI_DIM='' UI_BOLD=''
@@ -101,6 +101,9 @@ bootstrap_prerequisites() {
     hash -r
   fi
   export DOCKER_HOST="unix://$XDG_RUNTIME_DIR/docker.sock"
+  if [[ -r /proc/sys/kernel/apparmor_restrict_unprivileged_userns && $(cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns) == 1 ]]; then
+    rootlesskit --version >/dev/null || fail 'Ubuntu restricts this rootlesskit path. Rerun the administrator bootstrap to prepare its path-specific AppArmor profile; do not disable AppArmor.'
+  fi
   if ! docker info >/dev/null 2>&1; then
     dockerd-rootless-setuptool.sh install
     systemctl --user start docker
@@ -237,6 +240,10 @@ NODE_RUNTIME_PY
   runuser -u "$game" -- mkdir -p -m 0700 "$game_home/.local/opt" "$game_home/.config/systemd/user" "$game_home/.config/bifrost-host-agent"
   runuser -u "$game" -- python3 - "$stage/host.zip" "$package_root" <<'AUTO_HOST_ZIP_PY'
 import os,pathlib,stat,sys,zipfile,tempfile,hashlib
+def stream_sha256(stream):
+    digest=hashlib.sha256()
+    for chunk in iter(lambda:stream.read(1024*1024),b''):digest.update(chunk)
+    return digest.digest()
 archive,destination=sys.argv[1:]
 final=pathlib.Path(destination)
 if final.parent.resolve()!=final.parent or final.is_symlink():raise SystemExit("Unsafe Host package destination.")
@@ -263,7 +270,7 @@ with zipfile.ZipFile(archive) as source:
                 continue
             if not target.is_file() or target.stat().st_uid!=os.getuid() or target.stat().st_nlink!=1 or target.stat().st_size!=entry.file_size:raise SystemExit('Invalid retained Host package.')
             with target.open('rb') as current,source.open(entry) as expected:
-                if hashlib.file_digest(current,'sha256').digest()!=hashlib.file_digest(expected,'sha256').digest():raise SystemExit('Retained Host package differs; it was preserved.')
+                if stream_sha256(current)!=stream_sha256(expected):raise SystemExit('Retained Host package differs; it was preserved.')
             continue
         if entry.is_dir():target.mkdir(mode=0o700,parents=True,exist_ok=True);continue
         target.parent.mkdir(mode=0o700,parents=True,exist_ok=True)
@@ -395,7 +402,7 @@ UNIT
   # Exact checked staging tree only; never remove Host state or game storage.
   [[ "$stage" == /tmp/bifrost-auto-host.* && $(stat -c %u "$stage") -eq 0 ]] || fail 'Unsafe preparation staging path.'
   rm -rf -- "$stage"
-  ui_ok 'Local Host prepared. Finish the browser wizard; master acceptance starts its connection automatically.'
+  ui_ok 'Local Host prepared. Complete licensing, then choose Set up local Host for independent management, or finish your chosen Controller connection.'
 }
 
 automated_bootstrap() {
@@ -434,6 +441,23 @@ automated_bootstrap() {
   if [[ "${BIFROST_INSTALL_ROLE:-controller}" == instance && -e /home/bifrost-games/.config/bifrost-host-agent/host-agent.json ]]; then fail 'An automatic local Host already exists. Preserve its credentials and games; use the update/recovery path instead of wiping its panel.'; fi
   local uid account_home copied
   uid=$(id -u bifrost); account_home=$(getent passwd bifrost | cut -d: -f6)
+  if [[ -r /proc/sys/kernel/apparmor_restrict_unprivileged_userns && $(cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns) == 1 ]]; then
+    [[ "$account_home" == /home/bifrost ]] || fail 'The rootlesskit AppArmor profile requires the managed /home/bifrost account.'
+    command -v apparmor_parser >/dev/null || run_task 'Install Ubuntu AppArmor profile tools' env DEBIAN_FRONTEND=noninteractive apt-get -q install -y apparmor
+    local profile=/etc/apparmor.d/bifrost-rootlesskit next
+    next=$(mktemp)
+    cat > "$next" <<'BIFROST_ROOTLESSKIT_APPARMOR'
+abi <abi/4.0>,
+include <tunables/global>
+"/home/bifrost/bin/rootlesskit" flags=(unconfined) {
+  userns,
+  include if exists <local/bifrost-rootlesskit>
+}
+BIFROST_ROOTLESSKIT_APPARMOR
+    if [[ -e "$profile" ]]; then cmp -s "$next" "$profile" || { rm -f "$next"; fail 'Existing Bifrost rootlesskit AppArmor profile differs; preserve it for administrator review.'; }; fi
+    install -o root -g root -m 0644 "$next" "$profile"; rm -f "$next"
+    apparmor_parser -r "$profile" || fail 'Could not load the path-specific rootlesskit AppArmor profile.'
+  fi
   # Start the user manager independently of an SSH login; no account password is required.
   systemctl start "user@$uid.service"
   [[ -S "/run/user/$uid/bus" ]] || fail 'The bifrost user session bus did not start.'
@@ -449,7 +473,10 @@ automated_bootstrap() {
 require_host_runtime() {
   command -v python3 >/dev/null || fail 'Python 3 is required to safely unpack the Host Agent package.'
   command -v sha256sum >/dev/null || fail 'sha256sum is required to verify the Host Agent package.'
-  [[ -x /usr/bin/node ]] && /usr/bin/node -e 'process.exit(Number(process.versions.node.split(".")[0]) === 24 ? 0 : 1)' || fail 'Instance Host needs Node.js 24 at /usr/bin/node. Prepare it for this account, then rerun.'
+  BIFROST_NODE_BIN="${BIFROST_NODE_BIN:-$(command -v node || true)}"
+  if [[ ! -x "$BIFROST_NODE_BIN" && -x /opt/bifrost-node-v24.19.0/bin/node ]]; then BIFROST_NODE_BIN=/opt/bifrost-node-v24.19.0/bin/node; fi
+  export BIFROST_NODE_BIN
+  [[ -x "$BIFROST_NODE_BIN" ]] && "$BIFROST_NODE_BIN" -e 'process.exit(Number(process.versions.node.split(".")[0]) === 24 ? 0 : 1)' || fail 'Instance Host needs Node.js 24. Use the prepared runtime or install Node 24 for this account, then rerun.'
   command -v podman >/dev/null || fail 'Instance Host needs rootless Podman available to this account.'
   [[ "$(podman info --format '{{.Host.Security.Rootless}}' 2>/dev/null || true)" == true ]] || fail 'Podman is not running rootless for this account.'
   systemctl --user show-environment >/dev/null 2>&1 || fail 'A systemd user manager is unavailable. Sign in as the regular game-server operator account and retry.'
@@ -468,9 +495,12 @@ install_instance_host() {
   fetch "https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION/bifrost-linux-host-agent.zip" "$stage/bifrost-linux-host-agent.zip" || fail 'Could not download the Host Agent package for this release.'
   fetch "https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION/bifrost-linux-host-agent.zip.sha256" "$checksum_file" || fail 'Could not download the Host Agent checksum.'
   (cd "$stage" && sha256sum --check bifrost-linux-host-agent.zip.sha256) || fail 'Host Agent package checksum failed.'
-  mkdir -m 0700 "$package"
   python3 - "$stage/bifrost-linux-host-agent.zip" "$package" <<'HOST_ZIP_PY'
 import os,pathlib,stat,sys,zipfile,tempfile,hashlib
+def stream_sha256(stream):
+    digest=hashlib.sha256()
+    for chunk in iter(lambda:stream.read(1024*1024),b''):digest.update(chunk)
+    return digest.digest()
 archive,destination=sys.argv[1:]
 final=pathlib.Path(destination)
 if final.parent.resolve()!=final.parent or final.is_symlink():raise SystemExit("Unsafe Host package destination.")
@@ -497,7 +527,7 @@ with zipfile.ZipFile(archive) as source:
                 continue
             if not target.is_file() or target.stat().st_uid!=os.getuid() or target.stat().st_nlink!=1 or target.stat().st_size!=entry.file_size:raise SystemExit('Invalid retained Host package.')
             with target.open('rb') as current,source.open(entry) as expected:
-                if hashlib.file_digest(current,'sha256').digest()!=hashlib.file_digest(expected,'sha256').digest():raise SystemExit('Retained Host package differs; it was preserved.')
+                if stream_sha256(current)!=stream_sha256(expected):raise SystemExit('Retained Host package differs; it was preserved.')
             continue
         if entry.is_dir():target.mkdir(mode=0o700,parents=True,exist_ok=True);continue
         target.parent.mkdir(mode=0o700,parents=True,exist_ok=True)
@@ -507,6 +537,8 @@ with zipfile.ZipFile(archive) as source:
                 chunk=inp.read(1024*1024)
                 if not chunk:break
                 out.write(chunk)
+            out.flush();os.fsync(out.fileno())
+if not existing:os.rename(root,final)
 HOST_ZIP_PY
   [[ -f "$package/install-agent.sh" && -f "$package/dist/enroll.js" ]] || fail 'The downloaded Host Agent package is incomplete.'
   digest=$(sha256sum "$stage/bifrost-linux-host-agent.zip" | awk '{print $1}')
@@ -533,7 +565,7 @@ if [[ "${1:-}" == --update ]]; then
   rm -f "$update_stage/update.sh"; rmdir "$update_stage"
   exit 0
 fi
-[[ "${1:-}" != --help ]] || { echo 'Run bash install.sh to choose Controller, standalone Instance node, or Hybrid. Pass --controller, --instance, or --hybrid; --host installs only an Agent for an existing Controller. Fresh amd64 Instances joining a chosen parent prepare their Host automatically after master acceptance. Earlier/manual Installs can use --host --join-instance. --resume-local-host resumes interrupted fresh pre-join preparation as root. Existing Hosts can use --host --upgrade; revoked Hosts can use --host --upgrade --re-enroll.'; exit 0; }
+[[ "${1:-}" != --help ]] || { echo 'Run bash install.sh to choose Controller, standalone Instance node, or Hybrid. Pass --controller, --instance, or --hybrid; --host installs only an Agent for an existing Controller. Fresh amd64 Instances prepare an isolated Host. After licensing, independent setup authorizes it locally; a Controller join requires that Controller approval. Earlier/manual Installs can use --host --join-instance. --resume-local-host resumes interrupted fresh pre-join preparation as root. Existing Hosts can use --host --upgrade; revoked Hosts can use --host --upgrade --re-enroll.'; exit 0; }
 if [[ "${1:-}" == --resume-local-host ]]; then
   [[ $(id -u) -eq 0 && ( $# -eq 1 || ( $# -eq 2 && "$2" == --upgrade ) ) ]] || fail 'Resume local Host preparation as the VM administrator. Optional --upgrade updates only its prepared pre-join services; this does not reinstall or wipe the panel.'
   BIFROST_PREJOIN_UPGRADE=0; [[ ${2:-} != --upgrade ]] || BIFROST_PREJOIN_UPGRADE=1
@@ -563,7 +595,7 @@ elif [[ -z "${BIFROST_INSTALL_ROLE:-}" ]]; then
   printf "\n  1) Controller â€” central fleet panel; separate game Hosts\n  2) Standalone Instance node â€” local panel and local game Host; can pair later\n  3) Hybrid â€” fleet Controller plus a local game Host\n  4) Host Agent only â€” join an existing Controller; no new panel\n\n"
   printf '  A game instance is one server created later in the Controller panel.\n'
   printf '  For one game server, you still need a Controller and an enrolled Host.\n'
-  printf '  The Instance bootstrap prepares an isolated local Host automatically for joining a parent. Hybrid local Hosts still use separate account preparation.\n  Complete panel setup and licensing, then enroll its local Agent or choose a verified parent Controller.\n\n'
+  printf '  The Instance bootstrap prepares an isolated local Host for independent management or an explicitly chosen parent. Hybrid local Hosts still use separate account preparation.\n  Complete panel setup and licensing, then enroll its local Agent or choose a verified parent Controller.\n\n'
   read -r -p 'Select 1, 2, 3 or 4: ' install_choice </dev/tty
   case "$install_choice" in 1) BIFROST_INSTALL_ROLE=controller;; 2) BIFROST_INSTALL_ROLE=instance;; 3) BIFROST_INSTALL_ROLE=hybrid;; 4) BIFROST_INSTALL_ROLE=host;; *) fail 'Choose a displayed node role or Host Agent only.';; esac
 fi
@@ -633,7 +665,7 @@ fetch "$base/$bundle" "$scratch/$bundle" || fail 'Application download failed.'
 fetch "$base/SHA256SUMS" "$scratch/SHA256SUMS" || fail 'Checksum download failed.'
 (cd "$scratch" && grep -F "  $bundle" SHA256SUMS | sha256sum --check --status) || fail 'Checksum verification failed.'
 python3 - "$scratch/$bundle" "$scratch/package" <<'PY'
-import pathlib,sys,tarfile
+import pathlib,sys,tarfile,shutil
 root=pathlib.Path(sys.argv[2]);root.mkdir(mode=0o700)
 with tarfile.open(sys.argv[1],'r:gz') as archive:
     entries=archive.getmembers();seen=set();total=0
@@ -642,7 +674,16 @@ with tarfile.open(sys.argv[1],'r:gz') as archive:
         path=pathlib.PurePosixPath(entry.name);key=str(path).casefold();total+=entry.size
         if path.is_absolute() or '..' in path.parts or key in seen or not(entry.isfile() or entry.isdir()) or total>4*1024**3:raise SystemExit('Unsafe package.')
         seen.add(key)
-    archive.extractall(root,filter='data')
+    # Debian 12's Python may lack tarfile's filter argument. All entries were
+    # validated above; copy regular contents only into this new private tree,
+    # never materialize links, ownership, set-id bits or archive permissions.
+    for entry in entries:
+        target=root/pathlib.PurePosixPath(entry.name)
+        if entry.isdir():target.mkdir(mode=0o700,parents=True,exist_ok=True)
+        else:
+            target.parent.mkdir(mode=0o700,parents=True,exist_ok=True)
+            with archive.extractfile(entry) as source,target.open('xb') as output:shutil.copyfileobj(source,output,1024*1024)
+            target.chmod(0o600)
 PY
 ui_step '05 / 06   Secure your installation' 'Creating private credentials and HTTPS configuration.'
 mkdir -p "$(dirname "$INSTALL_DIR")"

@@ -1,3 +1,7 @@
+## Test27 - independent local Host onboarding and installation audit fixes
+
+Complete standalone local Host approval/heartbeat while retaining license/MFA/CSRF and parent authority controls. Repair manual package extraction, Node24 and certificate trust; prepare restrictive Ubuntu AppArmor by exact runtime path and extract Debian archives without unavailable Python APIs. Explain catalog/Host/capacity errors, pending states and selected player ports. Publication and acceptance evidence remain separate from source verification.
+
 ## Install-test 25 release — published
 
 The Ubuntu installer keeps `umask 077` for private credentials and explicitly sets the shipped public config directory to `0755` and regular config files to `0644` after installation. This lets PostgreSQL read its init hook and SQL file and lets non-root Control Plane processes read mounted config files. The matched Linux bundle and installer are published at [the install-test .25 prerelease](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.25). Customer VM acceptance remains pending; stable release is unchanged.

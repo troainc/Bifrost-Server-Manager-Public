@@ -34,6 +34,11 @@ on:
         description: Exact private runtime build source commit
         required: true
         type: string
+      source_tag:
+        description: Exact local image tag bound to the reviewed archive configuration
+        required: true
+        default: bifrost/torch-wine:candidate-20261007
+        type: string
 permissions:
   contents: read
 jobs:
@@ -55,6 +60,7 @@ jobs:
       SMOKE_SHA: ${{ inputs.smoke_sha256 }}
       CONFIG_SHA: ${{ inputs.image_config_sha256 }}
       SOURCE_SHA: ${{ inputs.reviewed_source_sha }}
+      SOURCE_TAG: ${{ inputs.source_tag }}
     steps:
       - name: Fetch only exact assets from this repository
         run: |
@@ -63,6 +69,7 @@ jobs:
           for id in "$ARCHIVE_ID" "$SCAN_ID" "$SMOKE_ID"; do [[ "$id" =~ ^[1-9][0-9]*$ ]]; done
           for digest in "$ARCHIVE_SHA" "$SCAN_SHA" "$SMOKE_SHA" "$CONFIG_SHA"; do [[ "$digest" =~ ^[a-f0-9]{64}$ ]]; done
           [[ "$SOURCE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          [[ "$SOURCE_TAG" =~ ^bifrost/torch-wine:candidate-([0-9]{8}|test[0-9]{1,4})$ ]]
           gh api "repos/$GITHUB_REPOSITORY/releases/assets/$ARCHIVE_ID" > archive-asset.json
           gh api "repos/$GITHUB_REPOSITORY/releases/assets/$SCAN_ID" > scan-asset.json
           gh api "repos/$GITHUB_REPOSITORY/releases/assets/$SMOKE_ID" > smoke-asset.json
@@ -81,19 +88,24 @@ jobs:
           python3 - <<'PY'
           import tarfile,json,os,hashlib
           with tarfile.open('runtime.tar.gz','r|gz') as archive:
-              matched=False
+              matched=False; tag_bound=False
               for member in archive:
+                  if member.name=='manifest.json':
+                      assert member.isfile() and member.size<1024*1024
+                      entries=json.load(archive.extractfile(member)); selected=[x for x in entries if os.environ['SOURCE_TAG'] in (x.get('RepoTags') or [])]
+                      assert len(selected)==1 and selected[0]['Config'] in [os.environ['CONFIG_SHA']+'.json','blobs/sha256/'+os.environ['CONFIG_SHA']]
+                      tag_bound=True
                   if member.name=='blobs/sha256/'+os.environ['CONFIG_SHA'] or member.name==os.environ['CONFIG_SHA']+'.json':
                       assert member.isfile() and member.size<1024*1024
                       b=archive.extractfile(member).read();assert hashlib.sha256(b).hexdigest()==os.environ['CONFIG_SHA']
                       c=json.loads(b);assert c['architecture']=='amd64' and c['os']=='linux' and c['config']['User']=='1000:1000' and c['config']['Entrypoint']==['/usr/local/bin/bifrost-torch'];matched=True
-              assert matched
+              assert matched and tag_bound
           findings=[f for r in json.load(open('scan.json')).get('Results',[]) for field in ['Vulnerabilities','Secrets','Misconfigurations'] for f in (r.get(field) or []) if f.get('Severity') in ['HIGH','CRITICAL']]
           assert not findings
           assert 'Keen: Game ready...' in open('smoke.txt').read()
           PY
           docker load --input runtime.tar.gz
-          source=bifrost/torch-wine:candidate-20261007
+          source="$SOURCE_TAG"
           docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges --user 1000:1000 --entrypoint /bin/sh "$source" -c 'test "$(id -u)" = 1000 && test ! -e /app && test ! -e /workspace && test ! -e /run/secrets && test -x /usr/bin/tini && test -x /usr/local/bin/bifrost-torch && wine --version'
       - name: Publish the same reviewed image without rebuilding
         run: |
@@ -102,7 +114,7 @@ jobs:
           target="ghcr.io/troainc/bifrost-game-torch-wine:source-$SOURCE_SHA"
           if docker manifest inspect "$target" > existing-manifest.json 2> manifest-error.txt; then echo 'Tag already exists; inspect it rather than replacing it.'; exit 1; fi
           grep -qi 'manifest unknown\|no such manifest' manifest-error.txt
-          docker tag bifrost/torch-wine:candidate-20261007 "$target"
+          docker tag "$SOURCE_TAG" "$target"
           docker push --platform linux/amd64 "$target" | tee push-receipt.txt
           digest="$(sed -n 's/.*digest: \(sha256:[a-f0-9]\{64\}\).*/\1/p' push-receipt.txt | tail -1)"
           [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]]
