@@ -1,3 +1,7 @@
+## 2026-10-11 - Install-test 25 Ubuntu client bundle
+
+The owner authorized a new Ubuntu-only `.25` client bundle after the Ubuntu 24.04.4 install exposed public config files with owner-only modes. Keep `umask 077` for secrets; after installing the package, set only `config/` to `0755` and its regular public files to `0644`. Build from the private customer source and keep the prior `.24` release assets immutable.
+
 ## 2026-10-11 - Release checksum formatting
 
 Release SHA256SUMS files must use GNU coreutils' two-space filename format on every build host. Do not copy sha256sum output directly: Git Bash marks filenames with `*`, which breaks the installer's exact filename filter on Ubuntu. Keep the published `.24` checksum manifest in that portable format.
