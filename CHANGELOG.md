@@ -1,3 +1,7 @@
+## 2026-10-11 - Preparing install-test 24
+
+The candidate advances the Controller and customer web build to `v0.1.0-installtest.24`, updates the data-preserving installer to the matched updater, and prepares clients on the install-test channel to see the newest published install-test release. This is a release candidate; no public release has been published.
+
 ## 2026-10-08 - Torch port helper stopped-workload handling
 
 The helper now stops and verifies the game before stopping its user Agent, while holding the Agent ledger lock. An already exited game skips the redundant stop command. Separate inspection, confinement and stopped-state stages identify the failing check; command failures expose only bounded command names, numeric exit status and timeout flags. Existing private backups, rollback, signed profile validation and world preservation remain enforced.
