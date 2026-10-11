@@ -1,6 +1,6 @@
 ## Install-test 24 release
 
-The matched `v0.1.0-installtest.24` Controller package and data-preserving updater are published as a prerelease. Install-test clients check the install-test release channel; stable installs continue to check stable releases. Release checksum manifests use two spaces between each digest and filename so the installer can select the bundle and Host Agent entries on Ubuntu.
+The `v0.1.0-installtest.25` Ubuntu package and data-preserving updater correct installed config permissions for non-root container processes. Install-test clients check the install-test release channel; stable installs continue to check stable releases. Release checksum manifests use two spaces between each digest and filename so the installer can select the bundle and Host Agent entries on Ubuntu. The `.24` release remains available as a prior version.
 
 ## 2026-10-08 - Preparing testing 22 fresh Torch installation
 

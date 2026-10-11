@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.24
+VERSION=v0.1.0-installtest.25
 # Matched testing release updater; immutable source + digest.
-UPDATER_SOURCE_REF=edd4f79871d2883bccb7185d31a4e62a36d7efc2
-UPDATER_SHA256=8d9cf90ebec2eb1a07a42d1b97d31e0a2131419759b7e72eb10bccc6881a3d58
+UPDATER_SOURCE_REF=b7d601a0a54e6d1c13fe275b0cf3fc165aab0875
+UPDATER_SHA256=e9d1c5d9a2a3d3866e6405d20c5eac1358b045b9e323441a99555af08f994353
 INSTALL_DIR="${BIFROST_INSTALL_DIR:-$HOME/.local/share/bifrost}"
 # Terminal presentation: readable without color, animation, or a wide terminal.
 UI_RESET='' UI_BLUE='' UI_GREEN='' UI_GOLD='' UI_DIM='' UI_BOLD=''
@@ -648,6 +648,15 @@ ui_step '05 / 06   Secure your installation' 'Creating private credentials and H
 mkdir -p "$(dirname "$INSTALL_DIR")"
 mkdir -m 0700 "$INSTALL_DIR"
 cp -a "$scratch/package/." "$INSTALL_DIR/"
+# Public config is read by non-root processes inside the rootless containers.
+# Keep the installer's restrictive umask for credentials, then explicitly open
+# only the shipped public config directory and regular config files.
+[[ -d "$INSTALL_DIR/config" && ! -L "$INSTALL_DIR/config" ]] || fail 'Installed public config directory is missing or unsafe.'
+chmod 0755 "$INSTALL_DIR/config"
+for public_config in "$INSTALL_DIR/config/"*; do
+  [[ -f "$public_config" && ! -L "$public_config" ]] || fail 'Installed public config contains an unexpected entry.'
+  chmod 0644 "$public_config"
+done
 mkdir -m 0700 "$INSTALL_DIR/secrets"
 for name in postgres_owner_password bifrost_app_password rate_limit_pepper; do openssl rand -base64 48 | tr -d '\n' > "$INSTALL_DIR/secrets/$name.txt"; done
 openssl rand -base64 32 | tr -d '\n' > "$INSTALL_DIR/secrets/mfa_encryption_key.txt"
