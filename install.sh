@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.27
+VERSION=v0.1.0-installtest.28
 # Matched testing release updater; immutable source + digest.
 UPDATER_SOURCE_REF=143313eaf0b91de7ea0d6ff1ff3d29951d4001f4
 UPDATER_SHA256=24f250241db73a149cb7d2e58225a9922d0086072bc801bbe669529a5f2c8632

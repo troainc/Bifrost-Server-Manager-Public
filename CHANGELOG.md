@@ -1,3 +1,7 @@
+## 2026-10-11 - Test28 tester onboarding repairs
+
+Owner authorizes fixes and verified publication before advancing the TROA Debian/Ubuntu commands. Instance Add host now opens automatic local setup/status and offers manual pairing only when automatic preparation is unavailable. Creation explains the eight-character trimmed reason and every disabling condition without changing server authorization. Manual enrollment validates directory ownership/modes before prompts, checks certificate trust/Controller identity before requesting the five-digit code, refuses certificate URLs with file-path guidance, and reports bounded actionable errors without stack traces. Retain strict TLS/hostname/fingerprint, symlink/ownership/private-state and duplicate Host guards. Existing data and Test27 assets stay unchanged. Fresh distro, compiled CLI/parent regressions, package scans and live publication verification are pending.
+
 ## Test27 - independent local Host onboarding and installation audit fixes
 
 Complete standalone local Host approval/heartbeat while retaining license/MFA/CSRF and parent authority controls. Repair manual package extraction, Node24 and certificate trust; prepare restrictive Ubuntu AppArmor by exact runtime path and extract Debian archives without unavailable Python APIs. Explain catalog/Host/capacity errors, pending states and selected player ports. Publication and acceptance evidence remain separate from source verification.

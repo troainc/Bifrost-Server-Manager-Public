@@ -1,3 +1,7 @@
+## 2026-10-11 - Test28 tester onboarding repairs
+
+Owner authorizes fixes and verified publication before advancing the TROA Debian/Ubuntu commands. Instance Add host now opens automatic local setup/status and offers manual pairing only when automatic preparation is unavailable. Creation explains the eight-character trimmed reason and every disabling condition without changing server authorization. Manual enrollment validates directory ownership/modes before prompts, checks certificate trust/Controller identity before requesting the five-digit code, refuses certificate URLs with file-path guidance, and reports bounded actionable errors without stack traces. Retain strict TLS/hostname/fingerprint, symlink/ownership/private-state and duplicate Host guards. Existing data and Test27 assets stay unchanged. Fresh distro, compiled CLI/parent regressions, package scans and live publication verification are pending.
+
 ## Test27 clean Debian and Ubuntu acceptance
 
 Matched compiled customer/Host artifacts and signed Torch1.0.2 completed clean Debian12/Ubuntu24 installation, standalone Host enrollment and real Torch/A2S checks. Human player join and native Windows runtime remain separate acceptance. Final publication/download/deployment receipts are recorded with the release.
