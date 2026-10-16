@@ -1,3 +1,9 @@
+## 2026-10-16 - Published matched Test 33
+
+Test 33 is published at https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.33 . Its 17 assets have exact GitHub size/digest matches; the installer, updater, checksum manifest, Linux Host archive and source provenance also match anonymous HTTPS downloads. Installer SHA-256: `57d7147a78a71a32bfa626b5632b1389d0dd40363efa595ba1647925c0a1add5`. Compiled private source: `e429321cfdae171cdd89a732111278e5c0b0fcbc`; immutable public packaging source: `3aca71d87fc4f9651a32175dcb25ea0074fa4d95`.
+
+Controller, web and Linux Host ship the audit fixes and matching signed catalogs; the private owner registry/issuer is excluded from customer artifacts. All three exact customer image scans contain zero HIGH/CRITICAL vulnerabilities and secret findings. Compilation and package-integrity checks completed; test suites, manual UI QA, fresh Debian/Ubuntu installs and game acceptance were explicitly deferred. No new Windows distribution or customer machine update is implied. Prior release assets, production accounts/data and keys remain unchanged. The private master deployment completed on the matched source.
+
 ## 2026-10-11 - Test28 clean installation and tester-case acceptance
 
 Clean Debian12 and Ubuntu24.04 x86_64 installations completed initial administrator/MFA/legal review, explicit testing consent and signed HTTPS license, protected automatic local Host/catalog enrollment and real heartbeat. Both completed actual Steam download, Torch1.0.2 creation/readiness and UDP A2S on selected port2750. The immutable signed runtime and all six recipes/publisher identity remain unchanged from Test27. The exact compiled customer UI was manually checked against a disposable API: Instance Add host shows its existing automatic Host status without issuing a manual code.
