@@ -1,3 +1,7 @@
+## 2026-10-21 - verified local follow-up candidate
+
+Frozen private implementation 5314704a8ee3ee059598666bcc38a80d23d9a84a and public packaging 0d4a83a91f83d8b8a08c7d5a2110e7e0eec64e31 produce a new separately retained local Test 34 candidate. All 21 signed artifact hashes verify through installer/updater before and after Windows copy. Private Node regressions: 258 passed, two explicit skips; public: 43 Node and 92 Python including three separately executed root cases. Exact packaged HTTPS/migrations/grants/persisted keyring and edition isolation pass. Host prerequisite advisories remain an OPEN gate, so rollout readiness is 6/10 for each edition. No push, publication, deployment or production/customer data/key changes. Human checklist and independent host security approval remain required. Later documentation commits do not change the frozen signed source identity.
+
 ## 2026-10-21 - local follow-up and regression gate
 
 Current work adds signed local release verification, explicit local asset selection, read-only prerequisite inventory and manual acceptance checklists. Missing Docker/Compose automatic downloads are paused because separate compiled host-tool scans found unresolved high-severity advisories. Existing runtimes/data are preserved. Tag creation is separated from immutable update/deletion controls; external activation is still unapproved. No push, deployment, publication or production data/key changes are authorized.

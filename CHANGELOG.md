@@ -1,3 +1,7 @@
+## 2026-10-21 - verified local follow-up candidate
+
+Frozen private implementation 5314704a8ee3ee059598666bcc38a80d23d9a84a and public packaging 0d4a83a91f83d8b8a08c7d5a2110e7e0eec64e31 produce a new separately retained local Test 34 candidate. All 21 signed artifact hashes verify through installer/updater before and after Windows copy. Private Node regressions: 258 passed, two explicit skips; public: 43 Node and 92 Python including three separately executed root cases. Exact packaged HTTPS/migrations/grants/persisted keyring and edition isolation pass. Host prerequisite advisories remain an OPEN gate, so rollout readiness is 6/10 for each edition. No push, publication, deployment or production/customer data/key changes. Human checklist and independent host security approval remain required. Later documentation commits do not change the frozen signed source identity.
+
 ## 2026-10-21 — local release remediation
 
 User authorizes local fixes and repeated automated re-audit for both private master and customer product, preserving all data. No push, deployment, publication, external settings mutation or production key change. Candidate Test 34 is unpublished; historical deployment/test-deferral entries below do not authorize current external actions. Current scope/evidence: Docs/Supported-Release-Scope.md and Docs/Recovery-and-Key-Rotation.md.
