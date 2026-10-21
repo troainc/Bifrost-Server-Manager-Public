@@ -6,7 +6,7 @@ For each item record tester/reviewer, date, OS, exact signed private/public sour
 
 ## Before installation
 
-- [ ] Independently approve the exact host Docker/Compose, rootless Podman and Node baseline. Review package identity, backports, vulnerability results and applicable residual risk. Current reviewed Docker 29.9.2/Compose 5.6.1 archives still have high-severity advisories; automatic Docker/Compose download is paused. The read-only inventory script does not approve a runtime.
+- [ ] Independently approve the exact host Docker/Compose, rootless Podman and Node baseline, maintained patch and future update ownership. Verify the separately signed local patched prerequisite candidate as well as the Bifrost application signature. Unchanged vendor archives remain blocked; automatic Docker/Compose download stays paused. Test actual target OS systemd/cgroup CPU/memory/process enforcement. Read-only inventory and local signatures do not approve deployment.
 - [ ] Verify every local signed release asset with `bash install.sh --verify-release /absolute/release-directory`. Retain both signed source revisions and signature identity. Missing, altered or linked assets must refuse. Do not use online Test 34 commands before separate publication approval.
 - [ ] Confirm isolated panel/game accounts, rootless runtimes, subordinate IDs, private directory permissions, reviewed TLS hostname/trust, host firewall/ports, free disk/RAM and service persistence after logout/reboot. The game account must have no panel socket, sudo or issuer credentials.
 
