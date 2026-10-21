@@ -23,3 +23,9 @@ Test 35 is installation testing, not general beta/stable approval. On the deploy
 ## Separate owner master
 
 The owner master was deployed and its account/security records, mounted data, secrets, managed keys and branding verified against its retained on-host checkpoint. Private production receipts remain private. This customer package contains compiled customer artifacts, not private issuer source or credentials.
+
+## Main-site installation commands verified
+
+Website source `e22c53c6f1a65569e82069be47051ffb6630fad9` deployed successfully through Coolify `qni404visq0s6kzdf5i453nl` at 2026-10-21 23:39:45 UTC. The [live installation section](https://therealmsofasgard.com/gaming-hub/bifrost-server-manager#testing-installation) visibly identifies Test 35. Its existing password gate returned matching Debian su and Ubuntu sudo commands with the verified Test 35 installer digest, bounded HTTPS, standalone --instance and no-store. No fresh-server installation, account change or shared database mutation was performed. Website typecheck, four focused units, outer/nested shell syntax and production build passed; its local Windows standalone symlink warning did not prevent the real Linux deployment. The existing website auth, gate password, artwork and latest unrelated volunteer authorization work were retained.
+
+Task-only release-build proxy and isolated Docker daemon were stopped after confirming no task containers were running. All build/fixture images and volumes were retained; installed global Docker and production services were untouched by cleanup. Published Test 35 assets remain immutable. Later documentation-only pushes use the installed [skip cd] marker.
