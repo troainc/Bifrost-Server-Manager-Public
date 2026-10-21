@@ -4,7 +4,7 @@ Bifrost manages customer Controllers, explicitly approved Hosts and game instanc
 
 ## Current status
 
-`v0.1.0-installtest.34` is a local unpublished candidate. Its source adds whole-release signature verification and encrypted database/configuration/key checkpoints with recovery into a new database. Existing production/customer data and earlier release assets remain preserved. No candidate install command is advertised until publication and independent approval are complete.
+`v0.1.0-installtest.34` is published for owner-authorized controlled installation testing. Fresh setup offers the separately signed maintained prerequisite baseline only after explicit tester consent; independent review and real target-server acceptance remain pending. Its source adds whole-release signature verification and encrypted database/configuration/key checkpoints with recovery into a new database. Existing production/customer data and earlier release assets remain preserved. No candidate install command is advertised until publication and independent approval are complete.
 
 The historical published prerelease is [Test 33](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.33). Its earlier acceptance and signature limitations remain historical; it is not evidence for this candidate. [Earlier delivery records](Docs/History/README-before-release-readiness-2026-10-21.md) are retained.
 
