@@ -62,17 +62,18 @@ class OfflineRelease(unittest.TestCase):
         alias=self.root/'alias';alias.symlink_to(self.assets,target_is_directory=True)
         self.assertNotEqual(self.run_bash('verify_local_release "$1"',alias).returncode,0)
 
-    def test_missing_unreviewed_prerequisites_fail_before_any_download(self):
+    def test_missing_prerequisites_decline_or_missing_compose_never_download_vendor_tools(self):
         source=(ROOT/'install.sh').read_text()
         sections=[(source.index('  if ! command -v dockerd-rootless-setuptool.sh'), '  export DOCKER_HOST='),(source.index('  if ! docker compose version >/dev/null'),'  mkdir -p "$HOME/.config/bifrost"')]
         for start,delimiter in sections:
             block=source[start:source.index(delimiter,start)]
             home=self.root/'prerequisite-home';home.mkdir(exist_ok=True)
             sentinel=home/'unexpected-download'
-            harness='set -Eeuo pipefail\nfail(){ echo "$*" >&2;exit 2; }\ncommand(){ return 1; }\ndocker(){ return 1; }\nfetch(){ touch "$HOME/unexpected-download"; }\n'+block
-            result=subprocess.run(['bash','-c',harness],env={**os.environ,'HOME':str(home),'TMPDIR':str(self.root)},capture_output=True,text=True)
+            helper=source[source.index('prepare_testing_prerequisites() {'):source.index('bootstrap_prerequisites() {')]
+            harness='set -Eeuo pipefail\nfail(){ echo "$*" >&2;exit 2; }\ncommand(){ return 1; }\ndocker(){ return 1; }\nfetch(){ touch "$HOME/unexpected-download"; }\nfetch_release_asset(){ touch "$HOME/unexpected-download"; }\n'+helper+block
+            result=subprocess.run(['bash','-c',harness],env={**os.environ,'HOME':str(home),'TMPDIR':str(self.root)},input='DECLINE\n',capture_output=True,text=True)
             self.assertNotEqual(result.returncode,0)
-            self.assertIn('independently reviewed, patched',result.stderr)
+            self.assertRegex(result.stderr,'independently reviewed|independently reviewed, patched')
             self.assertFalse(sentinel.exists())
 
     def test_existing_rootless_runtime_is_used_without_download_or_reinstall(self):

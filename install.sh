@@ -135,6 +135,26 @@ fetch() {
   elif command -v wget >/dev/null; then wget --quiet --show-progress --output-document="$2" "$1";
   else fail 'This VM needs wget or curl.'; fi
 }
+prepare_testing_prerequisites() {
+  printf '\nThis testing release offers a separately signed Bifrost-maintained Docker/Compose security build.\n'
+  printf 'Independent security/source-license review and target-OS quota acceptance remain pending.\n'
+  printf 'Existing Docker tools, daemons and data will never be upgraded by this preparation.\n'
+  printf 'To accept this maintained build for testing only, type USE TEST PREREQUISITES: '
+  local answer stage
+  read -r answer || fail 'Testing prerequisite consent was not received.'
+  [[ "$answer" == 'USE TEST PREREQUISITES' ]] || fail 'Testing prerequisites were not accepted. Provision independently reviewed tools and rerun.'
+  stage=$(mktemp -d "$HOME/.local/share/bifrost-prerequisite-bootstrap.XXXXXX")
+  fetch_release_asset prepare-testing-prerequisites.py "$stage/prepare-testing-prerequisites.py"
+  fetch_release_asset verify-prerequisite-baseline.py "$stage/verify-prerequisite-baseline.py"
+  verify_signed_release "$stage" prepare-testing-prerequisites.py
+  python3 -B - "$stage" "$RELEASE_SIGNER_SPKI_SHA256" "$VERSION" <<'VERIFY_PREREQUISITE_HELPER_PY'
+import importlib.util,pathlib,sys
+root=pathlib.Path(sys.argv[1]);spec=importlib.util.spec_from_file_location('signed_verifier',root/'release-manifest.py');module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+module.verify(root/'release-manifest.json',root/'release-manifest.sig',root/'release-signing-public.pem',sys.argv[2],sys.argv[3],{'verify-prerequisite-baseline.py':root/'verify-prerequisite-baseline.py'})
+VERIFY_PREREQUISITE_HELPER_PY
+  python3 -B "$stage/prepare-testing-prerequisites.py" --accept-testing-build || fail 'Testing prerequisite preparation failed; retained files were preserved for review.'
+  hash -r
+}
 bootstrap_prerequisites() {
   export PATH="$HOME/.local/bin:$HOME/bin:$PATH:/usr/sbin:/sbin"
   local account uid tool file missing=()
@@ -183,7 +203,8 @@ bootstrap_prerequisites() {
   export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$uid}"
   [[ -d "$XDG_RUNTIME_DIR" && -w "$XDG_RUNTIME_DIR" ]] || fail 'Your login session has no writable runtime directory. Log out and log in directly.'
   if ! command -v dockerd-rootless-setuptool.sh >/dev/null; then
-    fail 'Provision independently reviewed, patched rootless Docker prerequisites for this account before continuing. Automatic Docker downloads are paused: the reviewed vendor archives still contain high-severity prerequisite findings. Existing runtimes and data were not replaced. See Docs/Prerequisite-Security-Review.md.'
+    mkdir -p -m 0700 "$HOME/.local/share"
+    prepare_testing_prerequisites
   fi
   export DOCKER_HOST="unix://$XDG_RUNTIME_DIR/docker.sock"
   if [[ -r /proc/sys/kernel/apparmor_restrict_unprivileged_userns && $(cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns) == 1 ]]; then
