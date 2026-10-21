@@ -1,10 +1,50 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.33
+VERSION=v0.1.0-installtest.34
+# BEGIN SIGNED_RELEASE_BOOTSTRAP
+# Local candidate identity. Private signing material is never part of this repository.
+readonly RELEASE_SIGNER_SPKI_SHA256=1dba79e7a3d2608b42a5324089d4db548567999210ffbf3dd96ce5cb63a92e6a
+verify_signed_release(){
+  local target="$1" local_name="$2" asset_name="${3:-$2}" metadata_base
+  metadata_base="https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION"
+  python3 - "$metadata_base" "$target" <<'SIGNED_RELEASE_DOWNLOAD_PY'
+import os,pathlib,sys,urllib.request,urllib.parse
+base,target=sys.argv[1],pathlib.Path(sys.argv[2])
+def approved(url):
+    value=urllib.parse.urlsplit(url)
+    if value.scheme!='https' or value.hostname not in ('github.com','release-assets.githubusercontent.com','objects.githubusercontent.com') or value.username or value.password or value.port not in (None,443):raise ValueError('Unapproved metadata origin.')
+class Redirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self,request,response,code,message,headers,url):
+        approved(url);return super().redirect_request(request,response,code,message,headers,url)
+opener=urllib.request.build_opener(Redirect())
+for name in ('release-signing-public.pem','release-manifest.json','release-manifest.sig','release-manifest.py'):
+    url=base+'/'+name;approved(url)
+    with opener.open(url,timeout=30) as response:
+        data=response.read(1024*1024+1)
+    if len(data)>1024*1024:raise ValueError('Oversized release metadata.')
+    descriptor=os.open(target/name,os.O_WRONLY|os.O_CREAT|os.O_TRUNC|os.O_NOFOLLOW,0o600)
+    with os.fdopen(descriptor,'wb')as output:output.write(data)
+SIGNED_RELEASE_DOWNLOAD_PY
+  [[ $? -eq 0 ]] || fail 'Signed release metadata download failed.'
+  local actual_signer
+  actual_signer=$(openssl pkey -pubin -in "$target/release-signing-public.pem" -outform DER | openssl dgst -sha256 -r | cut -d ' ' -f 1)
+  [[ "$actual_signer" == "$RELEASE_SIGNER_SPKI_SHA256" ]] || fail 'Release signing identity does not match the pinned publisher.'
+  openssl pkeyutl -verify -pubin -inkey "$target/release-signing-public.pem" -rawin -in "$target/release-manifest.json" -sigfile "$target/release-manifest.sig" >/dev/null 2>&1 || fail 'Release statement signature is invalid.'
+  # Authenticate the verifier itself before executing any downloaded Python.
+  python3 - "$target" <<'SIGNED_VERIFIER_PY'
+import hashlib,json,pathlib,sys
+root=pathlib.Path(sys.argv[1]);manifest=json.loads((root/'release-manifest.json').read_text())
+records=[item for item in manifest['artifacts']if item['name']=='release-manifest.py']
+if len(records)!=1:raise SystemExit('Signed verifier record missing or duplicated.')
+path=root/'release-manifest.py';data=path.read_bytes()
+if len(data)!=records[0]['size']or hashlib.sha256(data).hexdigest()!=records[0]['sha256']:raise SystemExit('Signed verifier bytes do not match.')
+SIGNED_VERIFIER_PY
+  [[ $? -eq 0 ]] || fail 'Release verifier integrity failed.'
+  python3 "$target/release-manifest.py" --manifest "$target/release-manifest.json" --signature "$target/release-manifest.sig" --public-key "$target/release-signing-public.pem" --expected-signer "$RELEASE_SIGNER_SPKI_SHA256" --version "$VERSION" --asset "$asset_name=$target/$local_name" || fail 'Signed release verification failed.'
+}
+# END SIGNED_RELEASE_BOOTSTRAP
 # Matched testing release updater; immutable source + digest.
-UPDATER_SOURCE_REF=8088c838c51a70ad089a9a462f1f6f68ed922266
-UPDATER_SHA256=68600ca1bd5235b861e2f7698dc35eacf08690ab10a5c166cf607033345c2dc3
 INSTALL_DIR="${BIFROST_INSTALL_DIR:-$HOME/.local/share/bifrost}"
 # Terminal presentation: readable without color, animation, or a wide terminal.
 UI_RESET='' UI_BLUE='' UI_GREEN='' UI_GOLD='' UI_DIM='' UI_BOLD=''
@@ -233,6 +273,7 @@ NODE_RUNTIME_PY
   "$node_root/bin/node" -e 'if(process.versions.node!=="24.19.0")process.exit(1)' || fail 'Pinned Node runtime identity mismatch.'
   fetch "https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION/bifrost-linux-host-agent.zip" "$stage/host.zip"
   fetch "https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION/SHA256SUMS" "$stage/SHA256SUMS"
+  verify_signed_release "$stage" host.zip bifrost-linux-host-agent.zip
   (cd "$stage" && sed 's/  bifrost-linux-host-agent.zip$/  host.zip/' SHA256SUMS | grep -E '^[a-f0-9]{64}  host.zip$' | sha256sum --check --status) || fail 'Matched Host package checksum failed.'
   digest=$(sha256sum "$stage/host.zip" | awk '{print $1}')
   chmod 0644 "$stage/host.zip"
@@ -494,6 +535,7 @@ install_instance_host() {
   ui_step 'INSTANCE HOST   Connect this game machine' 'This installs the outbound Host Agent under your current account.'
   fetch "https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION/bifrost-linux-host-agent.zip" "$stage/bifrost-linux-host-agent.zip" || fail 'Could not download the Host Agent package for this release.'
   fetch "https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION/bifrost-linux-host-agent.zip.sha256" "$checksum_file" || fail 'Could not download the Host Agent checksum.'
+  verify_signed_release "$stage" bifrost-linux-host-agent.zip
   (cd "$stage" && sha256sum --check bifrost-linux-host-agent.zip.sha256) || fail 'Host Agent package checksum failed.'
   python3 - "$stage/bifrost-linux-host-agent.zip" "$package" <<'HOST_ZIP_PY'
 import os,pathlib,stat,sys,zipfile,tempfile,hashlib
@@ -558,11 +600,11 @@ HOST_ZIP_PY
 if [[ "${1:-}" == --update ]]; then
   [[ $# -eq 1 ]] || fail 'Unexpected arguments.'
   update_stage=$(mktemp -d)
-  fetch "https://raw.githubusercontent.com/troainc/Bifrost-Server-Manager-Public/$UPDATER_SOURCE_REF/update.sh" "$update_stage/update.sh"
-  (cd "$update_stage" && printf '%s  update.sh\n' "$UPDATER_SHA256" | sha256sum --check --status) || fail 'Updater checksum failed.'
+  fetch "https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION/update.sh" "$update_stage/update.sh"
+  verify_signed_release "$update_stage" update.sh
   grep -qx "VERSION=$VERSION" "$update_stage/update.sh" || fail 'Pinned updater version differs from the requested release.'
   bash "$update_stage/update.sh"
-  rm -f "$update_stage/update.sh"; rmdir "$update_stage"
+  rm -f "$update_stage/update.sh" "$update_stage/release-signing-public.pem" "$update_stage/release-manifest.json" "$update_stage/release-manifest.sig" "$update_stage/release-manifest.py"; rmdir "$update_stage"
   exit 0
 fi
 [[ "${1:-}" != --help ]] || { echo 'Run bash install.sh to choose Controller, standalone Instance node, or Hybrid. Pass --controller, --instance, or --hybrid; --host installs only an Agent for an existing Controller. Fresh amd64 Instances prepare an isolated Host. After licensing, independent setup authorizes it locally; a Controller join requires that Controller approval. Earlier/manual Installs can use --host --join-instance. --resume-local-host resumes interrupted fresh pre-join preparation as root. Existing Hosts can use --host --upgrade; revoked Hosts can use --host --upgrade --re-enroll.'; exit 0; }
@@ -663,6 +705,7 @@ bundle="bifrost-linux-amd64-$VERSION.tar.gz"
 base="https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION"
 fetch "$base/$bundle" "$scratch/$bundle" || fail 'Application download failed.'
 fetch "$base/SHA256SUMS" "$scratch/SHA256SUMS" || fail 'Checksum download failed.'
+verify_signed_release "$scratch" "$bundle"
 (cd "$scratch" && grep -F "  $bundle" SHA256SUMS | sha256sum --check --status) || fail 'Checksum verification failed.'
 python3 - "$scratch/$bundle" "$scratch/package" <<'PY'
 import pathlib,sys,tarfile,shutil

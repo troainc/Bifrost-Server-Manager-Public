@@ -1,6 +1,6 @@
-# Linux installation and first game server — Test 28
+# Linux installation and first game server — local candidate Test 34
 
-The public administrator bootstrap is for Debian/Ubuntu x86_64 with systemd. The panel runs as `bifrost` in rootless Docker; games run as the separate `bifrost-games` account in rootless Podman. Administrator authentication prepares OS prerequisites once; neither application nor Agent runs as root. Use the release-pinned, checksum-verified Debian or Ubuntu command on the [testing installation page](https://therealmsofasgard.com/gaming-hub/bifrost-server-manager#testing-installation).
+The public administrator bootstrap is for Debian/Ubuntu x86_64 with systemd. The panel runs as `bifrost` in rootless Docker; games run as the separate `bifrost-games` account in rootless Podman. Administrator authentication prepares OS prerequisites once; neither application nor Agent runs as root. This candidate is unpublished. After approval/publication, use its exact checksum-pinned command; existing website commands refer to earlier prereleases.
 
 ## Independent standalone machine
 

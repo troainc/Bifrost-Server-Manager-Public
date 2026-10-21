@@ -195,12 +195,11 @@ class ImageIdentity(unittest.TestCase):
             embedded = script.split("<<'IMAGE_IDENTITY_PY'\n", 1)[1].split("\nIMAGE_IDENTITY_PY", 1)[0]
             self.assertEqual(embedded, (ROOT / "scripts/verify-image-archive.py").read_text().rstrip())
 
-    def test_bootstrap_pins_the_corrected_updater_with_a_matching_digest(self):
+    def test_bootstrap_authenticates_the_updater_before_execution(self):
         script = (ROOT / "install.sh").read_text()
-        values = dict(line.split("=", 1) for line in script.splitlines() if line.startswith(("UPDATER_SOURCE_REF=", "UPDATER_SHA256=")))
-        self.assertRegex(values["UPDATER_SOURCE_REF"], r"^[a-f0-9]{40}$")
         updater = (ROOT / "update.sh").read_text().encode()
-        self.assertEqual(hashlib.sha256(updater).hexdigest(), values["UPDATER_SHA256"])
+        self.assertLess(script.index('verify_signed_release "$update_stage" update.sh'),script.index('bash "$update_stage/update.sh"'))
+        self.assertIn('readonly RELEASE_SIGNER_SPKI_SHA256=',script)
         self.assertIn(b"IMAGE_IDENTITY_PY", updater)
         self.assertIn("Pinned updater version differs", script)
 

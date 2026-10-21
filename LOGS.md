@@ -1,3 +1,11 @@
+## 2026-10-21 — local acceptance checkpoint
+
+Customer installer checks: 43 Node tests pass; 81 Python tests pass with 3 root bootstrap cases executed separately in a disposable container. Real PostgreSQL update recovery and private two-database disaster recovery pass with synthetic data, retained original databases and exact key preservation. Candidate Test 34 remains unpublished. Manual target OS, player and accessibility acceptance and external governance/privacy approval remain outstanding.
+
+## 2026-10-21 — local release remediation
+
+User authorizes local fixes and repeated automated re-audit for both private master and customer product, preserving all data. No push, deployment, publication, external settings mutation or production key change. Candidate Test 34 is unpublished; historical deployment/test-deferral entries below do not authorize current external actions. Current scope/evidence: Docs/Supported-Release-Scope.md and Docs/Recovery-and-Key-Rotation.md.
+
 ## 2026-10-16 - Published matched Test 33
 
 Test 33 is published at https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.33 . Its 17 assets have exact GitHub size/digest matches; the installer, updater, checksum manifest, Linux Host archive and source provenance also match anonymous HTTPS downloads. Installer SHA-256: `57d7147a78a71a32bfa626b5632b1389d0dd40363efa595ba1647925c0a1add5`. Compiled private source: `e429321cfdae171cdd89a732111278e5c0b0fcbc`; immutable public packaging source: `3aca71d87fc4f9651a32175dcb25ea0074fa4d95`.

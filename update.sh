@@ -1,7 +1,49 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.33
+VERSION=v0.1.0-installtest.34
+# BEGIN SIGNED_RELEASE_BOOTSTRAP
+# Local candidate identity. Private signing material is never part of this repository.
+readonly RELEASE_SIGNER_SPKI_SHA256=1dba79e7a3d2608b42a5324089d4db548567999210ffbf3dd96ce5cb63a92e6a
+verify_signed_release(){
+  local target="$1" local_name="$2" asset_name="${3:-$2}" metadata_base
+  metadata_base="https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION"
+  python3 - "$metadata_base" "$target" <<'SIGNED_RELEASE_DOWNLOAD_PY'
+import os,pathlib,sys,urllib.request,urllib.parse
+base,target=sys.argv[1],pathlib.Path(sys.argv[2])
+def approved(url):
+    value=urllib.parse.urlsplit(url)
+    if value.scheme!='https' or value.hostname not in ('github.com','release-assets.githubusercontent.com','objects.githubusercontent.com') or value.username or value.password or value.port not in (None,443):raise ValueError('Unapproved metadata origin.')
+class Redirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self,request,response,code,message,headers,url):
+        approved(url);return super().redirect_request(request,response,code,message,headers,url)
+opener=urllib.request.build_opener(Redirect())
+for name in ('release-signing-public.pem','release-manifest.json','release-manifest.sig','release-manifest.py'):
+    url=base+'/'+name;approved(url)
+    with opener.open(url,timeout=30) as response:
+        data=response.read(1024*1024+1)
+    if len(data)>1024*1024:raise ValueError('Oversized release metadata.')
+    descriptor=os.open(target/name,os.O_WRONLY|os.O_CREAT|os.O_TRUNC|os.O_NOFOLLOW,0o600)
+    with os.fdopen(descriptor,'wb')as output:output.write(data)
+SIGNED_RELEASE_DOWNLOAD_PY
+  [[ $? -eq 0 ]] || fail 'Signed release metadata download failed.'
+  local actual_signer
+  actual_signer=$(openssl pkey -pubin -in "$target/release-signing-public.pem" -outform DER | openssl dgst -sha256 -r | cut -d ' ' -f 1)
+  [[ "$actual_signer" == "$RELEASE_SIGNER_SPKI_SHA256" ]] || fail 'Release signing identity does not match the pinned publisher.'
+  openssl pkeyutl -verify -pubin -inkey "$target/release-signing-public.pem" -rawin -in "$target/release-manifest.json" -sigfile "$target/release-manifest.sig" >/dev/null 2>&1 || fail 'Release statement signature is invalid.'
+  # Authenticate the verifier itself before executing any downloaded Python.
+  python3 - "$target" <<'SIGNED_VERIFIER_PY'
+import hashlib,json,pathlib,sys
+root=pathlib.Path(sys.argv[1]);manifest=json.loads((root/'release-manifest.json').read_text())
+records=[item for item in manifest['artifacts']if item['name']=='release-manifest.py']
+if len(records)!=1:raise SystemExit('Signed verifier record missing or duplicated.')
+path=root/'release-manifest.py';data=path.read_bytes()
+if len(data)!=records[0]['size']or hashlib.sha256(data).hexdigest()!=records[0]['sha256']:raise SystemExit('Signed verifier bytes do not match.')
+SIGNED_VERIFIER_PY
+  [[ $? -eq 0 ]] || fail 'Release verifier integrity failed.'
+  python3 "$target/release-manifest.py" --manifest "$target/release-manifest.json" --signature "$target/release-manifest.sig" --public-key "$target/release-signing-public.pem" --expected-signer "$RELEASE_SIGNER_SPKI_SHA256" --version "$VERSION" --asset "$asset_name=$target/$local_name" || fail 'Signed release verification failed.'
+}
+# END SIGNED_RELEASE_BOOTSTRAP
 # Terminal presentation: readable without color, animation, or a wide terminal.
 UI_RESET='' UI_BLUE='' UI_GREEN='' UI_GOLD='' UI_DIM='' UI_BOLD=''
 if [[ -t 1 && -z "${NO_COLOR:-}" && "${TERM:-dumb}" != dumb ]]; then
@@ -66,11 +108,37 @@ if values.get('BIFROST_POSTGRES_RUNTIME')!='alpine17-v1':
     raise SystemExit('This testing release requires a fresh installation or a separately verified database backup/restore migration. Existing Debian PostgreSQL data is unchanged; automatic cross-runtime update is refused.')
 DATABASE_RUNTIME_PY
 docker info --format '{{json .SecurityOptions}}' | grep -qi rootless || fail 'Rootless Docker is required.'
-scratch=$(mktemp -d);trap 'rm -rf -- "$scratch"' EXIT
+if [[ -z "${BIFROST_UPDATE_LOCK_FD:-}" ]]; then
+  exec python3 - "$root" "$0" "$@" <<'LOCK_PY'
+import fcntl,os,pathlib,stat,sys
+root=pathlib.Path(sys.argv[1]);path=root/'update.lock'
+if root.resolve()!=root.absolute() or root.stat().st_uid!=os.getuid() or root.stat().st_mode&0o077:raise SystemExit('Unsafe installation directory.')
+fd=os.open(path,os.O_RDWR|os.O_CREAT|os.O_NOFOLLOW,0o600);info=os.fstat(fd)
+if not stat.S_ISREG(info.st_mode) or info.st_nlink!=1 or info.st_uid!=os.getuid() or info.st_mode&0o077:raise SystemExit('Unsafe update lock.')
+try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+except BlockingIOError:raise SystemExit('Another updater or recovery operation holds the installation lock.')
+os.set_inheritable(fd,True);os.environ['BIFROST_UPDATE_LOCK_FD']=str(fd)
+os.execv('/bin/bash',['bash',*sys.argv[2:]])
+LOCK_PY
+fi
+scratch=$(mktemp -d)
+checkpoint=''
+update_exit(){
+  local status=$?
+  trap - EXIT
+  if [[ $status -ne 0 && -n "$checkpoint" ]]; then
+    python3 "$recovery_helper" failed --root "$root" >/dev/null || true
+    printf '\nUpdate stopped. Retained checkpoint: %s/update-backups/%s\nReview the journal and recover explicitly; no database or volume was deleted.\n' "$root" "$checkpoint" >&2
+  fi
+  rm -rf -- "$scratch"
+  exit "$status"
+}
+trap update_exit EXIT
 base="https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION"
 bundle="bifrost-linux-amd64-$VERSION.tar.gz"
 curl -fL --progress-bar --retry 3 "$base/$bundle" -o "$scratch/$bundle"
 curl -fL --progress-bar --retry 3 "$base/SHA256SUMS" -o "$scratch/SHA256SUMS"
+verify_signed_release "$scratch" "$bundle"
 (cd "$scratch" && grep -F "  $bundle" SHA256SUMS | sha256sum --check --status) || fail 'Package checksum failed.'
 python3 - "$scratch/$bundle" "$scratch/package" <<'PY'
 import pathlib,sys,tarfile
@@ -85,6 +153,10 @@ with tarfile.open(sys.argv[1]) as archive:
     archive.extractall(root,filter='data')
 PY
 
+recovery_helper="$scratch/package/scripts/update-recovery.py"
+[[ -f "$recovery_helper" && ! -L "$recovery_helper" ]] || fail 'This candidate lacks authenticated update recovery. Use a newly reviewed matching release; the current installation was not changed.'
+checkpoint=$(python3 "$recovery_helper" begin --root "$root" --version "$VERSION") || fail 'Pre-update recovery checkpoint failed. Installation changes were refused.'
+printf '\nAn encrypted database/configuration/key checkpoint is retained. Escrow secrets/update_recovery.key separately.\n'
 printf '\nThis is a testing release. Qualified deployment review is still pending.\n'
 read -r -p 'Enable license testing before completing your local review? [y/N, Enter keeps setting]: ' test_intake </dev/tty
 case "$test_intake" in
@@ -231,8 +303,8 @@ if __name__ == "__main__":
         raise SystemExit(str(error))
 IMAGE_IDENTITY_PY
 cd "$root"
-backup="update-backups/$(date -u +%Y%m%dT%H%M%SZ)";mkdir -p "$backup"
-cp -a .env compose.yaml config "$backup/"
+backup="update-backups/$checkpoint"
+python3 "$recovery_helper" applying --root "$root" >/dev/null
 # Database volumes, passwords, signing keys and TLS certificate are preserved.
 if [[ ! -e secrets/local-host-bootstrap.json ]]; then printf '{"enabled":false}\n' > secrets/local-host-bootstrap.json; chmod 0644 secrets/local-host-bootstrap.json; fi
 [[ ! -L secrets/local-host-bootstrap.json ]] || fail 'Unsafe local Host bootstrap secret.'
@@ -288,5 +360,7 @@ fi
 chmod 0644 config/license-signing-public.pem
 docker compose config --quiet
 run_task 'Apply update and check service health' docker compose up -d --wait --wait-timeout 180 --force-recreate migrate control-plane web https
+python3 "$recovery_helper" complete --root "$root" >/dev/null
+checkpoint=''
 ui_step 'UPDATE COMPLETE' 'Refresh your browser to see the latest panel.'
 printf '\nUpdated to %s. Your database, administrator and credentials were preserved.\nConfiguration backup: %s/%s\nLicense activation requires a reachable HTTPS licensing service and its matching public key.\n' "$VERSION" "$root" "$backup"

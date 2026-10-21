@@ -1,6 +1,8 @@
 name: Check customer installer configuration
 on:
   pull_request:
+  push:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
@@ -9,22 +11,42 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.19.0
       - name: Check shell syntax without installing
-        run: bash -n install.sh && bash -n update.sh && bash -n scripts/build-release-bundle.sh
+        run: bash -n install.sh && bash -n update.sh && bash -n scripts/build-release-bundle.sh && python3 scripts/sync-release-bootstrap.py --check
       - name: Check license URL and key rejection using temporary files
         run: python3 -m unittest discover -s tests -v
-      - name: Check read-only Host diagnostic redaction
-        run: node --test tests/diagnose-local-host.test.mjs tests/inspect-unstarted-provisioning.test.mjs tests/unstarted-recovery.test.mjs tests/torch-world-multiplayer.test.mjs tests/torch-game-port.test.mjs
-      - name: Verify the pinned public updater download without executing it
+      - name: Fetch exact immutable historical Host inputs for preserving upgrade tests
         run: |
-          python3 - <<'PY'
-          import hashlib,pathlib,re,urllib.request
-          source=pathlib.Path('install.sh').read_text()
-          ref=re.search(r'^UPDATER_SOURCE_REF=([a-f0-9]{40})$',source,re.M)[1]
-          expected=re.search(r'^UPDATER_SHA256=([a-f0-9]{64})$',source,re.M)[1]
-          url=f'https://raw.githubusercontent.com/troainc/Bifrost-Server-Manager-Public/{ref}/update.sh'
-          with urllib.request.urlopen(url,timeout=30) as response:data=response.read()
-          assert hashlib.sha256(data).hexdigest()==expected,'Pinned public updater digest mismatch'
-          assert b'IMAGE_IDENTITY_PY' in data,'Updater missing repaired verification'
-          print('Pinned updater source and SHA-256 match')
-          PY
+          curl --fail --location --proto '=https' --proto-redir '=https' --max-filesize 2097152 https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/v0.1.0-installtest.20/bifrost-linux-host-agent.zip -o "$RUNNER_TEMP/host20.zip"
+          curl --fail --location --proto '=https' --proto-redir '=https' --max-filesize 2097152 https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/v0.1.0-installtest.21/bifrost-linux-host-agent.zip -o "$RUNNER_TEMP/host21.zip"
+          printf '%s  %s\n' 9408da9bac948edc3063fbd5e97019e07c99d30084d961d390d68f8191969504 "$RUNNER_TEMP/host20.zip" be6b513956e2c89b0160e4152c87c2b926512e6e36f9e25ad220929763861178 "$RUNNER_TEMP/host21.zip" | sha256sum --check
+      - name: Verify all Host diagnostics and historical preserving upgrades
+        env:
+          BIFROST_TEST20_HOST_ARCHIVE: ${{ runner.temp }}/host20.zip
+          BIFROST_TEST21_HOST_ARCHIVE: ${{ runner.temp }}/host21.zip
+        run: node --test tests/*.test.mjs
+      - name: Verify release signature and authenticated recovery negative cases
+        run: python3 -m unittest discover -s tests -p 'test_release_manifest.py' -v && python3 -m unittest discover -s tests -p 'test_update_recovery.py' -v
+  bootstrap-root:
+    name: Bootstrap ownership regressions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+      - name: Prepare fixture accounts only on an ephemeral GitHub-hosted runner
+        run: |
+          test "$GITHUB_ACTIONS" = true
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          ! id bifrost >/dev/null 2>&1
+          ! id bifrost-games >/dev/null 2>&1
+          available_id(){ for number in $(seq 1100 1200); do if ! getent passwd "$number" >/dev/null && ! getent group "$number" >/dev/null; then printf '%s\n' "$number"; return; fi; done; return 1; }
+          panel_id=$(available_id)
+          sudo groupadd --gid "$panel_id" bifrost
+          sudo useradd --no-create-home --uid "$panel_id" --gid "$panel_id" bifrost
+          game_id=$(available_id)
+          sudo groupadd --gid "$game_id" bifrost-games
+          sudo useradd --no-create-home --uid "$game_id" --gid "$game_id" bifrost-games
+      - name: Verify exact resume, retained mismatch and private-key/link refusal
+        run: sudo env BIFROST_INSTALLER_DISPOSABLE_ROOT=1 python3 -m unittest discover -s tests -p test_bootstrap_configuration.py -v

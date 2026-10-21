@@ -30,7 +30,7 @@ services:
     environment:
       DB_PASSWORD_FILE: /run/secrets/postgres_owner_password
       DB_HOST: postgres:5432
-      DB_NAME: bifrost
+      DB_NAME: ${BIFROST_DATABASE_NAME:-bifrost}
       DB_USER: bifrost_owner
     secrets: [postgres_owner_password]
     depends_on:
@@ -51,7 +51,7 @@ services:
       PUBLIC_BASE_URL: ${BIFROST_PUBLIC_URL:?Set BIFROST_PUBLIC_URL to the external HTTPS URL}
       DB_PASSWORD_FILE: /run/secrets/bifrost_app_password
       DB_HOST: postgres:5432
-      DB_NAME: bifrost
+      DB_NAME: ${BIFROST_DATABASE_NAME:-bifrost}
       DB_USER: bifrost_app
       TRUSTED_PROXIES: ${BIFROST_TRUSTED_PROXIES:?Set the TLS proxy and Controller network addresses}
       RATE_LIMIT_PEPPER_FILE: /run/secrets/rate_limit_pepper

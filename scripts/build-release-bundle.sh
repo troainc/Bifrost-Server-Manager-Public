@@ -23,6 +23,11 @@ PY
 rm -f "$key.der"
 mkdir -p "$output/package"
 cp -a deployment/. "$output/package/"
+mkdir -p "$output/package/scripts"
+cp scripts/update-recovery.py "$output/package/scripts/update-recovery.py"
+cp scripts/release-manifest.py "$output/release-manifest.py"
+cp deployment/config/release-signing-public.pem "$output/release-signing-public.pem"
+chmod 0644 "$output/package/scripts/update-recovery.py"
 # This is new staging with public templates only. Archive/checkouts created under
 # umask 077 can otherwise leave PostgreSQL's non-root init hook unreadable.
 for public_config in "$output/package/config/"*; do
@@ -50,6 +55,7 @@ docker save "bifrost/control-plane:$version" "bifrost/web:$version" "bifrost/pos
 # A portable lock records the archive config digest, not the engine-specific Id.
 python3 scripts/verify-image-archive.py "$output/package/customer-images.tar" "$output/package/IMAGE-LOCK.json" --write-lock \
   "bifrost/control-plane:$version" "bifrost/web:$version" "bifrost/postgres:$version"
+python3 scripts/write-image-identities.py "$output/package/customer-images.tar" "$output/package/IMAGE-LOCK.json" "$output/package/IMAGE-IDENTITIES.json"
 
 tar -czf "$output/bifrost-linux-amd64-$version.tar.gz" -C "$output/package" .
 cp install.sh update.sh "$output/"
