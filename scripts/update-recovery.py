@@ -207,7 +207,7 @@ def begin(root, version):
             for name in ('.env','compose.yaml','config','secrets','IMAGE-LOCK.json'):
                 if (root/name).exists(): copy_private(root/name,stage/name)
             command(root,['cp','control-plane:/var/lib/bifrost/keys',str(stage/'managed-keys')])
-            key_inventory(stage/'managed-keys')
+            require_persistent_managed_keys(root,key_inventory(stage/'managed-keys'))
             dump=stage/'database.dump'
             with dump.open('xb') as out:
                 os.chmod(dump,0o600)
@@ -231,6 +231,14 @@ def begin(root, version):
         # No installation config/schema changed yet. Restore the old service availability.
         command(root,['up','-d','--no-deps',*MANAGED])
         raise
+
+def require_persistent_managed_keys(root,inventory):
+    if not inventory:return
+    rendered=json.loads(command(root,['config','--format','json']))
+    mounts=rendered.get('services',{}).get('control-plane',{}).get('volumes',[])
+    if not any(isinstance(mount,dict)and mount.get('target')=='/var/lib/bifrost/keys'and mount.get('type')=='volume'and mount.get('source')=='controller_key_data'for mount in mounts):
+        raise ValueError('Retained managed keys require explicit migration into the candidate controller_key_data volume before update. Preserve the old container and exact keys; no configuration or schema was changed.')
+
 
 def digest(path):
     result=hashlib.sha256()

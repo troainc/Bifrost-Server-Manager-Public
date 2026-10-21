@@ -86,3 +86,12 @@ class UpdateRecovery(unittest.TestCase):
             hard=root/'hard';os.link(source,hard)
             with self.assertRaises(ValueError):recovery.crypt(hard,root/'new',os.urandom(64))
             self.assertFalse((root/'new').exists())
+
+    def test_retained_managed_keys_require_the_exact_persistent_candidate_mount(self):
+        recovery.require_persistent_managed_keys(pathlib.Path('/unused'),{})
+        for volumes,accepted in [([],False),([{'type':'bind','source':'/foreign','target':'/var/lib/bifrost/keys'}],False),([{'type':'volume','source':'controller_key_data','target':'/var/lib/bifrost/keys'}],True)]:
+            rendered=json.dumps({'services':{'control-plane':{'volumes':volumes}}}).encode()
+            with mock.patch.object(recovery,'command',return_value=rendered):
+                if accepted:recovery.require_persistent_managed_keys(pathlib.Path('/unused'),{'retained-key':'digest'})
+                else:
+                    with self.assertRaises(ValueError):recovery.require_persistent_managed_keys(pathlib.Path('/unused'),{'retained-key':'digest'})
