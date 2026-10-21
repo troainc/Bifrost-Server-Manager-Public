@@ -32,6 +32,8 @@ for document in Supported-Release-Scope Recovery-and-Key-Rotation Standalone-Ins
   chmod 0644 "$output/package/Docs/$document.md"
 done
 cp scripts/release-manifest.py "$output/release-manifest.py"
+cp scripts/prepare-testing-prerequisites.py "$output/prepare-testing-prerequisites.py"
+cp scripts/verify-prerequisite-baseline.py "$output/verify-prerequisite-baseline.py"
 cp deployment/config/release-signing-public.pem "$output/release-signing-public.pem"
 chmod 0644 "$output/package/scripts/update-recovery.py"
 chmod 0644 "$output/package/scripts/collect-prerequisite-evidence.py"

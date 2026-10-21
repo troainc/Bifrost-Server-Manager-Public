@@ -1,5 +1,11 @@
 # Host prerequisite security baseline
 
+## Authorized installation testing
+
+The owner authorized publication for controlled installation testing on October 21. Test 34 offers the separately signed maintained baseline only after the installing operator types `USE TEST PREREQUISITES`. This supersedes the local-only restriction in the historical assessment below; it does not grant general beta/stable or independent security approval. Existing runtimes are never replaced. An incomplete existing Docker installation needs separate administrator review. Fresh preparation verifies all five signed payloads and the exact twelve tools, retains sources/notices/raw evidence, and writes new account-owned executable files before the normal rootless service setup. The signature-authenticated preparer refuses foreign origins, invalid/tampered statements, linked/writable directories and existing executable paths. No global Docker daemon is upgraded.
+
+Independent security/source-license review, maintained patch ownership and fresh OS/systemd/resource-limit acceptance remain open. Use a disposable test VM and complete the manual acceptance checklist. A declined prompt does not download or install the baseline.
+
 The October 21 local remediation provides a separately signed **patched prerequisite candidate**, version `v0.0.0-prerequisites.1`, for both the private master and customer distribution. It is a Bifrost-maintained security build from pinned upstream sources, not an unchanged Docker vendor release. The installed daemon, services, configurations and all retained data remain unchanged. No deployment or publication is authorized.
 
 The original official Docker 29.9.2/Compose 5.6.1 archives remain unsuitable for automatic bootstrap: they contain the x/net advisory occurrences found in the initial audit. Missing Docker/Compose downloads therefore remain paused. The local candidate fixes those dependencies and additional eBPF/user-parser findings, retains runc seccomp/libpathrs, and backports the registry maintainer's manifest-digest verification fix. A test reproduces forged-header substitution before the backport and rejects it afterward. Independent review of this maintained build and its future update ownership is required before deployment.
