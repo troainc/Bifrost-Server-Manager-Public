@@ -1,3 +1,7 @@
+## 2026-10-21 - Test 35 delivery verified
+
+Test 35 UI fixes are deployed on the master and published as a new signed customer testing prerelease. Master account/security rows, mounted data, secrets, keys and branding match its retained checkpoint; all six services are healthy. All 33 application/prerequisite downloads match anonymous HTTPS hashes. Rebuilt private tests passed 262 with nine explicit skips; public 43 Node checks and exact-source hosted installer/image-store checks passed. Exact candidate and deployed image scans passed. Private hosted runners remain blocked by GitHub billing/spending limits. Human acceptance and general release approval remain outstanding. Frozen artifact sources and full preservation/verification evidence: Docs/Test-35-Rollout-2026-10-21.md. Documentation-only delivery uses [skip cd] to avoid an unnecessary restart.
+
 ## 2026-10-21 - Test 35 UI fixes prepared for authorized testing delivery
 
 Test 35 includes shared scrolling, navigation, responsive registry/field labels, modal focus and inventory-feedback fixes. It preserves existing data, accounts, cryptographic identities and installed runtimes. Prior release assets remain immutable. Publication and deployment evidence, and the remaining human checks, are recorded in Docs/Test-35-Rollout-2026-10-21.md; do not infer successful delivery from this preparation entry.
