@@ -21,3 +21,7 @@ Updates require the existing non-root service account and retained keys, stop pl
 Run shell syntax/bootstrap synchronization, Python installer/signature/recovery regressions and Node diagnostic tests before packaging. The private build pipeline compiles matched public-only Controller/web/Host artifacts, verifies owner exclusion and exact image identity, records dependency/SBOM and scan evidence, and signs only source-bound local candidates with passing automated gates. Exact target OS/game/player, accessibility, production configuration/key escrow, qualified privacy review and external repository/CI approvals remain explicit requirements before rollout.
 
 Use [AGENTS.md](AGENTS.md), [CONTEXT.md](CONTEXT.md) and [LOGS.md](LOGS.md) for current local work. Do not replace earlier release assets or describe source/fixture checks as customer machine acceptance.
+
+Host prerequisite approval is an open release gate. Missing Docker/Compose are no longer downloaded automatically; see [prerequisite security review](Docs/Prerequisite-Security-Review.md). Existing host runtimes/data are preserved.
+
+Use the [manual acceptance checklist](Docs/Manual-Acceptance-Checklist.md) to record the exact candidate's OS, upgrade, game/player, recovery, accessibility and approval evidence. It is also included in the compiled bundle alongside the read-only prerequisite inventory script.

@@ -25,9 +25,16 @@ mkdir -p "$output/package"
 cp -a deployment/. "$output/package/"
 mkdir -p "$output/package/scripts"
 cp scripts/update-recovery.py "$output/package/scripts/update-recovery.py"
+cp scripts/collect-prerequisite-evidence.py "$output/package/scripts/collect-prerequisite-evidence.py"
+mkdir -m 0755 "$output/package/Docs"
+for document in Supported-Release-Scope Recovery-and-Key-Rotation Standalone-Installation Prerequisite-Security-Review Manual-Acceptance-Checklist; do
+  cp "Docs/$document.md" "$output/package/Docs/$document.md"
+  chmod 0644 "$output/package/Docs/$document.md"
+done
 cp scripts/release-manifest.py "$output/release-manifest.py"
 cp deployment/config/release-signing-public.pem "$output/release-signing-public.pem"
 chmod 0644 "$output/package/scripts/update-recovery.py"
+chmod 0644 "$output/package/scripts/collect-prerequisite-evidence.py"
 # This is new staging with public templates only. Archive/checkouts created under
 # umask 077 can otherwise leave PostgreSQL's non-root init hook unreadable.
 for public_config in "$output/package/config/"*; do

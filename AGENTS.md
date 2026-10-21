@@ -1,3 +1,7 @@
+## 2026-10-21 - local follow-up and regression gate
+
+Current work adds signed local release verification, explicit local asset selection, read-only prerequisite inventory and manual acceptance checklists. Missing Docker/Compose automatic downloads are paused because separate compiled host-tool scans found unresolved high-severity advisories. Existing runtimes/data are preserved. Tag creation is separated from immutable update/deletion controls; external activation is still unapproved. No push, deployment, publication or production data/key changes are authorized.
+
 ## 2026-10-21 — local release remediation
 
 User authorizes local fixes and repeated automated re-audit for both private master and customer product, preserving all data. No push, deployment, publication, external settings mutation or production key change. Candidate Test 34 is unpublished; historical deployment/test-deferral entries below do not authorize current external actions. Current scope/evidence: Docs/Supported-Release-Scope.md and Docs/Recovery-and-Key-Rotation.md.

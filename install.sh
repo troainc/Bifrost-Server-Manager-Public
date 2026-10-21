@@ -5,28 +5,57 @@ VERSION=v0.1.0-installtest.34
 # BEGIN SIGNED_RELEASE_BOOTSTRAP
 # Local candidate identity. Private signing material is never part of this repository.
 readonly RELEASE_SIGNER_SPKI_SHA256=1dba79e7a3d2608b42a5324089d4db548567999210ffbf3dd96ce5cb63a92e6a
-verify_signed_release(){
-  local target="$1" local_name="$2" asset_name="${3:-$2}" metadata_base
-  metadata_base="https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION"
-  python3 - "$metadata_base" "$target" <<'SIGNED_RELEASE_DOWNLOAD_PY'
-import os,pathlib,sys,urllib.request,urllib.parse
-base,target=sys.argv[1],pathlib.Path(sys.argv[2])
+fetch_release_asset(){
+  local asset="$1" destination="$2"
+  python3 - "$VERSION" "$asset" "$destination" "${BIFROST_RELEASE_DIRECTORY:-}" <<'RELEASE_ASSET_PY'
+import os,pathlib,re,stat,sys,urllib.request,urllib.parse
+version,name,destination,offline=sys.argv[1:]
+if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,159}',name)or'..'in name:raise SystemExit('Unsafe release asset name.')
+limit=1024*1024 if name in ('release-signing-public.pem','release-manifest.json','release-manifest.sig','release-manifest.py','SHA256SUMS')else 4*1024**3
+
 def approved(url):
     value=urllib.parse.urlsplit(url)
-    if value.scheme!='https' or value.hostname not in ('github.com','release-assets.githubusercontent.com','objects.githubusercontent.com') or value.username or value.password or value.port not in (None,443):raise ValueError('Unapproved metadata origin.')
+    if value.scheme!='https'or value.hostname not in ('github.com','release-assets.githubusercontent.com','objects.githubusercontent.com')or value.username or value.password or value.port not in (None,443):raise ValueError('Unapproved release origin.')
 class Redirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self,request,response,code,message,headers,url):
         approved(url);return super().redirect_request(request,response,code,message,headers,url)
-opener=urllib.request.build_opener(Redirect())
-for name in ('release-signing-public.pem','release-manifest.json','release-manifest.sig','release-manifest.py'):
-    url=base+'/'+name;approved(url)
-    with opener.open(url,timeout=30) as response:
-        data=response.read(1024*1024+1)
-    if len(data)>1024*1024:raise ValueError('Oversized release metadata.')
-    descriptor=os.open(target/name,os.O_WRONLY|os.O_CREAT|os.O_TRUNC|os.O_NOFOLLOW,0o600)
-    with os.fdopen(descriptor,'wb')as output:output.write(data)
-SIGNED_RELEASE_DOWNLOAD_PY
-  [[ $? -eq 0 ]] || fail 'Signed release metadata download failed.'
+source=None
+try:
+    if offline:
+        root=pathlib.Path(offline)
+        if not root.is_absolute()or root.resolve()!=root or not root.is_dir():raise ValueError('Local release directory must be absolute, physical and readable.')
+        # Traverse from a held directory descriptor; no followed source links.
+        directory=os.open(root,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+        try:fd=os.open(name,os.O_RDONLY|os.O_NOFOLLOW,dir_fd=directory)
+        finally:os.close(directory)
+        info=os.fstat(fd)
+        if not stat.S_ISREG(info.st_mode)or info.st_nlink!=1 or not 0<info.st_size<=limit:
+            os.close(fd);raise ValueError('Local release asset must be a bounded unlinked regular file.')
+        source=os.fdopen(fd,'rb')
+    else:
+        url=f'https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/{version}/{name}';approved(url)
+        source=urllib.request.build_opener(Redirect()).open(url,timeout=30)
+    output=os.open(destination,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
+    with os.fdopen(output,'wb')as target:
+        total=0
+        while True:
+            block=source.read(min(1024*1024,limit-total+1))
+            if not block:break
+            total+=len(block)
+            if total>limit:raise ValueError('Release asset exceeds its bound.')
+            target.write(block)
+        if not total:raise ValueError('Release asset is empty.')
+except (OSError,ValueError)as error:
+    raise SystemExit('Release asset unavailable or unsafe; no alternate source was used: '+str(error))
+finally:
+    if source is not None:source.close()
+RELEASE_ASSET_PY
+}
+verify_signed_release(){
+  local target="$1" local_name="$2" asset_name="${3:-$2}" name
+  for name in release-signing-public.pem release-manifest.json release-manifest.sig release-manifest.py; do
+    fetch_release_asset "$name" "$target/$name" || fail 'Signed release metadata is unavailable.'
+  done
   local actual_signer
   actual_signer=$(openssl pkey -pubin -in "$target/release-signing-public.pem" -outform DER | openssl dgst -sha256 -r | cut -d ' ' -f 1)
   [[ "$actual_signer" == "$RELEASE_SIGNER_SPKI_SHA256" ]] || fail 'Release signing identity does not match the pinned publisher.'
@@ -42,6 +71,30 @@ if len(data)!=records[0]['size']or hashlib.sha256(data).hexdigest()!=records[0][
 SIGNED_VERIFIER_PY
   [[ $? -eq 0 ]] || fail 'Release verifier integrity failed.'
   python3 "$target/release-manifest.py" --manifest "$target/release-manifest.json" --signature "$target/release-manifest.sig" --public-key "$target/release-signing-public.pem" --expected-signer "$RELEASE_SIGNER_SPKI_SHA256" --version "$VERSION" --asset "$asset_name=$target/$local_name" || fail 'Signed release verification failed.'
+}
+verify_local_release(){
+  [[ $# -eq 1 && -n "$1" ]] || fail 'Pass one absolute local release directory.'
+  command -v python3 >/dev/null && command -v openssl >/dev/null || fail 'Verification requires Python 3 and OpenSSL.'
+  local stage status=0
+  stage=$(mktemp -d)
+  (
+    export BIFROST_RELEASE_DIRECTORY="$1"
+    fetch_release_asset install.sh "$stage/install.sh" || exit 1
+    verify_signed_release "$stage" install.sh
+    python3 -B - "$stage" "$BIFROST_RELEASE_DIRECTORY" "$RELEASE_SIGNER_SPKI_SHA256" "$VERSION" <<'VERIFY_LOCAL_RELEASE_PY'
+import importlib.util,json,pathlib,sys
+stage,assets=map(pathlib.Path,sys.argv[1:3])
+spec=importlib.util.spec_from_file_location('verified_release',stage/'release-manifest.py');module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+statement=json.loads((stage/'release-manifest.json').read_text())
+result=module.verify(stage/'release-manifest.json',stage/'release-manifest.sig',stage/'release-signing-public.pem',sys.argv[3],sys.argv[4],{item['name']:assets/item['name']for item in statement['artifacts']})
+print('PASS all signed local artifact hashes; private source '+result['privateSourceSha']+'; public source '+result['publicSourceSha'])
+print('Verification only: no account, service, database, installation or publication was changed.')
+VERIFY_LOCAL_RELEASE_PY
+  ) || status=$?
+  # Only fixed-name public metadata copied into this function's own mktemp tree.
+  rm -f -- "$stage/install.sh" "$stage/release-signing-public.pem" "$stage/release-manifest.json" "$stage/release-manifest.sig" "$stage/release-manifest.py"
+  rmdir -- "$stage"
+  return "$status"
 }
 # END SIGNED_RELEASE_BOOTSTRAP
 # Matched testing release updater; immutable source + digest.
@@ -78,7 +131,7 @@ run_task(){
 
 fail() { printf '\nBifrost: %s\n' "$*" >&2; exit 1; }
 fetch() {
-  if command -v curl >/dev/null; then curl -fL --progress-bar --retry 3 "$1" -o "$2";
+  if command -v curl >/dev/null; then curl --proto '=https' --proto-redir '=https' --connect-timeout 15 --max-time 300 -fL --progress-bar --retry 3 "$1" -o "$2";
   elif command -v wget >/dev/null; then wget --quiet --show-progress --output-document="$2" "$1";
   else fail 'This VM needs wget or curl.'; fi
 }
@@ -94,7 +147,7 @@ bootstrap_prerequisites() {
   if ((${#missing[@]})); then
     printf '\nThis VM is missing host-level rootless prerequisites:\n' >&2
     printf '  - %s\n' "${missing[@]}" >&2
-    fail 'These permissions must be provisioned in the VM image by its administrator. Bifrost cannot create them as a non-root user. Docker and Compose will be installed automatically once these are available.'
+    fail 'These permissions must be provisioned in the VM image by its administrator. Bifrost cannot create them as a non-root user. A reviewed rootless Docker and Compose installation must also be provisioned for this account.'
   fi
   local runtime="$HOME/.local/share/bifrost-prerequisites" packages=()
   command -v python3 >/dev/null || packages+=(python3)
@@ -130,15 +183,7 @@ bootstrap_prerequisites() {
   export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$uid}"
   [[ -d "$XDG_RUNTIME_DIR" && -w "$XDG_RUNTIME_DIR" ]] || fail 'Your login session has no writable runtime directory. Log out and log in directly.'
   if ! command -v dockerd-rootless-setuptool.sh >/dev/null; then
-    local version=29.8.2 stage
-    stage=$(mktemp -d)
-    fetch "https://download.docker.com/linux/static/stable/x86_64/docker-$version.tgz" "$stage/docker.tgz"
-    fetch "https://download.docker.com/linux/static/stable/x86_64/docker-rootless-extras-$version.tgz" "$stage/rootless.tgz"
-    mkdir -p "$HOME/bin"
-    tar -xzf "$stage/docker.tgz" --strip-components=1 -C "$HOME/bin"
-    tar -xzf "$stage/rootless.tgz" --strip-components=1 -C "$HOME/bin"
-    rm -f "$stage/docker.tgz" "$stage/rootless.tgz"; rmdir "$stage"
-    hash -r
+    fail 'Provision independently reviewed, patched rootless Docker prerequisites for this account before continuing. Automatic Docker downloads are paused: the reviewed vendor archives still contain high-severity prerequisite findings. Existing runtimes and data were not replaced. See Docs/Prerequisite-Security-Review.md.'
   fi
   export DOCKER_HOST="unix://$XDG_RUNTIME_DIR/docker.sock"
   if [[ -r /proc/sys/kernel/apparmor_restrict_unprivileged_userns && $(cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns) == 1 ]]; then
@@ -151,13 +196,7 @@ bootstrap_prerequisites() {
   for attempt in {1..30}; do docker info >/dev/null 2>&1 && break; sleep 1; done
   docker info --format '{{json .SecurityOptions}}' | grep -qi rootless || fail 'Docker is not running rootless.'
   if ! docker compose version >/dev/null 2>&1; then
-    local compose_version=v2.39.4 compose_dir="$HOME/.docker/cli-plugins" stage
-    mkdir -p "$compose_dir"; stage=$(mktemp -d)
-    fetch "https://github.com/docker/compose/releases/download/$compose_version/docker-compose-linux-x86_64" "$stage/docker-compose-linux-x86_64"
-    fetch "https://github.com/docker/compose/releases/download/$compose_version/docker-compose-linux-x86_64.sha256" "$stage/docker-compose-linux-x86_64.sha256"
-    (cd "$stage" && sha256sum --check docker-compose-linux-x86_64.sha256) || fail 'Compose checksum failed.'
-    install -m 0700 "$stage/docker-compose-linux-x86_64" "$compose_dir/docker-compose"
-    rm -f "$stage/docker-compose-linux-x86_64" "$stage/docker-compose-linux-x86_64.sha256"; rmdir "$stage"
+    fail 'Provision an independently reviewed, patched Docker Compose plugin for this account before continuing. Automatic Compose download is paused by prerequisite security review. Existing runtimes and data were not replaced. See Docs/Prerequisite-Security-Review.md.'
   fi
   mkdir -p "$HOME/.config/bifrost"
   printf 'export PATH="$HOME/.local/bin:$HOME/bin:$PATH"\nexport DOCKER_HOST="unix:///run/user/%s/docker.sock"\n' "$uid" > "$HOME/.config/bifrost/environment.sh"
@@ -271,8 +310,8 @@ for path in [root,*root.rglob('*')]:
     if path.is_symlink() and not path.resolve().is_relative_to(root):raise SystemExit('Pinned Node runtime link escapes its root.')
 NODE_RUNTIME_PY
   "$node_root/bin/node" -e 'if(process.versions.node!=="24.19.0")process.exit(1)' || fail 'Pinned Node runtime identity mismatch.'
-  fetch "https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION/bifrost-linux-host-agent.zip" "$stage/host.zip"
-  fetch "https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION/SHA256SUMS" "$stage/SHA256SUMS"
+  fetch_release_asset "bifrost-linux-host-agent.zip" "$stage/host.zip"
+  fetch_release_asset "SHA256SUMS" "$stage/SHA256SUMS"
   verify_signed_release "$stage" host.zip bifrost-linux-host-agent.zip
   (cd "$stage" && sed 's/  bifrost-linux-host-agent.zip$/  host.zip/' SHA256SUMS | grep -E '^[a-f0-9]{64}  host.zip$' | sha256sum --check --status) || fail 'Matched Host package checksum failed.'
   digest=$(sha256sum "$stage/host.zip" | awk '{print $1}')
@@ -452,10 +491,10 @@ automated_bootstrap() {
   if [[ $(id -u) -ne 0 ]]; then
     printf '\nAdministrator authentication is needed once to prepare the VM and create bifrost.\n'
     if command -v sudo >/dev/null && sudo -v; then
-      exec sudo -- env BIFROST_REINSTALL="${BIFROST_REINSTALL:-0}" BIFROST_RESUME="${BIFROST_RESUME:-0}" BIFROST_INSTALL_ROLE="${BIFROST_INSTALL_ROLE:-controller}" bash "$script" --bootstrap
+      exec sudo -- env BIFROST_RELEASE_DIRECTORY="${BIFROST_RELEASE_DIRECTORY:-}" BIFROST_REINSTALL="${BIFROST_REINSTALL:-0}" BIFROST_RESUME="${BIFROST_RESUME:-0}" BIFROST_INSTALL_ROLE="${BIFROST_INSTALL_ROLE:-controller}" bash "$script" --bootstrap
     elif command -v su >/dev/null; then
       local command_line
-      printf -v command_line 'exec env BIFROST_REINSTALL=%q BIFROST_RESUME=%q BIFROST_INSTALL_ROLE=%q bash %q --bootstrap' "${BIFROST_REINSTALL:-0}" "${BIFROST_RESUME:-0}" "${BIFROST_INSTALL_ROLE:-controller}" "$script"
+      printf -v command_line 'exec env BIFROST_RELEASE_DIRECTORY=%q BIFROST_REINSTALL=%q BIFROST_RESUME=%q BIFROST_INSTALL_ROLE=%q bash %q --bootstrap' "${BIFROST_RELEASE_DIRECTORY:-}" "${BIFROST_REINSTALL:-0}" "${BIFROST_RESUME:-0}" "${BIFROST_INSTALL_ROLE:-controller}" "$script"
       printf 'Enter the VM root password at the following prompt.\n'
       exec su -s /bin/bash -c "$command_line" root
     else
@@ -506,7 +545,7 @@ BIFROST_ROOTLESSKIT_APPARMOR
   copied="$account_home/.local/share/bifrost-bootstrap/install.sh"
   [[ "$script" == "$copied" ]] || install -m 0700 -o bifrost -g "$(id -gn bifrost)" "$script" "$copied"
   printf '\nVM preparation complete. Continuing installation as bifrost (UID %s).\n' "$uid"
-  runuser -u bifrost -- env -i HOME="$account_home" USER=bifrost LOGNAME=bifrost PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin XDG_RUNTIME_DIR="/run/user/$uid" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" TERM="${TERM:-xterm}" BIFROST_REINSTALL="${BIFROST_REINSTALL:-0}" BIFROST_RESUME="${BIFROST_RESUME:-0}" BIFROST_INSTALL_ROLE="${BIFROST_INSTALL_ROLE:-controller}" bash "$copied"
+  runuser -u bifrost -- env -i BIFROST_RELEASE_DIRECTORY="${BIFROST_RELEASE_DIRECTORY:-}" HOME="$account_home" USER=bifrost LOGNAME=bifrost PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin XDG_RUNTIME_DIR="/run/user/$uid" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" TERM="${TERM:-xterm}" BIFROST_REINSTALL="${BIFROST_REINSTALL:-0}" BIFROST_RESUME="${BIFROST_RESUME:-0}" BIFROST_INSTALL_ROLE="${BIFROST_INSTALL_ROLE:-controller}" bash "$copied"
   if [[ "${BIFROST_INSTALL_ROLE:-controller}" == instance ]]; then prepare_automatic_instance_host; fi
   exit 0
 }
@@ -533,8 +572,8 @@ install_instance_host() {
   checksum_file="$stage/bifrost-linux-host-agent.zip.sha256"
   ui_banner
   ui_step 'INSTANCE HOST   Connect this game machine' 'This installs the outbound Host Agent under your current account.'
-  fetch "https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION/bifrost-linux-host-agent.zip" "$stage/bifrost-linux-host-agent.zip" || fail 'Could not download the Host Agent package for this release.'
-  fetch "https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION/bifrost-linux-host-agent.zip.sha256" "$checksum_file" || fail 'Could not download the Host Agent checksum.'
+  fetch_release_asset "bifrost-linux-host-agent.zip" "$stage/bifrost-linux-host-agent.zip" || fail 'Could not download the Host Agent package for this release.'
+  fetch_release_asset "bifrost-linux-host-agent.zip.sha256" "$checksum_file" || fail 'Could not download the Host Agent checksum.'
   verify_signed_release "$stage" bifrost-linux-host-agent.zip
   (cd "$stage" && sha256sum --check bifrost-linux-host-agent.zip.sha256) || fail 'Host Agent package checksum failed.'
   python3 - "$stage/bifrost-linux-host-agent.zip" "$package" <<'HOST_ZIP_PY'
@@ -597,17 +636,20 @@ HOST_ZIP_PY
   printf '  Enrollment connects this machine to the fleet; install a reviewed game Blueprint separately.\n'
 }
 
+if [[ "${1:-}" == --verify-release ]]; then
+  shift; verify_local_release "$@"; exit $?
+fi
 if [[ "${1:-}" == --update ]]; then
   [[ $# -eq 1 ]] || fail 'Unexpected arguments.'
   update_stage=$(mktemp -d)
-  fetch "https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION/update.sh" "$update_stage/update.sh"
+  fetch_release_asset "update.sh" "$update_stage/update.sh"
   verify_signed_release "$update_stage" update.sh
   grep -qx "VERSION=$VERSION" "$update_stage/update.sh" || fail 'Pinned updater version differs from the requested release.'
   bash "$update_stage/update.sh"
   rm -f "$update_stage/update.sh" "$update_stage/release-signing-public.pem" "$update_stage/release-manifest.json" "$update_stage/release-manifest.sig" "$update_stage/release-manifest.py"; rmdir "$update_stage"
   exit 0
 fi
-[[ "${1:-}" != --help ]] || { echo 'Run bash install.sh to choose Controller, standalone Instance node, or Hybrid. Pass --controller, --instance, or --hybrid; --host installs only an Agent for an existing Controller. Fresh amd64 Instances prepare an isolated Host. After licensing, independent setup authorizes it locally; a Controller join requires that Controller approval. Earlier/manual Installs can use --host --join-instance. --resume-local-host resumes interrupted fresh pre-join preparation as root. Existing Hosts can use --host --upgrade; revoked Hosts can use --host --upgrade --re-enroll.'; exit 0; }
+[[ "${1:-}" != --help ]] || { echo 'Use --verify-release /absolute/directory to verify every signed local artifact without installing. Set BIFROST_RELEASE_DIRECTORY to that physical local directory for unpublished testing; missing assets fail without network fallback. Docker/vendor prerequisites still need their normal sources. Run bash install.sh to choose Controller, standalone Instance node, or Hybrid. Pass --controller, --instance, or --hybrid; --host installs only an Agent for an existing Controller. Fresh amd64 Instances prepare an isolated Host. After licensing, independent setup authorizes it locally; a Controller join requires that Controller approval. Earlier/manual Installs can use --host --join-instance. --resume-local-host resumes interrupted fresh pre-join preparation as root. Existing Hosts can use --host --upgrade; revoked Hosts can use --host --upgrade --re-enroll.'; exit 0; }
 if [[ "${1:-}" == --resume-local-host ]]; then
   [[ $(id -u) -eq 0 && ( $# -eq 1 || ( $# -eq 2 && "$2" == --upgrade ) ) ]] || fail 'Resume local Host preparation as the VM administrator. Optional --upgrade updates only its prepared pre-join services; this does not reinstall or wipe the panel.'
   BIFROST_PREJOIN_UPGRADE=0; [[ ${2:-} != --upgrade ]] || BIFROST_PREJOIN_UPGRADE=1
@@ -703,8 +745,8 @@ if [[ "${BIFROST_RESUME:-0}" != 1 ]]; then
 ui_step '04 / 06   Download your command center' 'Downloading the release, then verifying its checksum.'
 bundle="bifrost-linux-amd64-$VERSION.tar.gz"
 base="https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION"
-fetch "$base/$bundle" "$scratch/$bundle" || fail 'Application download failed.'
-fetch "$base/SHA256SUMS" "$scratch/SHA256SUMS" || fail 'Checksum download failed.'
+fetch_release_asset "$bundle" "$scratch/$bundle" || fail 'Application download failed.'
+fetch_release_asset SHA256SUMS "$scratch/SHA256SUMS" || fail 'Checksum download failed.'
 verify_signed_release "$scratch" "$bundle"
 (cd "$scratch" && grep -F "  $bundle" SHA256SUMS | sha256sum --check --status) || fail 'Checksum verification failed.'
 python3 - "$scratch/$bundle" "$scratch/package" <<'PY'

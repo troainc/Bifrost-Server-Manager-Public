@@ -1,3 +1,7 @@
+## 2026-10-21 - local follow-up and regression gate
+
+Current work adds signed local release verification, explicit local asset selection, read-only prerequisite inventory and manual acceptance checklists. Missing Docker/Compose automatic downloads are paused because separate compiled host-tool scans found unresolved high-severity advisories. Existing runtimes/data are preserved. Tag creation is separated from immutable update/deletion controls; external activation is still unapproved. No push, deployment, publication or production data/key changes are authorized.
+
 ## 2026-10-21 — final local candidate and configuration loop
 
 Accepted packaging source is `b92f0603c40db2cd39dca2d87711ce1301b97434`; private implementation is `b7f9500de9fd4f14d2595cc751e9ce12d93d6470`. Test 34 remains unpublished. The final 21-asset Ed25519 statement and all hashes verify after local Windows copy. Customer Compose HTTPS/first-admin setup, 79 migrations twice, append-only grants and actual persisted protected keyring/trust-overlap startup pass. Public regressions: 43 Node and 82 Python tests; three root cases executed separately in a disposable container. The updater refuses nonempty retained managed keys without the exact persistent candidate mount before config/schema changes. No existing customer data or keys were changed. Manual OS/game/browser/accessibility, external governance/hosted CI, qualified privacy and production signer custody remain unapproved. This entry changes documentation only; the signed packaging source remains the revision above.

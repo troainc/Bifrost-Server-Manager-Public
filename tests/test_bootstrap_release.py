@@ -20,8 +20,7 @@ class BootstrapRelease(unittest.TestCase):
             end = SCRIPT.index("  printf '\\nPreparing VM prerequisites", start)
             detection = SCRIPT[start:end].replace('/etc/os-release', shlex.quote(str(fixture)))
             downloads = '\n'.join(line for line in SCRIPT.splitlines()
-                                  if line.strip().startswith('fetch ')
-                                  and 'releases/download/$VERSION/' in line
+                                  if line.strip().startswith('fetch_release_asset ')
                                   and '"$stage/' in line
                                   and ('host.zip"' in line or 'SHA256SUMS"' in line))
             self.assertEqual(len(downloads.splitlines()), 2)
@@ -30,7 +29,7 @@ class BootstrapRelease(unittest.TestCase):
                        'fail(){ printf "%s\\n" "$*" >&2; exit 2; }\n'
                        'ui_banner(){ :; }\nui_step(){ :; }\n'
                        'detect_os(){\n' + detection + '}\n'
-                       'fetch(){ printf "%s\\n" "$1"; }\n'
+                       'fetch_release_asset(){ printf "%s\\n" "https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/$VERSION/$1"; }\n'
                        'detect_os\n' + downloads + '\n'
                        'printf "retained:%s:%s:%s\\n" "$VERSION" "$ID" "$VERSION_ID"\n')
             return subprocess.run(['bash', '-c', harness], text=True, capture_output=True)

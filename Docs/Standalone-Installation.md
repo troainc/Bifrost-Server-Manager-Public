@@ -48,3 +48,18 @@ Use the matched updater for panel updates. Existing Host policy is not silently 
 ## Verification scope
 
 Test 28 verification is recorded with the release's source provenance and acceptance evidence. Runtime checks and synthetic fixtures are distinguished from clean distro installation and real vendor/player acceptance. Earlier release assets remain immutable.
+
+## Unpublished local acceptance
+
+Provision independently reviewed rootless Docker/Compose and OS prerequisites first; automatic Docker/Compose downloads are paused by [prerequisite security review](Prerequisite-Security-Review.md). The Bifrost asset mirror is not an air-gapped OS or vendor-game installer.
+
+Copy only the frozen signed customer release assets to a physical absolute directory readable by the selected service account. Do not copy the offline private signing key, production secrets or a private master archive. Check both source revisions printed by verification against the approved candidate record.
+
+```sh
+bash /path/to/local/install.sh --verify-release /absolute/signed-customer-release
+BIFROST_RELEASE_DIRECTORY=/absolute/signed-customer-release bash /path/to/local/install.sh --controller
+```
+
+Use `--instance`, `--hybrid` or `--host` only for the corresponding disposable test role. For a preserved-state test upgrade, use the matched local installer with `--update` and the same environment variable. Verification-only mode also exists on `update.sh`; it changes no accounts, installation, services or database. Every payload and the verifier remain signature/hash checked. Missing or unsafe local assets fail without fallback to GitHub. The local directory is carried explicitly across the installer's account switch; its public files must be readable by that service account. Normal Node/Docker/Podman/vendor prerequisites may still need their approved sources.
+
+Complete [the customer acceptance checklist](Manual-Acceptance-Checklist.md) before any release approval. Do not run wipe/reinstall/reset options on retained data.
