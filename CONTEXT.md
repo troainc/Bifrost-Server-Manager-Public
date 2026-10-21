@@ -1,3 +1,7 @@
+## 2026-10-21 — final local candidate and configuration loop
+
+Accepted packaging source is `b92f0603c40db2cd39dca2d87711ce1301b97434`; private implementation is `b7f9500de9fd4f14d2595cc751e9ce12d93d6470`. Test 34 remains unpublished. The final 21-asset Ed25519 statement and all hashes verify after local Windows copy. Customer Compose HTTPS/first-admin setup, 79 migrations twice, append-only grants and actual persisted protected keyring/trust-overlap startup pass. Public regressions: 43 Node and 82 Python tests; three root cases executed separately in a disposable container. The updater refuses nonempty retained managed keys without the exact persistent candidate mount before config/schema changes. No existing customer data or keys were changed. Manual OS/game/browser/accessibility, external governance/hosted CI, qualified privacy and production signer custody remain unapproved. This entry changes documentation only; the signed packaging source remains the revision above.
+
 ## 2026-10-21 — local release remediation
 
 User authorizes local fixes and repeated automated re-audit for both private master and customer product, preserving all data. No push, deployment, publication, external settings mutation or production key change. Candidate Test 34 is unpublished; historical deployment/test-deferral entries below do not authorize current external actions. Current scope/evidence: Docs/Supported-Release-Scope.md and Docs/Recovery-and-Key-Rotation.md.

@@ -1,3 +1,7 @@
+## 2026-10-21 — final local candidate and configuration loop
+
+Accepted packaging source is `b92f0603c40db2cd39dca2d87711ce1301b97434`; private implementation is `b7f9500de9fd4f14d2595cc751e9ce12d93d6470`. Test 34 remains unpublished. The final 21-asset Ed25519 statement and all hashes verify after local Windows copy. Customer Compose HTTPS/first-admin setup, 79 migrations twice, append-only grants and actual persisted protected keyring/trust-overlap startup pass. Public regressions: 43 Node and 82 Python tests; three root cases executed separately in a disposable container. The updater refuses nonempty retained managed keys without the exact persistent candidate mount before config/schema changes. No existing customer data or keys were changed. Manual OS/game/browser/accessibility, external governance/hosted CI, qualified privacy and production signer custody remain unapproved. This entry changes documentation only; the signed packaging source remains the revision above.
+
 ## 2026-10-21 — local acceptance checkpoint
 
 Customer installer checks: 43 Node tests pass; 81 Python tests pass with 3 root bootstrap cases executed separately in a disposable container. Real PostgreSQL update recovery and private two-database disaster recovery pass with synthetic data, retained original databases and exact key preservation. Candidate Test 34 remains unpublished. Manual target OS, player and accessibility acceptance and external governance/privacy approval remain outstanding.
