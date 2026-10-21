@@ -1,3 +1,7 @@
+## 2026-10-21 - Test 35 UI fixes prepared for authorized testing delivery
+
+Test 35 includes shared scrolling, navigation, responsive registry/field labels, modal focus and inventory-feedback fixes. It preserves existing data, accounts, cryptographic identities and installed runtimes. Prior release assets remain immutable. Publication and deployment evidence, and the remaining human checks, are recorded in Docs/Test-35-Rollout-2026-10-21.md; do not infer successful delivery from this preparation entry.
+
 # Bifrost Server Manager — customer distribution
 
 Bifrost manages customer Controllers, explicitly approved Hosts and game instances through signed jobs and reviewed local policies. The private TROA licensing/owner master is a separate deployment and is excluded from these packages.

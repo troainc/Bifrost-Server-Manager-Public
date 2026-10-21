@@ -1,6 +1,6 @@
 # Supported candidate scope and acceptance
 
-The October 21 work is local. Candidate `v0.1.0-installtest.34` is unpublished. Test 33 remains the historical published prerelease. Neither a source build nor a signed candidate authorizes deployment, general customer intake or a stable-release claim.
+The October 21 work is local. Candidate `v0.1.0-installtest.35` is unpublished. Test 33 remains the historical published prerelease. Neither a source build nor a signed candidate authorizes deployment, general customer intake or a stable-release claim.
 
 ## Two separate products
 
