@@ -9,10 +9,13 @@ import { randomUUID, createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
-import { upgradeAutomaticHost, managedUnit, setupUnit, downloadMatchedPackage, OLD, NEW } from '../scripts/upgrade-automatic-host-testing36.mjs';
+import { upgradeAutomaticHost, managedUnit, setupUnit, downloadMatchedPackage, parseAgentState, agentIsStopped, inspectAgentState, OLD, NEW } from '../scripts/upgrade-automatic-host-testing36.mjs';
 const exec = promisify(execFile);
 const bytes = () => readFile(process.env.BIFROST_TEST36_HOST_ARCHIVE);
 const digest = b => createHash('sha256').update(b).digest('hex');
+const runningState=()=>({ActiveState:'active',SubState:'running',MainPID:'1234',ControlGroup:'/fixture-agent',TasksCurrent:'1',Job:'',Result:'success',ExecMainCode:'0',ExecMainStatus:'0'});
+const stoppedState=()=>({ActiveState:'inactive',SubState:'dead',MainPID:'0',ControlGroup:'',TasksCurrent:'[not set]',Job:'',Result:'success',ExecMainCode:'1',ExecMainStatus:'0'});
+const reportedTimeoutState=()=>({...stoppedState(),ActiveState:'failed',SubState:'failed',Result:'timeout'});
 async function fixture() {
   assert.notEqual(process.getuid(),0,'These tests require a non-root Linux account.');
   const home = await mkdtemp(join(tmpdir(),'.bifrost36-upgrade-'));
@@ -44,7 +47,7 @@ for root,dirs,files in os.walk(p):
  for f in files:(pathlib.Path(root)/f).chmod(0o600)
 `,process.env.BIFROST_TEST35_HOST_ARCHIVE,old]);
   const actions = [], stages = [];
-  const options = {home,node:process.execPath,packageBytes:bytes,systemctl:async args=>{actions.push(args[0]);},setupInactive:async()=>{},waitForStartup:async()=>{},onStage:s=>stages.push(s)};
+  const options = {home,node:process.execPath,packageBytes:bytes,inspectAgent:async()=>actions.lastIndexOf('stop')>actions.lastIndexOf('start')?stoppedState():runningState(),systemctl:async args=>{actions.push(args[0]);},setupInactive:async()=>{},waitForStartup:async()=>{},onStage:s=>stages.push(s)};
   return {home,unit,setup,bootstrap,config,token,ledger,world,state,old,actions,stages,options,cleanup:()=>rm(home,{recursive:true,force:true})};
 }
 test('bounded production download permits only expected HTTPS final hosts',async()=>{
@@ -155,4 +158,49 @@ test('group-writable intermediate directory refuses without changing its permiss
 });
 test('production entry point refuses another account/runtime without disclosing private state',async()=>{
   await assert.rejects(exec(process.execPath,[fileURLToPath(new URL('../scripts/upgrade-automatic-host-testing36.mjs',import.meta.url))]),error=>error.code===1&&error.stderr.includes('Credentials and game files were preserved')&&!error.stderr.includes('SYNTHETIC_PRIVATE_TOKEN'));
+});
+test('actual reported timeout state is accepted only as fully stopped',async()=>{
+  const state=reportedTimeoutState();
+  assert.equal(agentIsStopped(parseAgentState(Object.entries(state).map(([k,v])=>`${k}=${v}`).join('\n'))),true);
+  for(const changed of [{MainPID:'123'},{ControlGroup:'/remaining-processes'},{TasksCurrent:'1'},{Job:'12'},{ExecMainStatus:'9'},{ActiveState:'deactivating'},{Result:'signal'}])assert.equal(agentIsStopped({...state,...changed}),false);
+  assert.throws(()=>parseAgentState('ActiveState=failed'),/Incomplete/);
+  assert.throws(()=>parseAgentState('ActiveState=failed\nActiveState=active'),/Duplicate/);
+});
+test('production status adapter asks for bounded fixed fields without credentials/logs',async()=>{
+  const state=reportedTimeoutState();const actual=await inspectAgentState(async(binary,args,options)=>{
+    assert.equal(binary,'/usr/bin/systemctl');assert.deepEqual(args.slice(0,3),['--user','show','bifrost-host-agent.service']);assert.equal(options.timeout,15000);
+    return {stdout:Object.entries(state).map(([k,v])=>`${k}=${v}`).join('\n')};
+  });assert.deepEqual(actual,state);
+});
+test('explicit stopped recovery reuses retained candidate and never repeats stop',async()=>{
+  const f=await fixture();try {
+    const options={...f.options,resumeStopped:true,inspectAgent:async()=>f.actions.includes('start')?runningState():reportedTimeoutState()};
+    // Exercise a real staged candidate from the previous failed attempt.
+    await assert.rejects(upgradeAutomaticHost({...f.options,systemctl:async args=>{f.actions.push(args[0]);if(args[0]==='stop')throw new Error('stop timeout');},inspectAgent:async()=>runningState()}));
+    f.actions.length=0;
+    assert.equal((await upgradeAutomaticHost(options)).serviceActive,true);
+    assert.deepEqual(f.actions,['daemon-reload','start','is-active']);
+    assert.equal(await readFile(f.unit,'utf8'),managedUnit(f.home,NEW));
+    assert.equal(await readFile(f.world,'utf8'),'RETAINED_WORLD_AND_PLAYER_DATA');
+    assert.equal((await upgradeAutomaticHost(options)).alreadyUpdated,true);
+  }finally{await f.cleanup();}
+});
+test('stopped old Agent requires explicit recovery and rejects residual/pending processes',async()=>{
+  const f=await fixture();try {
+    await assert.rejects(upgradeAutomaticHost({...f.options,inspectAgent:async()=>reportedTimeoutState()}));
+    for(const changed of [{MainPID:'123'},{ControlGroup:'/remaining'},{Job:'1'},{TasksCurrent:'2'}])await assert.rejects(upgradeAutomaticHost({...f.options,resumeStopped:true,inspectAgent:async()=>({...reportedTimeoutState(),...changed})}));
+    assert.deepEqual(f.actions,[]);assert.equal(await readFile(f.unit,'utf8'),managedUnit(f.home,OLD));
+  }finally{await f.cleanup();}
+});
+test('stop-call failure proceeds only after independent proof of completed shutdown',async()=>{
+  const f=await fixture();try {
+    const result=await upgradeAutomaticHost({...f.options,systemctl:async args=>{f.actions.push(args[0]);if(args[0]==='stop')throw new Error('systemd timeout');},inspectAgent:async()=>f.actions.lastIndexOf('stop')>f.actions.lastIndexOf('start')?reportedTimeoutState():runningState()});
+    assert.equal(result.serviceActive,true);assert.equal(await readFile(f.unit,'utf8'),managedUnit(f.home,NEW));
+  }finally{await f.cleanup();}
+});
+test('stopped recovery startup failure restores old unit and leaves original stopped state',async()=>{
+  const f=await fixture();try {
+    await assert.rejects(upgradeAutomaticHost({...f.options,resumeStopped:true,inspectAgent:async()=>reportedTimeoutState(),systemctl:async args=>{f.actions.push(args[0]);if(args[0]==='start')throw new Error('startup refusal');}}),/startup refusal/);
+    assert.equal(await readFile(f.unit,'utf8'),managedUnit(f.home,OLD));assert.equal(f.actions.filter(x=>x==='start').length,1);
+  }finally{await f.cleanup();}
 });

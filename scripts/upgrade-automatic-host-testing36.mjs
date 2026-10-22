@@ -105,14 +105,34 @@ with zipfile.ZipFile(archive) as z:
    p=pathlib.Path(current)/name
    if p not in files and p!=root/'.bifrost-package-sha256':raise SystemExit('Unexpected package file')
 `;
-const systemctlDefault = async args => { await exec('/usr/bin/systemctl', ['--user', ...args], { timeout: 90000, maxBuffer: 4096 }); };
+const systemctlDefault = async args => { await exec('/usr/bin/systemctl', ['--user', ...args], { timeout: args[0]==='stop' ? 120000 : 90000, maxBuffer: 4096 }); };
+export function parseAgentState(text) {
+  const state={};
+  for(const line of text.trim().split('\n')) {
+    const index=line.indexOf('=');if(index<1)throw new Error('Malformed Agent service state.');
+    const key=line.slice(0,index);if(Object.hasOwn(state,key))throw new Error('Duplicate Agent service state.');
+    state[key]=line.slice(index+1);
+  }
+  for(const key of ['ActiveState','SubState','MainPID','ControlGroup','TasksCurrent','Job','Result','ExecMainCode','ExecMainStatus'])if(!Object.hasOwn(state,key))throw new Error('Incomplete Agent service state.');
+  return state;
+}
+export const agentIsRunning = s => s.ActiveState==='active' && s.SubState==='running' && /^[1-9][0-9]*$/.test(s.MainPID) && ['', '0'].includes(s.Job);
+export const agentIsStopped = s => s.MainPID==='0' && s.ControlGroup==='' && ['', '0'].includes(s.Job) && ['0','[not set]'].includes(s.TasksCurrent) && (
+  s.ActiveState==='inactive' && s.SubState==='dead' && s.Result==='success' ||
+  s.ActiveState==='failed' && s.SubState==='failed' && s.Result==='timeout' && s.ExecMainCode==='1' && s.ExecMainStatus==='0'
+);
+export async function inspectAgentState(run=exec) {
+  const fields=['ActiveState','SubState','MainPID','ControlGroup','TasksCurrent','Job','Result','ExecMainCode','ExecMainStatus'];
+  const {stdout}=await run('/usr/bin/systemctl',['--user','show','bifrost-host-agent.service',...fields.flatMap(p=>['-p',p])],{timeout:15000,maxBuffer:4096});
+  return parseAgentState(stdout);
+}
 async function setupInactiveDefault() {
   try { const { stdout } = await exec('/usr/bin/systemctl', ['--user', 'show', 'bifrost-instance-setup.service', '-p', 'ActiveState', '--value'], { timeout: 10000, maxBuffer: 1024 }); if (stdout.trim() !== 'inactive') throw new Error('Setup worker must be inactive.'); }
   catch { throw new Error('Completed, inactive automatic setup is required.'); }
 }
 // Injection is for disposable import-based tests; the CLI accepts no paths,
 // commands, versions, URLs or security overrides.
-export async function upgradeAutomaticHost({ home = '/home/bifrost-games', node = NODE, packageBytes = downloadMatchedPackage, diagnoseOnly = false, onStage = () => {}, systemctl = systemctlDefault, setupInactive = setupInactiveDefault, waitForStartup = async () => new Promise(r => setTimeout(r, 3000)), preflight = async (root, config) => { await exec(node, [join(root, 'dist/preflight-upgrade.js'), config], { timeout: 30000, maxBuffer: 4096 }); } } = {}) {
+export async function upgradeAutomaticHost({ home = '/home/bifrost-games', node = NODE, packageBytes = downloadMatchedPackage, diagnoseOnly = false, resumeStopped = false, inspectAgent = inspectAgentState, onStage = () => {}, systemctl = systemctlDefault, setupInactive = setupInactiveDefault, waitForStartup = async () => new Promise(r => setTimeout(r, 3000)), preflight = async (root, config) => { await exec(node, [join(root, 'dist/preflight-upgrade.js'), config], { timeout: 30000, maxBuffer: 4096 }); } } = {}) {
   onStage('private-path-validation');
   const unit = join(home, '.config/systemd/user/bifrost-host-agent.service');
   const setup = join(home, '.config/systemd/user/bifrost-instance-setup.service');
@@ -146,8 +166,12 @@ export async function upgradeAutomaticHost({ home = '/home/bifrost-games', node 
   // Never execute a retained candidate before comparing its entire tree with
   // the pinned archive. The verified NEW preflight validates existing state.
   onStage('existing-service-readiness');
-  await systemctl(['is-active','--quiet','bifrost-host-agent.service']);
-  if (diagnoseOnly) return { readOnly:true, matchedDownloadVerified:true, currentServiceActive:true, alreadyUpdated, newPackagePreflightPending:true, serviceReplacementPending:!alreadyUpdated, gameFilesChanged:false };
+  const initialService=await inspectAgent();
+  const initiallyRunning=agentIsRunning(initialService);
+  if(!initiallyRunning && !(resumeStopped && !alreadyUpdated && agentIsStopped(initialService))) throw new Error('Agent is not active or in the explicitly supported stopped recovery state.');
+  if(resumeStopped && initiallyRunning && !alreadyUpdated)throw new Error('Stopped recovery requires the old Agent to remain stopped.');
+  if(initiallyRunning)await systemctl(['is-active','--quiet','bifrost-host-agent.service']);
+  if (diagnoseOnly) return { readOnly:true, matchedDownloadVerified:true, currentServiceActive:initiallyRunning, alreadyUpdated, newPackagePreflightPending:true, serviceReplacementPending:!alreadyUpdated, gameFilesChanged:false };
   const releaseUpdate = await ownLock(join(dirname(token), 'update-testing36.lock'));
   try {
     const stage = await mkdtemp(join(home,'.local/opt/.testing36-stage-'));
@@ -186,7 +210,13 @@ export async function upgradeAutomaticHost({ home = '/home/bifrost-games', node 
     let stopped = false, replaced = false;
     try {
       await preflight(packageRoot,config); await setupInactive();
-      onStage('agent-service-stop'); await systemctl(['stop','bifrost-host-agent.service']); stopped = true;
+      if(initiallyRunning) {
+        onStage('agent-service-stop');
+        try { await systemctl(['stop','bifrost-host-agent.service']); }
+        catch(error) { if(!agentIsStopped(await inspectAgent()))throw error; }
+      } else onStage('confirmed-stopped-agent-recovery');
+      if(!agentIsStopped(await inspectAgent()))throw new Error('Agent is not completely stopped; no service file was replaced.');
+      stopped = true;
       await preflight(packageRoot,config); await setupInactive();
       for (const [file, expected] of original) if (!(await privateBytes(file)).equals(expected)) throw new Error('State changed while stopping; preserve it for review.');
       const backup = `${unit}.before-testing36`;
@@ -195,19 +225,22 @@ export async function upgradeAutomaticHost({ home = '/home/bifrost-games', node 
       onStage('agent-unit-replacement'); await atomic(unit,Buffer.from(managedUnit(home,NEW))); replaced = true;
       await systemctl(['daemon-reload']); await systemctl(['start','bifrost-host-agent.service']);
       await waitForStartup(); await systemctl(['is-active','--quiet','bifrost-host-agent.service']);
+      if(!agentIsRunning(await inspectAgent()))throw new Error('New Agent is not running.');
       for (const [file, expected] of original) if (file !== unit && !(await privateBytes(file)).equals(expected)) throw new Error('Protected state changed during startup.');
     } catch (error) {
       if (stopped) {
         onStage('preserving-agent-recovery');
         if (replaced) {
-          await systemctl(['stop','bifrost-host-agent.service']);
+          try { await systemctl(['stop','bifrost-host-agent.service']); }
+          catch(stopError) {if(!agentIsStopped(await inspectAgent()))throw stopError;}
+          if(!agentIsStopped(await inspectAgent()))throw new Error('New Agent is not stopped; no rollback replacement was attempted.');
           if (!(await privateBytes(unit)).equals(Buffer.from(managedUnit(home,NEW)))) throw new Error('Service changed during recovery; left stopped for review.');
           await atomic(unit,oldUnit); await systemctl(['daemon-reload']);
         }
         // Do not restart against changed credentials, a running job or setup.
         for (const [file, expected] of original) if (!(await privateBytes(file)).equals(expected)) throw new Error('Protected state changed; Agent left stopped for review.');
         await preflight(packageRoot,config); await setupInactive();
-        await systemctl(['start','bifrost-host-agent.service']);
+        if(initiallyRunning)await systemctl(['start','bifrost-host-agent.service']);
       }
       throw error;
     } finally { await releaseLedger(); }
@@ -221,12 +254,12 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     for (const path of ['/opt','/opt/bifrost-node-v24.19.0','/opt/bifrost-node-v24.19.0/bin',NODE]) {
       const s = await lstat(path); if (s.isSymbolicLink() || (path === NODE ? !s.isFile() : !s.isDirectory()) || s.uid !== 0 || (s.mode & 0o022)) throw new Error('Runtime ownership failed.');
     }
-    if (process.argv.length > 3 || process.argv.length === 3 && process.argv[2] !== '--diagnose') throw new Error('Unsupported argument.');
+    if (process.argv.length > 3 || process.argv.length === 3 && !['--diagnose','--resume-stopped'].includes(process.argv[2])) throw new Error('Unsupported argument.');
     process.chdir('/home/bifrost-games');
     stage = 'rootless-runtime-check';
     const {stdout} = await exec('/usr/bin/podman',['info','--format','{{.Host.Security.Rootless}}'],{cwd:'/home/bifrost-games',timeout:20000,maxBuffer:4096});
     if (stdout.trim() !== 'true') throw new Error('Rootless Podman is required.');
-    console.log(JSON.stringify(await upgradeAutomaticHost({diagnoseOnly:process.argv[2] === '--diagnose', onStage:value=>{stage=value;console.log(`Bifrost Host update: ${value}`);}}),null,2));
+    console.log(JSON.stringify(await upgradeAutomaticHost({diagnoseOnly:process.argv[2] === '--diagnose', resumeStopped:process.argv[2] === '--resume-stopped', onStage:value=>{stage=value;console.log(`Bifrost Host update: ${value}`);}}),null,2));
   } catch (error) {
     const allowed = new Set(['ENOENT','EACCES','EPERM','EEXIST','ENOSPC','ETIMEDOUT','ECONNREFUSED','ENOTFOUND','EAI_AGAIN','CERT_HAS_EXPIRED','UNABLE_TO_VERIFY_LEAF_SIGNATURE','UNABLE_TO_GET_ISSUER_CERT_LOCALLY','ERR_TLS_CERT_ALTNAME_INVALID','DEPTH_ZERO_SELF_SIGNED_CERT']);
     const code = allowed.has(error?.code) ? error.code : allowed.has(error?.cause?.code) ? error.cause.code : 'CHECK_REFUSED';
