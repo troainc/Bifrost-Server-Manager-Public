@@ -23,10 +23,17 @@ jobs:
           curl --fail --location --proto '=https' --proto-redir '=https' --max-filesize 2097152 https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/v0.1.0-installtest.20/bifrost-linux-host-agent.zip -o "$RUNNER_TEMP/host20.zip"
           curl --fail --location --proto '=https' --proto-redir '=https' --max-filesize 2097152 https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/v0.1.0-installtest.21/bifrost-linux-host-agent.zip -o "$RUNNER_TEMP/host21.zip"
           printf '%s  %s\n' 9408da9bac948edc3063fbd5e97019e07c99d30084d961d390d68f8191969504 "$RUNNER_TEMP/host20.zip" be6b513956e2c89b0160e4152c87c2b926512e6e36f9e25ad220929763861178 "$RUNNER_TEMP/host21.zip" | sha256sum --check
+          mkdir "$RUNNER_TEMP/test35" "$RUNNER_TEMP/test36"
+          curl --fail --location --proto '=https' --proto-redir '=https' --connect-timeout 15 --max-time 120 --retry 3 --max-filesize 2097152 https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/v0.1.0-installtest.35/bifrost-linux-host-agent.zip -o "$RUNNER_TEMP/test35/bifrost-linux-host-agent.zip"
+          curl --fail --location --proto '=https' --proto-redir '=https' --connect-timeout 15 --max-time 120 --retry 3 --max-filesize 1048576 https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/v0.1.0-installtest.35/install.sh -o "$RUNNER_TEMP/test35/install.sh"
+          curl --fail --location --proto '=https' --proto-redir '=https' --connect-timeout 15 --max-time 120 --retry 3 --max-filesize 2097152 https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/v0.1.0-installtest.36/bifrost-linux-host-agent.zip -o "$RUNNER_TEMP/test36/bifrost-linux-host-agent.zip"
+          printf '%s  %s\n' 53f28e0dc131ad83a53f13b59c8359175aa0e92b86926660adc7d83b5ef00d4e "$RUNNER_TEMP/test35/bifrost-linux-host-agent.zip" 31c4e58c235f5d6103e48f07a86a12aafe299c16679c8d9f8aa777919815a6c1 "$RUNNER_TEMP/test35/install.sh" 5aa8e9e80e2cbb89419c88a005bb5c9207f09aa9932e4a43aa96879bcb8793ad "$RUNNER_TEMP/test36/bifrost-linux-host-agent.zip" | sha256sum --check
       - name: Verify all Host diagnostics and historical preserving upgrades
         env:
           BIFROST_TEST20_HOST_ARCHIVE: ${{ runner.temp }}/host20.zip
           BIFROST_TEST21_HOST_ARCHIVE: ${{ runner.temp }}/host21.zip
+          BIFROST_TEST35_HOST_ARCHIVE: ${{ runner.temp }}/test35/bifrost-linux-host-agent.zip
+          BIFROST_TEST36_HOST_ARCHIVE: ${{ runner.temp }}/test36/bifrost-linux-host-agent.zip
         run: node --test tests/*.test.mjs
       - name: Verify release signature and authenticated recovery negative cases
         run: python3 -m unittest discover -s tests -p 'test_release_manifest.py' -v && python3 -m unittest discover -s tests -p 'test_update_recovery.py' -v

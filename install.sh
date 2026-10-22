@@ -573,6 +573,9 @@ BIFROST_ROOTLESSKIT_APPARMOR
 }
 
 require_host_runtime() {
+  # runuser preserves the caller's cwd; Podman must not inherit a private
+  # administrator home that this game account cannot traverse.
+  cd -- "$HOME" || fail 'Cannot enter the game account home directory.'
   command -v python3 >/dev/null || fail 'Python 3 is required to safely unpack the Host Agent package.'
   command -v sha256sum >/dev/null || fail 'sha256sum is required to verify the Host Agent package.'
   BIFROST_NODE_BIN="${BIFROST_NODE_BIN:-$(command -v node || true)}"
@@ -580,7 +583,7 @@ require_host_runtime() {
   export BIFROST_NODE_BIN
   [[ -x "$BIFROST_NODE_BIN" ]] && "$BIFROST_NODE_BIN" -e 'process.exit(Number(process.versions.node.split(".")[0]) === 24 ? 0 : 1)' || fail 'Instance Host needs Node.js 24. Use the prepared runtime or install Node 24 for this account, then rerun.'
   command -v podman >/dev/null || fail 'Instance Host needs rootless Podman available to this account.'
-  [[ "$(podman info --format '{{.Host.Security.Rootless}}' 2>/dev/null || true)" == true ]] || fail 'Podman is not running rootless for this account.'
+  [[ "$(podman info --format '{{.Host.Security.Rootless}}' 2>/dev/null || true)" == true ]] || fail 'Could not verify rootless Podman. Run podman info from this account home directory to inspect the error.'
   systemctl --user show-environment >/dev/null 2>&1 || fail 'A systemd user manager is unavailable. Sign in as the regular game-server operator account and retry.'
 }
 
