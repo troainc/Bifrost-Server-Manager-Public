@@ -17,9 +17,10 @@ assert os.getuid() == 0 and pathlib.Path('/.dockerenv').exists()
 assert os.environ.get('BIFROST_DISPOSABLE_RESET_FIXTURE') == '1'
 source = pathlib.Path(__file__).resolve().parents[1]
 helper = source / 'scripts/reset-automatic-instance.py'
-disabled = os.environ.get('BIFROST_RESET_DISABLED_FIXTURE') == '1'
-review_mode = '--review-auto' if disabled else '--review-prejoin'
-apply_mode = '--apply-auto-reset' if disabled else '--apply-prejoin-reset'
+stale = os.environ.get('BIFROST_RESET_STALE_FIXTURE') == '1'
+disabled = stale or os.environ.get('BIFROST_RESET_DISABLED_FIXTURE') == '1'
+review_mode = '--review-stale-prejoin' if stale else ('--review-auto' if disabled else '--review-prejoin')
+apply_mode = '--apply-stale-prejoin-reset' if stale else ('--apply-auto-reset' if disabled else '--apply-prejoin-reset')
 game = pathlib.Path('/home/bifrost-games')
 panel = pathlib.Path('/home/bifrost')
 package = game / '.local/opt' / ('bifrost-host-agent-' + 'a' * 64)
@@ -59,8 +60,12 @@ owned_file(root / 'compose.yaml', 'services: {}\n', 'bifrost')
 original_secret = dict(enabled=False) if disabled else dict(enabled=True, token='a' * 64)
 owned_file(root / 'secrets/local-host-bootstrap.json', json.dumps(original_secret), 'bifrost')
 owned_file(root / 'secrets/panel-cert.pem', certificate, 'bifrost')
+host_certificate = certificate
+if stale:
+    subprocess.run(['openssl','req','-x509','-newkey','rsa:2048','-nodes','-days','1','-subj','/CN=old-prejoin-fixture','-keyout','/tmp/old-key.pem','-out','/tmp/old-cert.pem'],check=True,capture_output=True)
+    host_certificate = pathlib.Path('/tmp/old-cert.pem').read_text()
 owned_file(config / 'local-bootstrap.json', json.dumps(dict(version=1, local='https://10.0.0.1:8443', token='a' * 64,
-    certificate=certificate, enableReviewedCatalog=True)), 'bifrost-games')
+    certificate=host_certificate, enableReviewedCatalog=True)), 'bifrost-games')
 for setup, name in ((True, 'bifrost-instance-setup.service'), (False, 'bifrost-host-agent.service')):
     prefix = '[Unit]\nDescription=Bifrost ' + ('automatic Instance connection' if setup else 'local game Host Agent') + '\n[Service]\n'
     command = f'ExecStart=/opt/bifrost-node-v24.19.0/bin/node {package}/dist/' + ('automatic-instance-setup.js /home/bifrost-games/.config/bifrost-host-agent/local-bootstrap.json' if setup else 'main.js') + '\n'
@@ -103,6 +108,18 @@ owned_file(unrelated, 'preserve', 'bifrost-games')
 review = subprocess.run(['/usr/bin/python3', str(helper), review_mode], capture_output=True, text=True)
 assert review.returncode == 0, review.stdout + review.stderr
 assert json.loads(review.stdout)['resetReady'] is True
+if stale:
+    refused = subprocess.run(['/usr/bin/python3',str(helper),'--review-auto'],capture_output=True,text=True)
+    assert refused.returncode == 1 and 'certificate' in refused.stdout
+    assert root.exists() and config.exists()
+    owned_file(config / 'host-agent.json', '{}', 'bifrost-games')
+    refused = subprocess.run(['/usr/bin/python3',str(helper),review_mode],capture_output=True,text=True)
+    assert refused.returncode == 1 and 'enrollment or work' in refused.stdout
+    (config / 'host-agent.json').unlink()
+    owned_file(game / '.local/state/bifrost-host-agent/job-ledger.json', '{}', 'bifrost-games')
+    refused = subprocess.run(['/usr/bin/python3',str(helper),review_mode],capture_output=True,text=True)
+    assert refused.returncode == 1 and 'enrollment or work' in refused.stdout
+    (game / '.local/state/bifrost-host-agent/job-ledger.json').unlink()
 original_environment = (root / '.env').read_text()
 owned_file(root / '.env', original_environment.replace('=instance', '=controller'), 'bifrost')
 refused = subprocess.run(['/usr/bin/python3', str(helper), apply_mode], capture_output=True, text=True)
@@ -111,23 +128,24 @@ assert root.exists() and config.exists()
 owned_file(root / '.env', original_environment, 'bifrost')
 owned_file(root / 'secrets/local-host-bootstrap.json', json.dumps(dict(enabled=True, token='b' * 64)), 'bifrost')
 refused = subprocess.run(['/usr/bin/python3', str(helper), apply_mode], capture_output=True, text=True)
-assert refused.returncode == 1 and 'belongs to another panel' in refused.stdout
+assert refused.returncode == 1 and ('belongs to another panel' in refused.stdout or stale and 'disabled panel' in refused.stdout)
 assert root.exists() and config.exists()
 owned_file(root / 'secrets/local-host-bootstrap.json', json.dumps(original_secret), 'bifrost')
 if disabled:
     owned_file(root / '.env', original_environment.replace('10.0.0.1', '10.0.0.2'), 'bifrost')
     refused = subprocess.run(['/usr/bin/python3', str(helper), apply_mode], capture_output=True, text=True)
-    assert refused.returncode == 1 and 'another panel' in refused.stdout
+    assert refused.returncode == 1 and ('another panel' in refused.stdout or stale and 'origin differs' in refused.stdout)
     assert root.exists() and config.exists()
     owned_file(root / '.env', original_environment, 'bifrost')
 
 
-def apply(confirmation):
+def apply(confirmation, stale_confirmation='WIPE STALE LOCAL HOST'):
     master, slave = pty.openpty()
     process = subprocess.Popen(['/usr/bin/python3', str(helper), apply_mode], stdin=slave, stdout=slave, stderr=slave)
     os.close(slave)
     result = b''
     sent = False
+    stale_sent = False
     deadline = time.monotonic() + 30
     while time.monotonic() < deadline:
         if select.select([master], [], [], .1)[0]:
@@ -136,6 +154,9 @@ def apply(confirmation):
             except OSError:
                 break
             result += part
+            if b'Type WIPE STALE LOCAL HOST:' in result and not stale_sent:
+                os.write(master, stale_confirmation.encode() + b'\n')
+                stale_sent = True
             if b'Type WIPE ALL:' in result and not sent:
                 os.write(master, confirmation.encode() + b'\n')
                 sent = True
@@ -148,6 +169,10 @@ def apply(confirmation):
     return process.returncode, result.decode()
 
 
+if stale:
+    code, output = apply('WIPE ALL', 'CANCEL')
+    assert code == 1 and 'cancelled' in output, output
+    assert root.exists() and config.exists()
 code, output = apply('CANCEL')
 assert code == 1 and 'RESET_REFUSED' in output, output
 assert root.exists() and config.exists()
@@ -156,4 +181,4 @@ assert code == 0 and '"resetCompleted": true' in output, output
 assert not root.exists() and not config.exists()
 assert all(not (units / name).exists() for name in ('bifrost-instance-setup.service', 'bifrost-host-agent.service'))
 assert package.exists() and unrelated.read_text() == 'preserve'
-print('PASS actual root CLI, dedicated non-root components, matching bootstrap, cancellation, WIPE ALL and real tree removal; runtime replies simulated; disabled bootstrap='+str(disabled))
+print('PASS actual root CLI, dedicated non-root components, matching bootstrap, cancellation, WIPE ALL and real tree removal; runtime replies simulated; disabled bootstrap='+str(disabled)+'; stale certificate='+str(stale))

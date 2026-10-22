@@ -1,5 +1,26 @@
 # Full reset before a fresh automatic Instance installation
 
+## Stale certificate recovery for an empty local Host
+
+Normal automatic reset still refuses mismatched certificates. If the protected
+pre-enrollment Host bootstrap retains an old certificate but the current local
+Instance uses exactly the same HTTPS origin, use the explicit read-only
+`--review-stale-prejoin` mode. It accepts only the strict empty pre-enrollment
+Host plus a panel bootstrap exactly `{"enabled":false}`, and different valid
+public certificates. Any enrollment config/token/receipt, work ledger/lock,
+game data/runtime, custom units, wrong origin, enabled panel capability,
+Controller/Hybrid role or foreign/shared resources still refuses.
+
+`--apply-stale-prejoin-reset` repeats all checks and asks for **WIPE STALE LOCAL
+HOST**, then **WIPE ALL**. Both plans are checked again before either cleanup;
+the empty Host is checked after worker shutdown. This explicitly destroys only
+the reviewed local installation. It does not prove old certificate ownership,
+trust that certificate, contact a remote panel, or repair enrollment in place.
+The main site's reset command selects this recovery only after its separate
+read-only review succeeds; it cannot confirm either phrase for the owner.
+Other refused states stop without reinstalling. Use only on the disposable
+public test Instance intended to be wiped, never the master or shared host.
+
 ## Automatic review, including a disabled pre-enrollment bootstrap
 
 Use the current checksum-pinned helper with `--review-auto` and

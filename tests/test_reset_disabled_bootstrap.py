@@ -36,9 +36,9 @@ class DisabledBootstrapReset(unittest.TestCase):
    self.m.panel_prejoin_apply(self.home,os.getuid(),expected,True)
   cleanup.assert_not_called()
  def run_root(self,argv,plans,confirmation=None,tty=True):
-  with patch.object(self.m.sys,'argv',['reset',argv]),patch.object(self.m.os,'getuid',return_value=0),patch.object(self.m,'account_environment',return_value=(type('User',(),dict(pw_uid=1234))(),{})),patch.object(self.m.pathlib.Path,'exists',return_value=True),patch.object(self.m,'child',side_effect=plans) as child,patch.object(self.m.sys.stdin,'isatty',return_value=tty),patch('builtins.input',return_value=confirmation):
+  with patch.object(self.m.sys,'argv',['reset',argv]),patch.object(self.m.os,'getuid',return_value=0),patch.object(self.m,'account_environment',return_value=(type('User',(),dict(pw_uid=1234))(),{})),patch.object(self.m.pathlib.Path,'exists',return_value=True),patch.object(self.m,'child',side_effect=plans) as child,patch.object(self.m.sys.stdin,'isatty',return_value=tty),patch('builtins.input',**({'side_effect':confirmation} if isinstance(confirmation,list) else {'return_value':confirmation})):
    return self.m.main(),child.call_args_list
- def pair(self):return (dict(component='game-prejoin',containers=[],panelIdentity='same',binding='token'),dict(component='panel',containers=[],panelIdentity='same',bootstrapState='disabled'))
+ def pair(self):return (dict(component='game-prejoin',containers=[],panelIdentity='same',originIdentity='origin',binding='token'),dict(component='panel',containers=[],panelIdentity='same',originIdentity='origin',bootstrapState='disabled'))
  def test_auto_disabled_root_success_rechecks_both_then_uses_scoped_components(self):
   game,panel=self.pair();result,calls=self.run_root('--apply-auto-reset',[game,panel,game,panel,{},{}],'WIPE ALL')
   self.assertTrue(result['resetCompleted'])
@@ -51,3 +51,15 @@ class DisabledBootstrapReset(unittest.TestCase):
   game=dict(component='game',containers=[]);panel=dict(component='panel',containers=[])
   result,calls=self.run_root('--review-auto',[game,panel])
   self.assertTrue(result['readOnly']);self.assertEqual(calls[-1].args,('bifrost','--component-review'))
+
+ def test_stale_same_origin_certificate_recovery_requires_two_confirmations_and_pair_recheck(self):
+  game,panel=self.pair();panel=dict(panel,panelIdentity='new-certificate')
+  result,_=self.run_root('--review-stale-prejoin',[game,panel])
+  self.assertTrue(result['staleLocalBootstrap']);self.assertTrue(result['readOnly'])
+  result,calls=self.run_root('--apply-stale-prejoin-reset',[game,panel,game,panel,{},{}],['WIPE STALE LOCAL HOST','WIPE ALL'])
+  self.assertTrue(result['resetCompleted']);self.assertEqual(calls[0].args,('bifrost-games','--component-prejoin-review'))
+ def test_stale_recovery_cannot_bypass_origin_enabled_secret_confirmation_or_state_guards(self):
+  game,panel=self.pair();panel=dict(panel,panelIdentity='new-certificate')
+  cases=[([game,dict(panel,originIdentity='other')],None,True,'origin differs'),([game,dict(panel,bootstrapState='enabled')],None,True,'disabled'),([game,dict(panel,panelIdentity='same')],None,True,'normal automatic'),([game,panel],['CANCEL'],True,'cancelled'),([game,panel],['WIPE STALE LOCAL HOST','CANCEL'],True,'cancelled'),([game,panel],None,False,'interactive'),([game,panel,dict(game,fingerprint='changed')],['WIPE STALE LOCAL HOST','WIPE ALL'],True,'review changed')]
+  for plans,confirmation,tty,message in cases:
+   with self.subTest(message=message),self.assertRaisesRegex(RuntimeError,message):self.run_root('--apply-stale-prejoin-reset',plans,confirmation,tty)

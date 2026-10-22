@@ -130,7 +130,8 @@ def prejoin_review(home, uid):
     require(not json_run(["/usr/bin/podman", "volume", "ls", "--format", "json"]), "Existing game volumes; pre-join reset refused")
     require(all(entry.get("name") == "podman" for entry in json_run(["/usr/bin/podman", "network", "ls", "--format", "json"])), "Foreign game network")
     return dict(component="game-prejoin", fingerprint=fingerprint, binding=binding,
-                panelIdentity=panel_identity(bootstrap["local"], bootstrap["certificate"]), containers=[],
+                panelIdentity=panel_identity(bootstrap["local"], bootstrap["certificate"]),
+                originIdentity=hashlib.sha256(bootstrap["local"].encode()).hexdigest(), containers=[],
                 trees=trees, units=units)
 
 
@@ -165,6 +166,7 @@ def panel_prejoin_review(home, uid, allow_disabled=False):
     if disabled:
         plan["bootstrapState"] = "disabled"
         plan["panelIdentity"] = panel_identity(values.get("BIFROST_PUBLIC_URL", ""), cert_bytes.decode())
+        plan["originIdentity"] = hashlib.sha256(values["BIFROST_PUBLIC_URL"].encode()).hexdigest()
     else:
         plan["binding"] = bootstrap_binding(dict(local=values.get("BIFROST_PUBLIC_URL", ""), token=secret.get("token", ""),
                                                 certificate=cert_bytes.decode()))
@@ -410,29 +412,43 @@ def main():
         else:
             apply(home, record.pw_uid, plan)
         return dict(componentReset=True, component=plan["component"])
-    require(os.getuid() == 0 and len(sys.argv) == 2 and sys.argv[1] in ("--review", "--apply-reset", "--review-prejoin", "--apply-prejoin-reset", "--review-auto", "--apply-auto-reset"),
-            "Run as VM administrator: --review-auto/--apply-auto-reset, --review/--apply-reset or --review-prejoin/--apply-prejoin-reset")
+    require(os.getuid() == 0 and len(sys.argv) == 2 and sys.argv[1] in ("--review", "--apply-reset", "--review-prejoin", "--apply-prejoin-reset", "--review-auto", "--apply-auto-reset", "--review-stale-prejoin", "--apply-stale-prejoin-reset"),
+            "Run as VM administrator: --review-auto/--apply-auto-reset, --review/--apply-reset or --review-prejoin/--apply-prejoin-reset; explicit stale local recovery: --review-stale-prejoin/--apply-stale-prejoin-reset")
     for account in ("bifrost", "bifrost-games"):
         record, _ = account_environment(account)
         require(pathlib.Path(f"/run/user/{record.pw_uid}/bus").exists(), "Dedicated user manager is unavailable")
+    stale = sys.argv[1] in ("--review-stale-prejoin", "--apply-stale-prejoin-reset")
     automatic = sys.argv[1] in ("--review-auto", "--apply-auto-reset")
     game_auto = child("bifrost-games", "--component-auto-review") if automatic else None
     prejoin = game_auto["component"] == "game-prejoin" if automatic else "prejoin" in sys.argv[1]
     review_mode = "--component-prejoin-review" if prejoin else "--component-review"
     apply_mode = "--component-prejoin-apply" if prejoin else "--component-apply"
-    panel_review_mode = "--component-prejoin-any-review" if automatic and prejoin else review_mode
-    panel_apply_mode = "--component-prejoin-any-apply" if automatic and prejoin else apply_mode
+    panel_review_mode = "--component-prejoin-any-review" if (automatic or stale) and prejoin else review_mode
+    panel_apply_mode = "--component-prejoin-any-apply" if (automatic or stale) and prejoin else apply_mode
     game = game_auto if automatic else child("bifrost-games", review_mode)
     panel = child("bifrost", panel_review_mode)
     if prejoin:
-        identity = "panelIdentity" if panel.get("bootstrapState") == "disabled" else "binding"
-        require(game[identity] == panel[identity], "Prepared Host belongs to another panel; reset refused")
+        if stale:
+            # Explicit local destruction recovery, never authorization to enroll
+            # or trust the old certificate. No remote panel is contacted.
+            require(panel.get("bootstrapState") == "disabled", "Stale recovery requires a disabled panel bootstrap")
+            require(game["originIdentity"] == panel["originIdentity"], "Stale Host origin differs; reset refused")
+            require(game["panelIdentity"] != panel["panelIdentity"], "Certificate matches; use normal automatic reset")
+        else:
+            identity = "panelIdentity" if panel.get("bootstrapState") == "disabled" else "binding"
+            require(game[identity] == panel[identity], "Prepared Host belongs to another panel or retained certificate; reset refused; only an empty unenrolled Host with the same origin and disabled local panel may use explicit stale recovery")
     summary = dict(readOnly=True, resetReady=True, gameContainers=len(game["containers"]), panelContainers=len(panel["containers"]),
                    scope="panel database, panel credentials, automatic Host enrollment and all local Bifrost test worlds")
-    if sys.argv[1] in ("--review", "--review-prejoin", "--review-auto"):
+    if stale:
+        summary["staleLocalBootstrap"] = True
+        summary["warning"] = "Same origin but different certificates: only this machine's reviewed managed Instance and empty prepared Host will be removed; no remote enrollment or certificate trust is allowed"
+    if sys.argv[1] in ("--review", "--review-prejoin", "--review-auto", "--review-stale-prejoin"):
         return summary
     require(sys.stdin.isatty(), "Full reset requires an interactive terminal")
     print(json.dumps(summary), flush=True)
+    if stale:
+        print("Discard the stale local Host bootstrap and this reviewed local Instance. Type WIPE STALE LOCAL HOST:", flush=True)
+        require(input().strip() == "WIPE STALE LOCAL HOST", "Stale local reset cancelled; existing data preserved")
     print("Permanently remove the standard Instance panel and all its Bifrost games/enrollment. Linux accounts and router settings remain. Type WIPE ALL:", flush=True)
     require(input().strip() == "WIPE ALL", "Full reset cancelled; existing data preserved")
     # Recheck BOTH sides before beginning either destructive component. Each
