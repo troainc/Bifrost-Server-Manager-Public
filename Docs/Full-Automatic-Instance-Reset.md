@@ -57,7 +57,7 @@ subprocesses and filesystem removal while retaining unrelated markers. Runtime
 responses are simulated inside network-disabled disposable Debian containers;
 this does not claim the owner's actual server was reset.
 
-Ordinary `install.sh --instance --reinstall` resets only a panel and deliberately refuses an existing automatically enrolled local Host. It is not a complete fresh-install test.
+The legacy `--reinstall` path is disabled in the unpublished October 22 follow-up. Do not use it as a reset or update workflow. The historical published Test 35 command only resets a panel and refuses an automatically enrolled Host; use this separately reviewed strict reset helper for an explicitly authorized complete disposable-Instance reset.
 
 The separate `scripts/reset-automatic-instance.py` supports a standard Debian/Ubuntu automatic Instance with the dedicated `/home/bifrost` panel and `/home/bifrost-games` Host. Run the checksum-verified helper as the VM administrator with `--review` to inspect the bounded reset scope, or `--apply-reset` to repeat the review and request the exact `WIPE ALL` terminal confirmation before any reset action. Run the matched, verified `install.sh --instance` only after `resetCompleted:true`.
 

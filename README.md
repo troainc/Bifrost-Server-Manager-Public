@@ -1,3 +1,7 @@
+> Local October 22 candidate: continuous Console, separately delegated Torch commands and stopped-server mod/plugin ZIP installation are implemented and tested locally. [Scope, evidence and target acceptance](Docs/Live-Console-and-Content-2026-10-22.md). Published installation assets remain unchanged.
+
+> Local October 22 follow-up is unpublished. The modified working-tree installer must not replace the signed Test 35 asset. See [local validation and remaining checks](Docs/UI-UX-Remediation-2026-10-22.md).
+
 ## 2026-10-21 - Test 35 delivery verified
 
 Test 35 UI fixes are deployed on the master and published as a new signed customer testing prerelease. Master account/security rows, mounted data, secrets, keys and branding match its retained checkpoint; all six services are healthy. All 33 application/prerequisite downloads match anonymous HTTPS hashes. Rebuilt private tests passed 262 with nine explicit skips; public 43 Node checks and exact-source hosted installer/image-store checks passed. Exact candidate and deployed image scans passed. Private hosted runners remain blocked by GitHub billing/spending limits. Human acceptance and general release approval remain outstanding. Frozen artifact sources and full preservation/verification evidence: Docs/Test-35-Rollout-2026-10-21.md. Documentation-only delivery uses [skip cd] to avoid an unnecessary restart.

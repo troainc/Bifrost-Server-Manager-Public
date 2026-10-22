@@ -4,16 +4,16 @@ ROOT=pathlib.Path(__file__).resolve().parents[1]
 class NodeRoles(unittest.TestCase):
  def select(self,*arguments):
   script=(ROOT/'install.sh').read_text()
-  start=script.index('HOST_FLAGS=()');end=script.index('if [[ "${1:-}" == --reinstall ]]; then',start)
+  start=script.index('HOST_FLAGS=()');end=script.index('\nif [[ "${1:-}" == --reinstall ||',start)
   fragment=script[start:end]
   harness='set -Eeuo pipefail\nfail(){ echo "$*" >&2; exit 2; }\ninstall_instance_host(){ printf "host:%s\\n" "${HOST_FLAGS[*]}"; }\n'+fragment+'\nprintf "%s:%s:%s\\n" "$BIFROST_INSTALL_ROLE" "${BIFROST_REINSTALL:-0}" "$#"\n'
   return subprocess.run(['bash','-c',harness,'test',*arguments],capture_output=True,text=True)
  def test_three_roles_are_distinct(self):
   for role in ['controller','instance','hybrid']:
    result=self.select('--'+role);self.assertEqual(result.returncode,0,result.stderr);self.assertEqual(result.stdout.strip(),role+':0:0')
- def test_reset_keeps_explicit_role(self):
+ def test_legacy_reset_refuses_before_installation(self):
   for role in ['controller','instance','hybrid']:
-   result=self.select('--'+role,'--reinstall');self.assertEqual(result.returncode,0,result.stderr);self.assertEqual(result.stdout.strip(),role+':1:0')
+   result=self.select('--'+role,'--reinstall');self.assertNotEqual(result.returncode,0);self.assertIn('Legacy --reinstall is disabled',result.stderr)
  def test_host_only_is_not_a_new_controller(self):
   result=self.select('--host','--upgrade');self.assertEqual(result.returncode,0,result.stderr);self.assertEqual(result.stdout.strip(),'host:--upgrade')
  def test_fresh_join_is_distinct_and_cannot_replace_existing_host(self):

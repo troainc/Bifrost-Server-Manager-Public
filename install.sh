@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.35
+VERSION=v0.1.0-installtest.36
 # BEGIN SIGNED_RELEASE_BOOTSTRAP
 # Local candidate identity. Private signing material is never part of this repository.
 readonly RELEASE_SIGNER_SPKI_SHA256=1dba79e7a3d2608b42a5324089d4db548567999210ffbf3dd96ce5cb63a92e6a
@@ -512,10 +512,10 @@ automated_bootstrap() {
   if [[ $(id -u) -ne 0 ]]; then
     printf '\nAdministrator authentication is needed once to prepare the VM and create bifrost.\n'
     if command -v sudo >/dev/null && sudo -v; then
-      exec sudo -- env BIFROST_RELEASE_DIRECTORY="${BIFROST_RELEASE_DIRECTORY:-}" BIFROST_REINSTALL="${BIFROST_REINSTALL:-0}" BIFROST_RESUME="${BIFROST_RESUME:-0}" BIFROST_INSTALL_ROLE="${BIFROST_INSTALL_ROLE:-controller}" bash "$script" --bootstrap
+      exec sudo -- env BIFROST_INSTALL_ADVANCED="${BIFROST_INSTALL_ADVANCED:-0}" BIFROST_RELEASE_DIRECTORY="${BIFROST_RELEASE_DIRECTORY:-}" BIFROST_REINSTALL="${BIFROST_REINSTALL:-0}" BIFROST_RESUME="${BIFROST_RESUME:-0}" BIFROST_INSTALL_ROLE="${BIFROST_INSTALL_ROLE:-controller}" bash "$script" --bootstrap
     elif command -v su >/dev/null; then
       local command_line
-      printf -v command_line 'exec env BIFROST_RELEASE_DIRECTORY=%q BIFROST_REINSTALL=%q BIFROST_RESUME=%q BIFROST_INSTALL_ROLE=%q bash %q --bootstrap' "${BIFROST_RELEASE_DIRECTORY:-}" "${BIFROST_REINSTALL:-0}" "${BIFROST_RESUME:-0}" "${BIFROST_INSTALL_ROLE:-controller}" "$script"
+      printf -v command_line 'exec env BIFROST_INSTALL_ADVANCED=%q BIFROST_RELEASE_DIRECTORY=%q BIFROST_REINSTALL=%q BIFROST_RESUME=%q BIFROST_INSTALL_ROLE=%q bash %q --bootstrap' "${BIFROST_INSTALL_ADVANCED:-0}" "${BIFROST_RELEASE_DIRECTORY:-}" "${BIFROST_REINSTALL:-0}" "${BIFROST_RESUME:-0}" "${BIFROST_INSTALL_ROLE:-controller}" "$script"
       printf 'Enter the VM root password at the following prompt.\n'
       exec su -s /bin/bash -c "$command_line" root
     else
@@ -566,8 +566,9 @@ BIFROST_ROOTLESSKIT_APPARMOR
   copied="$account_home/.local/share/bifrost-bootstrap/install.sh"
   [[ "$script" == "$copied" ]] || install -m 0700 -o bifrost -g "$(id -gn bifrost)" "$script" "$copied"
   printf '\nVM preparation complete. Continuing installation as bifrost (UID %s).\n' "$uid"
-  runuser -u bifrost -- env -i BIFROST_RELEASE_DIRECTORY="${BIFROST_RELEASE_DIRECTORY:-}" HOME="$account_home" USER=bifrost LOGNAME=bifrost PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin XDG_RUNTIME_DIR="/run/user/$uid" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" TERM="${TERM:-xterm}" BIFROST_REINSTALL="${BIFROST_REINSTALL:-0}" BIFROST_RESUME="${BIFROST_RESUME:-0}" BIFROST_INSTALL_ROLE="${BIFROST_INSTALL_ROLE:-controller}" bash "$copied"
+  runuser -u bifrost -- env -i BIFROST_INSTALL_ADVANCED="${BIFROST_INSTALL_ADVANCED:-0}" BIFROST_RELEASE_DIRECTORY="${BIFROST_RELEASE_DIRECTORY:-}" HOME="$account_home" USER=bifrost LOGNAME=bifrost PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin XDG_RUNTIME_DIR="/run/user/$uid" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" TERM="${TERM:-xterm}" BIFROST_REINSTALL="${BIFROST_REINSTALL:-0}" BIFROST_RESUME="${BIFROST_RESUME:-0}" BIFROST_INSTALL_ROLE="${BIFROST_INSTALL_ROLE:-controller}" bash "$copied"
   if [[ "${BIFROST_INSTALL_ROLE:-controller}" == instance ]]; then prepare_automatic_instance_host; fi
+  ui_step "INSTALLATION READY FOR BROWSER SETUP" "All selected terminal preparation is complete. Open the panel URL above; create your administrator, save MFA recovery codes, review licensing and approve the prepared Host."
   exit 0
 }
 
@@ -657,6 +658,7 @@ HOST_ZIP_PY
   printf '  Enrollment connects this machine to the fleet; install a reviewed game Blueprint separately.\n'
 }
 
+if [[ "${BIFROST_REINSTALL:-0}" == 1 || "${1:-}" == --reinstall ]]; then fail "Legacy --reinstall is disabled. Data preserved; use the separately reviewed full Instance reset command."; fi
 if [[ "${1:-}" == --verify-release ]]; then
   shift; verify_local_release "$@"; exit $?
 fi
@@ -689,8 +691,8 @@ if [[ "${1:-}" == --host ]]; then
 elif [[ "${1:-}" == --controller || "${1:-}" == --instance || "${1:-}" == --hybrid ]]; then
   BIFROST_INSTALL_ROLE="${1#--}"
   shift
-  case "${1:-}" in --reinstall) export BIFROST_REINSTALL=1; shift;; --resume) export BIFROST_RESUME=1; shift;; esac
-  [[ $# -eq 0 ]] || fail 'A node role accepts only an optional --reinstall or --resume.'
+  case "${1:-}" in --reinstall) fail "Legacy --reinstall is disabled. Data preserved; use the separately reviewed full Instance reset command.";; --resume) export BIFROST_RESUME=1; shift;; esac
+  [[ $# -eq 0 ]] || fail 'A node role accepts only an optional --resume.'
 elif [[ "${1:-}" == --reinstall || "${1:-}" == --resume || "${1:-}" == --prepare-account || "${1:-}" == --bootstrap ]]; then
   BIFROST_INSTALL_ROLE="${BIFROST_INSTALL_ROLE:-controller}"
 elif [[ -z "${BIFROST_INSTALL_ROLE:-}" ]]; then
@@ -705,7 +707,7 @@ elif [[ -z "${BIFROST_INSTALL_ROLE:-}" ]]; then
   case "$install_choice" in 1) BIFROST_INSTALL_ROLE=controller;; 2) BIFROST_INSTALL_ROLE=instance;; 3) BIFROST_INSTALL_ROLE=hybrid;; 4) BIFROST_INSTALL_ROLE=host;; *) fail 'Choose a displayed node role or Host Agent only.';; esac
 fi
 case "$BIFROST_INSTALL_ROLE" in host) install_instance_host; exit 0;; controller|instance|hybrid) ;; *) fail 'Installation role is missing; choose Controller, Instance, Hybrid or Host Agent.';; esac
-if [[ "${1:-}" == --reinstall ]]; then export BIFROST_REINSTALL=1; shift; fi
+if [[ "${1:-}" == --reinstall || "${BIFROST_REINSTALL:-0}" == 1 ]]; then fail "Legacy --reinstall is disabled. Data preserved; use the separately reviewed full Instance reset command."; fi
 if [[ "${1:-}" == --resume ]]; then export BIFROST_RESUME=1; shift; fi
 case "${1:-}" in
   --prepare-account|--bootstrap) [[ $# -eq 1 ]] || fail 'Unexpected arguments.'; automated_bootstrap;;
@@ -715,26 +717,6 @@ esac
 assert_service_account
 [[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || fail 'Linux x86_64 is required.'
 [[ "$INSTALL_DIR" == /* && "$INSTALL_DIR" != / && "$INSTALL_DIR" != "$HOME" ]] || fail 'Invalid installation directory.'
-if [[ "${BIFROST_REINSTALL:-0}" == 1 ]]; then
-  expected="$(readlink -f "$HOME")/.local/share/bifrost"
-  actual=$(readlink -m "$INSTALL_DIR")
-  [[ "$INSTALL_DIR" == "$HOME/.local/share/bifrost" && "$actual" == "$expected" && ! -L "$INSTALL_DIR" ]] || fail 'Reinstall only supports the standard bifrost home installation; refusing an alternate or symlinked path.'
-  [[ -r /dev/tty ]] || fail 'Reinstall requires an interactive terminal.'
-  ui_banner
-  ui_step 'RESET TEST INSTALLATION' 'This permanently deletes this panel database, administrator, credentials and local configuration.'
-  printf '  Target: %s\n' "$actual"
-  read -r -p 'Type WIPE to confirm a clean reinstall: ' confirmation </dev/tty
-  [[ "$confirmation" == WIPE ]] || fail 'Reinstall cancelled; data preserved.'
-  if [[ -d "$actual" ]]; then
-    [[ $(stat -c %u "$actual") -eq $(id -u) && -f "$actual/compose.yaml" && -f "$actual/.env" ]] || fail 'Refusing to wipe a directory that is not an owned, configured Bifrost installation.'
-    export PATH="$HOME/.local/bin:$HOME/bin:$PATH:/usr/sbin:/sbin"
-    export DOCKER_HOST="unix:///run/user/$(id -u)/docker.sock"
-    docker info --format '{{json .SecurityOptions}}' | grep -qi rootless || fail 'Rootless Docker is required to remove this installation.'
-    (cd "$actual" && run_task 'Remove test containers and database volumes' docker compose down --volumes)
-    rm -rf -- "$actual"
-    ui_ok 'Old test installation removed. Beginning a fresh install.'
-  fi
-fi
 if [[ -e "$INSTALL_DIR" ]]; then
   [[ "${BIFROST_RESUME:-0}" == 1 && -d "$INSTALL_DIR" && ! -L "$INSTALL_DIR" && ! -e "$INSTALL_DIR/.env" && -f "$INSTALL_DIR/customer-images.tar" && -f "$INSTALL_DIR/IMAGE-LOCK.json" && -f "$INSTALL_DIR/.env.example" && -d "$INSTALL_DIR/secrets" ]] || fail "Existing installation preserved: $INSTALL_DIR. For an interrupted pre-configuration install only, use bash install.sh --resume."
   [[ $(stat -c %u "$INSTALL_DIR") -eq $(id -u) ]] || fail 'Installation is owned by another account.'
@@ -755,11 +737,11 @@ default_address=$(hostname -I 2>/dev/null | awk '{print $1}')
 read -r -p "VM IP or hostname [${default_address:-localhost}]: " address </dev/tty
 address=${address:-${default_address:-localhost}}
 [[ "$address" =~ ^[A-Za-z0-9][A-Za-z0-9.-]*$ ]] || fail 'Enter a hostname or IPv4 address without a URL or port.'
-read -r -p 'HTTPS port [8443]: ' port </dev/tty
-port=${port:-8443}
+port=8443
+if [[ ${BIFROST_INSTALL_ADVANCED:-0} == 1 ]]; then read -r -p 'HTTPS port [8443]: ' port </dev/tty; port=${port:-8443}; fi
+printf 'Using HTTPS port %s. Advanced settings: BIFROST_INSTALL_ADVANCED=1.\n' "$port"
 [[ "$port" =~ ^[0-9]{4,5}$ && "$port" -ge 1024 && "$port" -le 65535 ]] || fail 'Choose a port from 1024 to 65535.'
-read -r -p "Install at $INSTALL_DIR? [Y/n]: " answer </dev/tty
-[[ "$answer" != [Nn]* ]] || exit 0
+printf "Installing in the dedicated service directory: %s\n" "$INSTALL_DIR"
 scratch=$(mktemp -d)
 trap 'rm -rf -- "$scratch"' EXIT
 if [[ "${BIFROST_RESUME:-0}" != 1 ]]; then
@@ -834,11 +816,14 @@ values={'BIFROST_NODE_ROLE':sys.argv[5],'BIFROST_NODE_HOSTNAME':socket.gethostna
 env=root/'.env';env.write_text((root/'.env.example').read_text()+'\n'+'\n'.join(f'{k}={v}' for k,v in values.items())+'\n');env.chmod(0o600)
 PY
 printf '\nLicensing uses your installation identifier and check-ins; optional analytics stays off.\n'
-read -r -p 'Configure the TROA license service now? [Y/n]: ' configure_license </dev/tty
+configure_license=y
+if [[ ${BIFROST_INSTALL_ADVANCED:-0} == 1 ]]; then read -r -p 'Configure the TROA license service now? [Y/n]: ' configure_license </dev/tty; fi
 if [[ "$configure_license" != [Nn] ]]; then
-  read -r -p 'Master license HTTPS URL [https://bifrost.therealmsofasgard.com/api]: ' license_url </dev/tty
+  license_url=https://bifrost.therealmsofasgard.com/api
+  if [[ ${BIFROST_INSTALL_ADVANCED:-0} == 1 ]]; then read -r -p 'Master license HTTPS URL [https://bifrost.therealmsofasgard.com/api]: ' license_url </dev/tty; fi
   license_url=${license_url:-https://bifrost.therealmsofasgard.com/api}
-  read -r -p 'Matching public verification PEM path (Enter uses bundled TROA key): ' key_file </dev/tty
+  key_file=$INSTALL_DIR/config/license-signing-public.pem
+  if [[ ${BIFROST_INSTALL_ADVANCED:-0} == 1 ]]; then read -r -p 'Matching public verification PEM path (Enter uses bundled TROA key): ' key_file </dev/tty; fi
   key_file=${key_file:-$INSTALL_DIR/config/license-signing-public.pem}
   python3 - "$INSTALL_DIR" "$license_url" "$key_file" <<'LICENSE_SETUP_PY'
 import pathlib,re,subprocess,sys,urllib.parse
@@ -1023,10 +1008,10 @@ ui_step '06 / 06   Bring your panel online' 'Waiting for the database, API and w
 cd "$INSTALL_DIR"
 docker compose config --quiet
 run_task 'Start and check all panel services' docker compose up -d --wait --wait-timeout 180
-ui_step 'YOUR BIFROST PANEL IS READY' 'Open the panel to confirm its node role and begin onboarding.'
+ui_step 'PANEL SERVICES HEALTHY' 'The management services are healthy. If automatic local Host preparation was selected, wait for it to finish before browser setup.'
 printf '\n  Node role: %s\n' "$BIFROST_INSTALL_ROLE"
 if [[ "$BIFROST_INSTALL_ROLE" == instance || "$BIFROST_INSTALL_ROLE" == hybrid ]]; then
-  printf '  Instance installations through the initial VM bootstrap prepare their local Agent automatically.\n  Manual or Hybrid installs: prepare a separate non-root game-service account with Node.js 24 and rootless Podman.\n  After panel setup and license activation, use Hosts â†’ Add host to pair that local Agent.\n  Run bash install.sh --host as the prepared game account, using this panel URL.\n  Or choose Join an existing Controller in Instance setup, verify its identity and use --host --join-instance.\n  Existing enrolled Hosts use the separate ownership handover flow.\n'
+  if [[ "$BIFROST_INSTALL_ROLE" == instance ]]; then printf '  Automatic VM setup prepares your separate local Host. Do not run a second manual Host command.\n  In the browser, choose independent management or explicitly verify a parent Controller.\n'; else printf '  Hybrid local Hosts need a separately prepared game-service account and explicit Host enrollment.\n'; fi
 fi
 printf '\n  Panel     https://%s:%s/install\n  Account   bifrost (non-root)\n  Files     %s\n\n  Your test HTTPS certificate is self-signed.\n  Your browser will ask you to confirm it.\n\n  Support   discord.gg/troainc\n\n' "$address" "$port" "$INSTALL_DIR"
 ui_rule
