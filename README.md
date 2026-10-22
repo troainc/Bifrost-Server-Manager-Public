@@ -1,3 +1,5 @@
+> Test 37 public package and main-site Debian/Ubuntu install/update commands are live and verified. [Delivery evidence and manual acceptance](Docs/Test-37-Rollout-2026-10-22.md). Panel updates preserve data and leave enrolled Hosts/games running; no real customer update was performed.
+
 > Test 36 testing delivery is verified. See [release evidence, in-place update command and remaining testing checklist](Docs/Test-36-Rollout-2026-10-22.md). Existing data and prior releases are retained. Host updates and stopped-game Console plugin installation are separate; general release and real-game acceptance remain pending.
 > Local October 22 candidate: continuous Console, separately delegated Torch commands and stopped-server mod/plugin ZIP installation are implemented and tested locally. [Scope, evidence and target acceptance](Docs/Live-Console-and-Content-2026-10-22.md). Published installation assets remain unchanged.
 
