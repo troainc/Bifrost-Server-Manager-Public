@@ -1,3 +1,52 @@
-# Test 36 authorized delivery - October 22, 2026
+# Test 36 delivery and testing - October 22, 2026
 
-Preparation in progress. Source, artifact, preservation, migration, security and deployed verification results will be recorded when confirmed. Previous releases and real data must be retained. This is a testing prerelease, not stable or completed game acceptance.
+The owner authorized the preserved-data master update and new customer testing package. The [Test 36 prerelease](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.36) is published, and all 28 application plus eight unchanged prerequisite files were anonymously downloaded and matched with their local verified hashes (33 ordinary downloads and three complete byte-range-assembled large archives). The existing Ed25519 identity signs all 26 application payloads, including the first-party Console ZIP. Both actual installer and updater verify the whole release. Prior releases remain immutable. No billing changes or paid service were used.
+
+Frozen application/Host source: `2490263a4e7e6a61f22c6f551b6a26414971c07e`; public packaging: `6b4bcf77a798e412b49e127ab656b628d79b8ff7`. Later documentation-only commits do not change these identities. Installer SHA-256: `96d5761e58f487e1a03d1fe39fb975d998e8baf3fbd8a5be52a5da375ffcaf7f`.
+
+## Validation and boundaries
+
+Both editions compile, and the customer image omits owner capabilities. The application suite passed 274 tests with 11 explicit platform/opt-in skips and zero failures. Public checks passed 43 Node and 117 Python cases; the three disposable-root-only cases also passed in the required isolated UID/GID-switch environment. Five release-control/signer rejection tests passed. All 66 native Linux content/provisioning/filesystem checks passed with zero skips; the exact newly versioned standalone Host archive resolves its parser dependencies outside the checkout. The exact package passed verified TLS, first-administrator setup status, anonymous access denial, all 80 fresh migrations twice, append-only grants and protected keyring restart. Test 35-to-36 migration ran twice on a populated synthetic database with exact retained account/password/MFA/recovery data and one new migration entry. Exact customer/owner and five deployed master image vulnerability/secret scans passed HIGH/CRITICAL/UNKNOWN gates.
+
+The master was updated in place through Coolify after an authenticated encrypted on-host checkpoint and retention of per-service rollback images. Existing users/security records, secrets, keys, branding and data mounts were verified against the checkpoint. The single new console table is additive. Existing Hosts, instances and game data were retained; game containers were not replaced or restarted by this rollout. The existing master browser session was already expired. A fresh public login screen shows Test 36; the owner explicitly chose to perform signed-in checks personally.
+
+Panel, Agent and game plugin updates are separate. The published package contains the new Linux Agent; update an enrolled Host in place to negotiate live Console/content operation capabilities. Install the first-party Bifrost Console ZIP on the stopped game before testing Torch commands. The package does not silently replace an approved game runtime or install a plugin. The signed runtime/catalog is retained: the extra Torch launcher preservation guard committed in source still requires its own reviewed runtime-image delivery. That remaining engineering delivery is not counted as target acceptance or claimed deployed. Check configuration persistence before treating plugin testing as accepted. General beta/stable, real game/player, native Windows and independent release acceptance remain open.
+
+## Existing Debian test instance: update without wiping
+
+Use this only on the existing supported automatic installation with the non-root `bifrost` panel and enrolled `bifrost-games` Host. It checks both installed configurations before starting. Enter the Debian root password when `su` asks. At the license URL prompt, press Enter to keep the existing connection. Keep the updater's recovery checkpoint/key. Host upgrade refuses unsafe active jobs; do not force it or re-enroll/reset to bypass a refusal. This syntax was checked; actual target execution remains the owner's test.
+
+```bash
+su -s /bin/bash -c 'set -euo pipefail; export PATH=/usr/sbin:/usr/bin:/sbin:/bin; test -f /home/bifrost/.local/share/bifrost/.env; test -f /home/bifrost-games/.config/bifrost-host-agent/host-agent.json; stage=$(mktemp -d /tmp/bifrost-update36.XXXXXX); chmod 0755 "$stage"; curl --proto "=https" --proto-redir "=https" --connect-timeout 15 --max-time 180 --max-filesize 1048576 -fL --retry 3 https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/v0.1.0-installtest.36/install.sh -o "$stage/install.sh"; printf "%s\n" "96d5761e58f487e1a03d1fe39fb975d998e8baf3fbd8a5be52a5da375ffcaf7f  $stage/install.sh" | sha256sum -c -; chmod 0644 "$stage/install.sh"; bash "$stage/install.sh" --update; game_uid=$(id -u bifrost-games); runuser -u bifrost-games -- env -i HOME=/home/bifrost-games USER=bifrost-games LOGNAME=bifrost-games PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin XDG_RUNTIME_DIR="/run/user/$game_uid" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$game_uid/bus" TERM="${TERM:-xterm}" bash "$stage/install.sh" --host --upgrade' root
+```
+
+The command updates the panel with `--update`, then updates its separate enrolled Host with `--host --upgrade`. It uses bounded HTTPS and the exact installer checksum, requires neither sudo nor shell quoting inside Python, and contains no wipe, reinstall, reset or re-enrollment flags. Account roles, enrolled identity, profiles and game storage remain in place.
+
+## Owner checklist: master
+
+- [ ] Hard refresh, sign in using the existing account/MFA and confirm Test 36. Check the existing Hosts and SE-Torch instance; confirm there are no duplicate/replaced identities.
+- [ ] Check short-window sidebar scrolling, mobile navigation, dialogs, file/history controls and owner-only license administration.
+- [ ] When recovery codes are displayed, download the text file, confirm it contains the complete codes and save it privately before acknowledgement. Only rotate codes intentionally; rotation invalidates previous codes.
+- [ ] Confirm administrator access and intended operator/viewer boundaries. Delegate Send game console commands only to the intended operators. Do not broaden permissions solely to bypass an error.
+
+## Owner checklist: updated public instance and game
+
+- [ ] Run the in-place command on the existing Debian test VM. Keep the license URL and existing enrollment. Refresh its panel and confirm settings, license, accounts, Host identity and worlds are retained. No wipe or reinstall.
+- [ ] Confirm a fresh Host heartbeat and new capability availability in the master. Existing game processes/worlds should remain present; report any upgrade refusal instead of forcing it.
+- [ ] Retain a full world backup. Stop SE-Torch, upload/install `BifrostConsole.Torch.0.1.0-dev.1.zip` from the verified release, start it and confirm Torch loads the plugin. Verify live log updates, search/wrap/pause, tab reconnect and stale/offline behavior.
+- [ ] With the intended command permission, send `!help`, then an explicitly authorized `!save`; verify the actual Torch response and world-save result. Never resend an uncertain command. Exercise interruption/reconciliation only on a disposable clone.
+- [ ] Stop the game and add the three chosen Workshop IDs. Confirm Steam downloads, world loading, in-game mod behavior and player connection. Existing mods, world/player data and ports should remain intact.
+- [ ] Install/update one approved compatible third-party Torch ZIP with the game stopped. Verify dependencies, the explicit updater choice, plugin loading and Torch.cfg persistence across two restarts. This is not accepted until the retained runtime's behavior is checked; the source-only launcher improvement is a separate pending runtime delivery.
+- [ ] On a disposable copy, test stopped-server file rollback and full-world recovery. File rollback cannot undo gameplay/world changes already made by a mod or plugin.
+
+## Separate fresh installation, if desired later
+
+Use a new empty supported Debian 12 / Ubuntu 24.04 VM and the website's matched installation command. Complete the intended first-administrator/MFA/legal/privacy/license choices, confirm a genuinely enrolled fresh Host, create a game and repeat player/mod/plugin/backup acceptance. Never turn an existing data-bearing VM into this fresh test by wiping it. Native Windows service acceptance is separate if that platform is claimed.
+
+This is an installation-testing prerelease. Automated preservation and package evidence do not replace real target testing or independent security, prerequisite, privacy, licensing and key-custody approval.
+
+## Main-site installation section verified
+
+Website source `5e48e21f148d4aa5cae65486619c980fac69d8ff` deployed successfully in Coolify `l3jhbrsr877ub68opcx07pdv` at 2026-10-22 10:53:13 UTC. The [live testing installation section](https://therealmsofasgard.com/gaming-hub/bifrost-server-manager#testing-installation) visibly shows Test 36. Its unchanged existing tester password gate returns the exact version/installer digest, Debian su/Ubuntu sudo, bounded HTTPS and no-store. The separately guarded reset helper remains pinned to its original reviewed source; no reset was executed. Five focused gate units, website typecheck, production build and actual generated wrapper/inner shell syntax passed. Only the version, label and installer checksum changed in functional website code; existing authentication, shared data and unrelated source are retained. This website section describes fresh installation; use the separate in-place command above for an existing enrolled instance.
+
+The copyable in-place update command passed outer/inner Bash syntax and four fully stubbed routing scenarios: success, missing Host, altered checksum and failed panel update. Failed checks prevent the Host step. No real account/network/update command ran in those fixtures. The labelled synthetic database, isolated local daemon and temporary package proxy were stopped after checks; all fixture images/volumes and evidence are retained. Current master services remain healthy. The owner selected personal signed-in/manual testing. Actual target-server updates and game/Console/plugin acceptance are not inferred from source, command syntax, snapshots or synthetic tests.
