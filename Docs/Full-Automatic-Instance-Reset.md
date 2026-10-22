@@ -1,5 +1,41 @@
 # Full reset before a fresh automatic Instance installation
 
+## Automatic review, including a disabled pre-enrollment bootstrap
+
+Use the current checksum-pinned helper with `--review-auto` and
+`--apply-auto-reset`. Automatic review selects the existing strict enrolled
+path when `host-agent.json` exists (including a linked path, which refuses),
+otherwise it requires the strict empty pre-enrollment Host review. A prepared
+Host with a panel bootstrap exactly `{"enabled":false}` is accepted only when
+the protected game bootstrap has the SAME HTTPS origin and public certificate
+as that Instance panel. No capability is enabled or regenerated.
+
+Before any deletion, both accounts must have standard homes, the expected
+service templates and protected paths. No enrollment token/receipt/config,
+ledger/lock, unknown configuration, game files, game containers, game volumes
+or foreign game networks may exist on the pre-enrollment path. Rootless runtime
+checks and canonical path/link/ownership protections remain mandatory. Known
+panel volumes may include the standard `controller_key_data` volume only with
+its exact Controller mount; foreign, external and shared volumes still refuse.
+
+Review is read-only. Apply repeats review, requires an interactive terminal and
+exact `WIPE ALL`, rechecks BOTH component plans before beginning cleanup, stops
+the managed workers and rechecks the empty Host state after shutdown. Changed
+state refuses. Unrelated files, OS accounts, compiled Host packages, other
+workloads, the private master and router settings are outside the reset scope.
+The matched Test 35 installer runs only if apply exits successfully.
+
+The main-site Debian wipe command includes `su`, verifies the immutable helper
+and Test 35 installer hashes before execution, and remains separate from fresh
+installation behind the existing tester password gate. No inline helper patch
+or forced cleanup is needed. Earlier release assets remain immutable.
+
+The root CLI regression fixture covers enabled and disabled bootstraps,
+origin/token/role mismatch, cancellation, exact confirmation, real service-user
+subprocesses and filesystem removal while retaining unrelated markers. Runtime
+responses are simulated inside network-disabled disposable Debian containers;
+this does not claim the owner's actual server was reset.
+
 Ordinary `install.sh --instance --reinstall` resets only a panel and deliberately refuses an existing automatically enrolled local Host. It is not a complete fresh-install test.
 
 The separate `scripts/reset-automatic-instance.py` supports a standard Debian/Ubuntu automatic Instance with the dedicated `/home/bifrost` panel and `/home/bifrost-games` Host. Run the checksum-verified helper as the VM administrator with `--review` to inspect the bounded reset scope, or `--apply-reset` to repeat the review and request the exact `WIPE ALL` terminal confirmation before any reset action. Run the matched, verified `install.sh --instance` only after `resetCompleted:true`.

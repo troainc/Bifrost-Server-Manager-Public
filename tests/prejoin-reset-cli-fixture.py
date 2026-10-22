@@ -17,6 +17,9 @@ assert os.getuid() == 0 and pathlib.Path('/.dockerenv').exists()
 assert os.environ.get('BIFROST_DISPOSABLE_RESET_FIXTURE') == '1'
 source = pathlib.Path(__file__).resolve().parents[1]
 helper = source / 'scripts/reset-automatic-instance.py'
+disabled = os.environ.get('BIFROST_RESET_DISABLED_FIXTURE') == '1'
+review_mode = '--review-auto' if disabled else '--review-prejoin'
+apply_mode = '--apply-auto-reset' if disabled else '--apply-prejoin-reset'
 game = pathlib.Path('/home/bifrost-games')
 panel = pathlib.Path('/home/bifrost')
 package = game / '.local/opt' / ('bifrost-host-agent-' + 'a' * 64)
@@ -53,7 +56,8 @@ subprocess.run(['openssl', 'req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-da
 certificate = pathlib.Path('/tmp/test-cert.pem').read_text()
 owned_file(root / '.env', 'BIFROST_NODE_ROLE=instance\nBIFROST_PUBLIC_URL=https://10.0.0.1:8443\n', 'bifrost')
 owned_file(root / 'compose.yaml', 'services: {}\n', 'bifrost')
-owned_file(root / 'secrets/local-host-bootstrap.json', json.dumps(dict(enabled=True, token='a' * 64)), 'bifrost')
+original_secret = dict(enabled=False) if disabled else dict(enabled=True, token='a' * 64)
+owned_file(root / 'secrets/local-host-bootstrap.json', json.dumps(original_secret), 'bifrost')
 owned_file(root / 'secrets/panel-cert.pem', certificate, 'bifrost')
 owned_file(config / 'local-bootstrap.json', json.dumps(dict(version=1, local='https://10.0.0.1:8443', token='a' * 64,
     certificate=certificate, enableReviewedCatalog=True)), 'bifrost-games')
@@ -79,7 +83,10 @@ elif name=='podman':
     elif 'volume' in args or 'network' in args: print('[]')
 elif name=='docker':
     if 'info' in args: print('["rootless"]')
-    elif 'compose' in args: print(json.dumps(dict(name='bifrost',services={key:{} for key in ('postgres','migrate','control-plane','web','https')},volumes={key:dict(name='bifrost_'+key) for key in ('postgres_data','branding_data')})))
+    elif 'compose' in args:
+        services={key:{} for key in ('postgres','migrate','control-plane','web','https')}
+        services['control-plane']['volumes']=[dict(type='volume',source='controller_key_data',target='/var/lib/bifrost/keys')]
+        print(json.dumps(dict(name='bifrost',services=services,volumes={key:dict(name='bifrost_'+key) for key in ('postgres_data','branding_data','controller_key_data')})))
     elif 'inspect' in args: sys.exit(1)
 '''
 for name in ('systemctl', 'podman'):
@@ -93,25 +100,31 @@ docker.chmod(0o755)
 unrelated = game / 'keep-unrelated.txt'
 owned_file(unrelated, 'preserve', 'bifrost-games')
 
-review = subprocess.run(['/usr/bin/python3', str(helper), '--review-prejoin'], capture_output=True, text=True)
+review = subprocess.run(['/usr/bin/python3', str(helper), review_mode], capture_output=True, text=True)
 assert review.returncode == 0, review.stdout + review.stderr
 assert json.loads(review.stdout)['resetReady'] is True
 original_environment = (root / '.env').read_text()
 owned_file(root / '.env', original_environment.replace('=instance', '=controller'), 'bifrost')
-refused = subprocess.run(['/usr/bin/python3', str(helper), '--apply-prejoin-reset'], capture_output=True, text=True)
+refused = subprocess.run(['/usr/bin/python3', str(helper), apply_mode], capture_output=True, text=True)
 assert refused.returncode == 1 and 'Instance panel' in refused.stdout
 assert root.exists() and config.exists()
 owned_file(root / '.env', original_environment, 'bifrost')
 owned_file(root / 'secrets/local-host-bootstrap.json', json.dumps(dict(enabled=True, token='b' * 64)), 'bifrost')
-refused = subprocess.run(['/usr/bin/python3', str(helper), '--apply-prejoin-reset'], capture_output=True, text=True)
+refused = subprocess.run(['/usr/bin/python3', str(helper), apply_mode], capture_output=True, text=True)
 assert refused.returncode == 1 and 'belongs to another panel' in refused.stdout
 assert root.exists() and config.exists()
-owned_file(root / 'secrets/local-host-bootstrap.json', json.dumps(dict(enabled=True, token='a' * 64)), 'bifrost')
+owned_file(root / 'secrets/local-host-bootstrap.json', json.dumps(original_secret), 'bifrost')
+if disabled:
+    owned_file(root / '.env', original_environment.replace('10.0.0.1', '10.0.0.2'), 'bifrost')
+    refused = subprocess.run(['/usr/bin/python3', str(helper), apply_mode], capture_output=True, text=True)
+    assert refused.returncode == 1 and 'another panel' in refused.stdout
+    assert root.exists() and config.exists()
+    owned_file(root / '.env', original_environment, 'bifrost')
 
 
 def apply(confirmation):
     master, slave = pty.openpty()
-    process = subprocess.Popen(['/usr/bin/python3', str(helper), '--apply-prejoin-reset'], stdin=slave, stdout=slave, stderr=slave)
+    process = subprocess.Popen(['/usr/bin/python3', str(helper), apply_mode], stdin=slave, stdout=slave, stderr=slave)
     os.close(slave)
     result = b''
     sent = False
@@ -143,4 +156,4 @@ assert code == 0 and '"resetCompleted": true' in output, output
 assert not root.exists() and not config.exists()
 assert all(not (units / name).exists() for name in ('bifrost-instance-setup.service', 'bifrost-host-agent.service'))
 assert package.exists() and unrelated.read_text() == 'preserve'
-print('PASS actual root CLI, dedicated non-root components, matching bootstrap, cancellation, WIPE ALL and real tree removal; runtime replies simulated')
+print('PASS actual root CLI, dedicated non-root components, matching bootstrap, cancellation, WIPE ALL and real tree removal; runtime replies simulated; disabled bootstrap='+str(disabled))

@@ -85,6 +85,13 @@ def bootstrap_binding(value):
                                     sort_keys=True).encode()).hexdigest()
 
 
+def panel_identity(local, certificate):
+    # Validate the origin/certificate using the existing strict parser. The
+    # fixed token here is validation input only, never a credential or file.
+    bootstrap_binding(dict(local=local, certificate=certificate, token="0" * 64))
+    return hashlib.sha256(json.dumps(dict(local=local, certificate=certificate), sort_keys=True).encode()).hexdigest()
+
+
 def prejoin_review(home, uid):
     """Only the installer-prepared Host before any enrollment or game data."""
     config_dir = home / ".config/bifrost-host-agent"
@@ -122,7 +129,8 @@ def prejoin_review(home, uid):
     require(not run(["/usr/bin/podman", "ps", "--all", "--quiet", "--no-trunc"]).stdout.strip(), "Existing game containers; pre-join reset refused")
     require(not json_run(["/usr/bin/podman", "volume", "ls", "--format", "json"]), "Existing game volumes; pre-join reset refused")
     require(all(entry.get("name") == "podman" for entry in json_run(["/usr/bin/podman", "network", "ls", "--format", "json"])), "Foreign game network")
-    return dict(component="game-prejoin", fingerprint=fingerprint, binding=binding, containers=[],
+    return dict(component="game-prejoin", fingerprint=fingerprint, binding=binding,
+                panelIdentity=panel_identity(bootstrap["local"], bootstrap["certificate"]), containers=[],
                 trees=trees, units=units)
 
 
@@ -143,23 +151,29 @@ def prejoin_apply(home, uid, expected):
         delete_tree(tree, uid)
 
 
-def panel_prejoin_review(home, uid):
+def panel_prejoin_review(home, uid, allow_disabled=False):
     plan = panel_review(home, uid)
     root = home / ".local/share/bifrost"
     values = dict(line.split("=", 1) for line in private_file(root / ".env", uid, 65536).decode().splitlines()
                   if "=" in line and not line.startswith("#"))
     secret_bytes = private_file(root / "secrets/local-host-bootstrap.json", uid, 32768)
     secret = json.loads(secret_bytes)
-    require(secret.get("enabled") is True, "Panel does not own a prepared local Host")
+    require(isinstance(secret, dict), "Invalid panel bootstrap record")
+    disabled = allow_disabled and secret == {"enabled": False} and secret.get("enabled") is False
+    require(disabled or secret.get("enabled") is True, "Panel does not own a prepared local Host")
     cert_bytes = private_file(root / "secrets/panel-cert.pem", uid, 32768)
-    plan["binding"] = bootstrap_binding(dict(local=values.get("BIFROST_PUBLIC_URL", ""), token=secret.get("token", ""),
-                                            certificate=cert_bytes.decode()))
+    if disabled:
+        plan["bootstrapState"] = "disabled"
+        plan["panelIdentity"] = panel_identity(values.get("BIFROST_PUBLIC_URL", ""), cert_bytes.decode())
+    else:
+        plan["binding"] = bootstrap_binding(dict(local=values.get("BIFROST_PUBLIC_URL", ""), token=secret.get("token", ""),
+                                                certificate=cert_bytes.decode()))
     plan["fingerprint"] = hashlib.sha256((plan["fingerprint"] + hashlib.sha256(secret_bytes + cert_bytes).hexdigest()).encode()).hexdigest()
     return plan
 
 
-def panel_prejoin_apply(home, uid, expected):
-    require(panel_prejoin_review(home, uid) == expected, "Panel bootstrap review changed; remaining data preserved")
+def panel_prejoin_apply(home, uid, expected, allow_disabled=False):
+    require(panel_prejoin_review(home, uid, allow_disabled) == expected, "Panel bootstrap review changed; remaining data preserved")
     panel_apply(home, uid, panel_review(home, uid))
 
 
@@ -238,7 +252,9 @@ def panel_review(home, uid):
     model = json_run(["docker", "compose", "config", "--format", "json"], cwd=str(root))
     project = model.get("name")
     require(project == "bifrost" and set(model.get("services", {})) == SERVICES, "Unrecognized panel Compose project")
-    require(set(model.get("volumes", {})) == {"postgres_data", "branding_data"}, "Unrecognized panel volumes")
+    require(set(model.get("volumes", {})) in ({"postgres_data", "branding_data"}, {"postgres_data", "branding_data", "controller_key_data"}), "Unrecognized panel volumes")
+    if "controller_key_data" in model["volumes"]:
+        require(any(isinstance(mount, dict) and mount.get("type") == "volume" and mount.get("source") == "controller_key_data" and mount.get("target") == "/var/lib/bifrost/keys" for mount in model["services"]["control-plane"].get("volumes", [])), "Unrecognized managed-key mount")
     require(not any(value.get("external") for value in model["volumes"].values()), "External panel volume")
     ids = run(["docker", "ps", "--all", "--quiet", "--no-trunc", "--filter", "label=com.docker.compose.project=bifrost"]).stdout.split()
     require(len(ids) <= 16 and all(re.fullmatch(r"[a-f0-9]{64}", value) for value in ids), "Invalid panel inventory")
@@ -374,40 +390,57 @@ def child(account, mode, plan=None):
 
 def main():
     require(sys.platform == "linux", "Linux is required")
-    if len(sys.argv) == 2 and sys.argv[1] in ("--component-review", "--component-apply", "--component-prejoin-review", "--component-prejoin-apply"):
+    if len(sys.argv) == 2 and sys.argv[1] in ("--component-review", "--component-apply", "--component-prejoin-review", "--component-prejoin-apply", "--component-auto-review", "--component-prejoin-any-review", "--component-prejoin-any-apply"):
         account = pwd.getpwuid(os.getuid()).pw_name
         require(os.getuid() > 0 and account in ("bifrost", "bifrost-games"), "Use dedicated non-root component owner")
         record, _ = account_environment(account)
         home = pathlib.Path(record.pw_dir)
         prejoin = "prejoin" in sys.argv[1]
+        allow_disabled = "prejoin-any" in sys.argv[1]
+        if sys.argv[1] == "--component-auto-review":
+            require(account == "bifrost-games", "Automatic Host review requires the game account")
+            return (game_review if os.path.lexists(home / ".config/bifrost-host-agent/host-agent.json") else prejoin_review)(home, record.pw_uid)
         review = (prejoin_review if prejoin else game_review) if account == "bifrost-games" else (panel_prejoin_review if prejoin else panel_review)
         if sys.argv[1].endswith("-review"):
-            return review(home, record.pw_uid)
+            return review(home, record.pw_uid, True) if allow_disabled and account == "bifrost" else review(home, record.pw_uid)
         plan = json.load(sys.stdin)
         apply = (prejoin_apply if prejoin else game_apply) if account == "bifrost-games" else (panel_prejoin_apply if prejoin else panel_apply)
-        apply(home, record.pw_uid, plan)
+        if allow_disabled and account == "bifrost":
+            apply(home, record.pw_uid, plan, True)
+        else:
+            apply(home, record.pw_uid, plan)
         return dict(componentReset=True, component=plan["component"])
-    require(os.getuid() == 0 and len(sys.argv) == 2 and sys.argv[1] in ("--review", "--apply-reset", "--review-prejoin", "--apply-prejoin-reset"),
-            "Run as VM administrator: --review/--apply-reset or --review-prejoin/--apply-prejoin-reset")
+    require(os.getuid() == 0 and len(sys.argv) == 2 and sys.argv[1] in ("--review", "--apply-reset", "--review-prejoin", "--apply-prejoin-reset", "--review-auto", "--apply-auto-reset"),
+            "Run as VM administrator: --review-auto/--apply-auto-reset, --review/--apply-reset or --review-prejoin/--apply-prejoin-reset")
     for account in ("bifrost", "bifrost-games"):
         record, _ = account_environment(account)
         require(pathlib.Path(f"/run/user/{record.pw_uid}/bus").exists(), "Dedicated user manager is unavailable")
-    prejoin = "prejoin" in sys.argv[1]
+    automatic = sys.argv[1] in ("--review-auto", "--apply-auto-reset")
+    game_auto = child("bifrost-games", "--component-auto-review") if automatic else None
+    prejoin = game_auto["component"] == "game-prejoin" if automatic else "prejoin" in sys.argv[1]
     review_mode = "--component-prejoin-review" if prejoin else "--component-review"
     apply_mode = "--component-prejoin-apply" if prejoin else "--component-apply"
-    game, panel = child("bifrost-games", review_mode), child("bifrost", review_mode)
+    panel_review_mode = "--component-prejoin-any-review" if automatic and prejoin else review_mode
+    panel_apply_mode = "--component-prejoin-any-apply" if automatic and prejoin else apply_mode
+    game = game_auto if automatic else child("bifrost-games", review_mode)
+    panel = child("bifrost", panel_review_mode)
     if prejoin:
-        require(game["binding"] == panel["binding"], "Prepared Host belongs to another panel; reset refused")
+        identity = "panelIdentity" if panel.get("bootstrapState") == "disabled" else "binding"
+        require(game[identity] == panel[identity], "Prepared Host belongs to another panel; reset refused")
     summary = dict(readOnly=True, resetReady=True, gameContainers=len(game["containers"]), panelContainers=len(panel["containers"]),
                    scope="panel database, panel credentials, automatic Host enrollment and all local Bifrost test worlds")
-    if sys.argv[1] in ("--review", "--review-prejoin"):
+    if sys.argv[1] in ("--review", "--review-prejoin", "--review-auto"):
         return summary
     require(sys.stdin.isatty(), "Full reset requires an interactive terminal")
     print(json.dumps(summary), flush=True)
     print("Permanently remove the standard Instance panel and all its Bifrost games/enrollment. Linux accounts and router settings remain. Type WIPE ALL:", flush=True)
     require(input().strip() == "WIPE ALL", "Full reset cancelled; existing data preserved")
+    # Recheck BOTH sides before beginning either destructive component. Each
+    # component also rechecks its own plan and shutdown boundaries below.
+    require(child("bifrost-games", review_mode) == game and child("bifrost", panel_review_mode) == panel,
+            "Reset review changed after confirmation; no cleanup performed")
     child("bifrost-games", apply_mode, game)
-    child("bifrost", apply_mode, panel)
+    child("bifrost", panel_apply_mode, panel)
     return dict(resetCompleted=True, panelRemoved=True, automaticHostRemoved=True, testWorldsRemoved=True,
                 nextStep="Run the verified matched install.sh --instance as the administrator")
 
