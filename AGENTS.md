@@ -1,6 +1,6 @@
-## 2026-10-23 - Test 38 public Node security candidate
+## 2026-10-23 - Test 38 public Node security release
 
-Current authorized work: prepare a new immutable signed Test 38 customer release with patched Controller and Linux Host runtimes. Test 37 assets remain immutable; do not advertise or use Test 38 commands until all matched assets and signatures are published and anonymously verified. A panel-only update does not update an enrolled Host or game. Preserve existing data, credentials, keys, volumes, enrollment and worlds; never use a wipe as an update. Remote update controls require explicit customer trust/approval and a narrow local updater. See Docs/Test-38-Node-Security-2026-10-23.md.
+The signed Test 38 customer release and all 28 assets are published and anonymously verified. The main-site tester gate serves the matched install and panel-only update commands. A panel-only update does not patch an enrolled Host Node runtime or game. Preserve existing data, credentials, keys, volumes, enrollment and worlds; never use a wipe as an update. Remote update controls require explicit customer trust/approval and a narrow local updater. See Docs/Test-38-Node-Security-2026-10-23.md.
 
 ## 2026-10-22 - Test 37 public package and website commands verified live
 

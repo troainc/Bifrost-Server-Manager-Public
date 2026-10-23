@@ -1,8 +1,8 @@
-## 2026-10-23 - Test 38 Node security candidate
+## 2026-10-23 - Test 38 Node security testing release
 
 - Pin fresh automatic Host setup to official Node 24.22.1 Linux x64 with a verified checksum; require the same patch floor for manual Hosts.
-- Stage a new Test 38 panel-only installer/update command. It is not ready for use until a matched immutable signed release is published and verified.
-- Existing Test 37 assets and installed customer data remain unchanged.
+- The matched signed Test 38 package and all 28 assets were anonymously verified; the main-site tester gate serves its install and panel-only update commands.
+- Existing Test 37 assets remain unchanged. Real installation and game acceptance remain open. See Docs/Test-38-Node-Security-2026-10-23.md.
 
 ## 2026-10-21 - Test 35 delivery verified
 

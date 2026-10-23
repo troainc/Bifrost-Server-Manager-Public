@@ -1,6 +1,6 @@
-## 2026-10-23 - Test 38 Node security candidate
+## 2026-10-23 - Test 38 Node security release
 
-Test 38 source installer pins official Node 24.22.1 Linux x64 and its verified checksum for fresh automatic Hosts; manual Hosts require at least 24.22.1 in 24.x. A matched Controller/web/Host release is being prepared. Test 37 remains current and immutable. Local builds and regressions pass; signed package, scans, disposable update, publication and target acceptance remain open. See Docs/Test-38-Node-Security-2026-10-23.md.
+Test 38 pins official Node 24.22.1 Linux x64 for fresh automatic Hosts; manual Hosts require at least 24.22.1 in 24.x. Matched signed Controller/web/Host assets, exact image scans, disposable preserved-state checks and anonymous downloads pass. Test 37 remains immutable. The main-site tester gate offers install and panel-only update commands. Real installation and game acceptance remain open. See Docs/Test-38-Node-Security-2026-10-23.md.
 
 ## 2026-10-22 - Test 37 public package and website commands verified live
 

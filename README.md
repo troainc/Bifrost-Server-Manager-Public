@@ -1,4 +1,4 @@
-> Test 38 Node security candidate is in preparation. Test 37 remains the current published package; see [candidate scope and open gates](Docs/Test-38-Node-Security-2026-10-23.md).
+> Signed Test 38 Node security testing assets and gated main-site commands are published and verified. Real installation and game acceptance remain open; see [release evidence and remaining checks](Docs/Test-38-Node-Security-2026-10-23.md).
 
 > Test 37 public package and main-site Debian/Ubuntu install/update commands are live and verified. [Delivery evidence and manual acceptance](Docs/Test-37-Rollout-2026-10-22.md). Panel updates preserve data and leave enrolled Hosts/games running; no real customer update was performed.
 

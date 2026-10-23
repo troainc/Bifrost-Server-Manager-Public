@@ -1,6 +1,6 @@
-## 2026-10-23 - Test 38 Node security preparation
+## 2026-10-23 - Test 38 testing release verified
 
-The new source installer and updater target Test 38; the automatic Host Node archive is pinned to official 24.22.1 with verified SHA-256. The manual Host path refuses older Node 24. Patched customer images and Host package build in isolation; existing Test 37 assets and all installations remain unchanged. See Docs/Test-38-Node-Security-2026-10-23.md for pending gates.
+The signed Test 38 installer and updater, matched Controller/web/Host assets and 28 anonymous downloads verify. Fresh automatic Host Node is pinned to official 24.22.1 with verified SHA-256; manual Hosts require the same patched floor. Local regressions, image scans and disposable preserved-state update checks pass. The main-site tester gate serves the published installer hash. Test 37 assets remain unchanged; real installation and game acceptance remain open. See Docs/Test-38-Node-Security-2026-10-23.md.
 
 ## 2026-10-22 - Test 37 public package and website commands verified live
 
