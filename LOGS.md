@@ -1,3 +1,7 @@
+## 2026-10-23 - Test 38 Node security preparation
+
+The new source installer and updater target Test 38; the automatic Host Node archive is pinned to official 24.22.1 with verified SHA-256. The manual Host path refuses older Node 24. Patched customer images and Host package build in isolation; existing Test 37 assets and all installations remain unchanged. See Docs/Test-38-Node-Security-2026-10-23.md for pending gates.
+
 ## 2026-10-22 - Test 37 public package and website commands verified live
 
 New immutable signed public Test 37 is published; all 28 application assets anonymously match. Main-site source 1712f428d5d0f37426f73da7bd6b49169c9b9f51 deployed successfully and visibly shows Test37 plus install/update entry points. Its unchanged tester gate returns matching checksum-verified Debian su and Ubuntu sudo commands for fresh installation and separate panel-only --update, with no-store. Six website units/typecheck/build, sixteen exact shell routing scenarios and local distribution/copy UI checks pass. Exact package, old-Agent HTTP console security, 59 nginx checks, synthetic account/MFA/journal preservation and current image security gates pass; see Docs/Test-37-Rollout-2026-10-22.md. No real customer machine, enrolled Host Agent or game was updated or restarted. Master remains healthy on its identical deployment/hotfix, original running databases and retained volumes. Human target/game and independent release acceptance remain open; no paid service/billing change. Documentation finalization uses [skip ci] [skip cd].

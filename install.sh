@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.37
+VERSION=v0.1.0-installtest.38
 # BEGIN SIGNED_RELEASE_BOOTSTRAP
 # Local candidate identity. Private signing material is never part of this repository.
 readonly RELEASE_SIGNER_SPKI_SHA256=1dba79e7a3d2608b42a5324089d4db548567999210ffbf3dd96ce5cb63a92e6a
@@ -311,12 +311,12 @@ prepare_automatic_instance_host() {
   loginctl enable-linger "$game"
   systemctl start "user@$game_uid.service"
   [[ -S "/run/user/$game_uid/bus" ]] || fail 'Game-account user session failed to start.'
-  node_root=/opt/bifrost-node-v24.19.0
+  node_root=/opt/bifrost-node-v24.22.1
   stage=$(mktemp -d /tmp/bifrost-auto-host.XXXXXX)
   chmod 0755 "$stage"
   if [[ ! -e "$node_root" ]]; then
-    fetch 'https://nodejs.org/dist/v24.19.0/node-v24.19.0-linux-x64.tar.xz' "$stage/node.tar.xz"
-    (cd "$stage" && printf '%s  node.tar.xz\n' '14b342e71204f811bde6153be8e04b62aef63c236fef92b55f9c83154b409647' | sha256sum --check --status) || fail 'Pinned Node runtime checksum failed.'
+    fetch 'https://nodejs.org/dist/v24.22.1/node-v24.22.1-linux-x64.tar.xz' "$stage/node.tar.xz"
+    (cd "$stage" && printf '%s  node.tar.xz\n' '6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6' | sha256sum --check --status) || fail 'Pinned Node runtime checksum failed.'
     install -d -m 0755 -o root -g root "$node_root"
     tar -xJf "$stage/node.tar.xz" -C "$node_root" --strip-components=1 --no-same-owner
     chmod -R go-w "$node_root"
@@ -330,7 +330,7 @@ for path in [root,*root.rglob('*')]:
     if info.st_uid!=0 or (not path.is_symlink() and info.st_mode&0o022):raise SystemExit('Pinned Node runtime must be root-owned and protected from service-account writes.')
     if path.is_symlink() and not path.resolve().is_relative_to(root):raise SystemExit('Pinned Node runtime link escapes its root.')
 NODE_RUNTIME_PY
-  "$node_root/bin/node" -e 'if(process.versions.node!=="24.19.0")process.exit(1)' || fail 'Pinned Node runtime identity mismatch.'
+  "$node_root/bin/node" -e 'if(process.versions.node!=="24.22.1")process.exit(1)' || fail 'Pinned Node runtime identity mismatch.'
   fetch_release_asset "bifrost-linux-host-agent.zip" "$stage/host.zip"
   fetch_release_asset "SHA256SUMS" "$stage/SHA256SUMS"
   verify_signed_release "$stage" host.zip bifrost-linux-host-agent.zip
@@ -578,10 +578,11 @@ require_host_runtime() {
   cd -- "$HOME" || fail 'Cannot enter the game account home directory.'
   command -v python3 >/dev/null || fail 'Python 3 is required to safely unpack the Host Agent package.'
   command -v sha256sum >/dev/null || fail 'sha256sum is required to verify the Host Agent package.'
-  BIFROST_NODE_BIN="${BIFROST_NODE_BIN:-$(command -v node || true)}"
-  if [[ ! -x "$BIFROST_NODE_BIN" && -x /opt/bifrost-node-v24.19.0/bin/node ]]; then BIFROST_NODE_BIN=/opt/bifrost-node-v24.19.0/bin/node; fi
+  BIFROST_NODE_BIN="${BIFROST_NODE_BIN:-}"
+  if [[ -z "$BIFROST_NODE_BIN" && -x /opt/bifrost-node-v24.22.1/bin/node ]]; then BIFROST_NODE_BIN=/opt/bifrost-node-v24.22.1/bin/node; fi
+  if [[ -z "$BIFROST_NODE_BIN" ]]; then BIFROST_NODE_BIN="$(command -v node || true)"; fi
   export BIFROST_NODE_BIN
-  [[ -x "$BIFROST_NODE_BIN" ]] && "$BIFROST_NODE_BIN" -e 'process.exit(Number(process.versions.node.split(".")[0]) === 24 ? 0 : 1)' || fail 'Instance Host needs Node.js 24. Use the prepared runtime or install Node 24 for this account, then rerun.'
+  [[ -x "$BIFROST_NODE_BIN" ]] && "$BIFROST_NODE_BIN" -e 'const [major,minor,patch]=process.versions.node.split(".").map(Number);process.exit(major===24 && (minor>22 || (minor===22 && patch>=1)) ? 0 : 1)' || fail 'Instance Host needs Node.js 24.22.1 or later in 24.x. Use the prepared runtime or update Node for this account, then rerun.'
   command -v podman >/dev/null || fail 'Instance Host needs rootless Podman available to this account.'
   [[ "$(podman info --format '{{.Host.Security.Rootless}}' 2>/dev/null || true)" == true ]] || fail 'Could not verify rootless Podman. Run podman info from this account home directory to inspect the error.'
   systemctl --user show-environment >/dev/null 2>&1 || fail 'A systemd user manager is unavailable. Sign in as the regular game-server operator account and retry.'

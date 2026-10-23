@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: 24.19.0
+          node-version: 24.22.1
       - name: Check shell syntax without installing
         run: bash -n install.sh && bash -n update.sh && bash -n scripts/build-release-bundle.sh && python3 scripts/sync-release-bootstrap.py --check
       - name: Check license URL and key rejection using temporary files

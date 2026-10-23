@@ -1,3 +1,9 @@
+## 2026-10-23 - Test 38 Node security candidate
+
+- Pin fresh automatic Host setup to official Node 24.22.1 Linux x64 with a verified checksum; require the same patch floor for manual Hosts.
+- Stage a new Test 38 panel-only installer/update command. It is not ready for use until a matched immutable signed release is published and verified.
+- Existing Test 37 assets and installed customer data remain unchanged.
+
 ## 2026-10-21 - Test 35 delivery verified
 
 Test 35 UI fixes are deployed on the master and published as a new signed customer testing prerelease. Master account/security rows, mounted data, secrets, keys and branding match its retained checkpoint; all six services are healthy. All 33 application/prerequisite downloads match anonymous HTTPS hashes. Rebuilt private tests passed 262 with nine explicit skips; public 43 Node checks and exact-source hosted installer/image-store checks passed. Exact candidate and deployed image scans passed. Private hosted runners remain blocked by GitHub billing/spending limits. Human acceptance and general release approval remain outstanding. Frozen artifact sources and full preservation/verification evidence: Docs/Test-35-Rollout-2026-10-21.md. Documentation-only delivery uses [skip cd] to avoid an unnecessary restart.
