@@ -153,5 +153,26 @@ class AutomaticUpdates(unittest.TestCase):
         for url in ('http://github.com/file', 'https://127.0.0.1/file', 'https://user@github.com/file', 'https://github.com:444/file'):
             with self.subTest(url=url), self.assertRaises(ValueError): automatic.approved(url)
 
+    def test_enable_rejects_implicit_channel_transition_before_writing_policy(self):
+        with self.assertRaises(ValueError): automatic.configure(self.root, True, 'stable')
+        self.assertEqual(json.loads((self.root / 'automatic-update-policy.json').read_text()), self.policy)
+
+    def test_timer_is_local_user_scoped_and_does_not_catch_up_missed_windows(self):
+        (self.root / 'scripts').mkdir()
+        (self.root / 'scripts/automatic-panel-updates.py').write_text('# fixture')
+        with patch.object(automatic.Path, 'home', return_value=self.root), patch.object(automatic.subprocess, 'run') as run:
+            automatic.configure(self.root, True, 'testing')
+        timer = (self.root / '.config/systemd/user/bifrost-panel-update.timer').read_text()
+        self.assertIn('Persistent=false', timer)
+        self.assertIn('04:00:00', timer)
+        self.assertEqual(run.call_args_list[-1].args[0], ['systemctl', '--user', 'enable', '--now', 'bifrost-panel-update.timer'])
+
+    def test_failed_timer_setup_revokes_saved_permission(self):
+        (self.root / 'scripts').mkdir()
+        (self.root / 'scripts/automatic-panel-updates.py').write_text('# fixture')
+        with patch.object(automatic.Path, 'home', return_value=self.root), patch.object(automatic.subprocess, 'run', side_effect=subprocess.CalledProcessError(1, 'systemctl')):
+            with self.assertRaises(subprocess.CalledProcessError): automatic.configure(self.root, True, 'testing')
+        self.assertFalse(json.loads((self.root / 'automatic-update-policy.json').read_text())['enabled'])
+
 
 if __name__ == '__main__': unittest.main()

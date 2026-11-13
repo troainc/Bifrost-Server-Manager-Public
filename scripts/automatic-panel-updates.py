@@ -165,7 +165,8 @@ def check(root, apply=False):
 
 
 def configure(root, enabled, channel):
-    environment(root)
+    values = environment(root)
+    if enabled: version(values.get('BIFROST_VERSION', ''), channel)
     units = Path.home() / '.config/systemd/user'
     units.mkdir(parents=True, exist_ok=True)
     protected(units, True)
@@ -181,8 +182,13 @@ def configure(root, enabled, channel):
         write_private(units / f'{UNIT}.timer', timer.encode())
     # Consent defaults off and belongs to this machine, never the licensing master.
     write_private(root / 'automatic-update-policy.json', (json.dumps({'enabled': enabled, 'channel': channel}) + '\n').encode())
-    subprocess.run(['systemctl', '--user', 'daemon-reload'], check=True, timeout=30)
-    subprocess.run(['systemctl', '--user', 'enable' if enabled else 'disable', '--now', f'{UNIT}.timer'], check=True, timeout=30)
+    try:
+        subprocess.run(['systemctl', '--user', 'daemon-reload'], check=True, timeout=30)
+        subprocess.run(['systemctl', '--user', 'enable' if enabled else 'disable', '--now', f'{UNIT}.timer'], check=True, timeout=30)
+    except subprocess.SubprocessError:
+        # A timer setup failure must not leave silent permission to update later.
+        write_private(root / 'automatic-update-policy.json', (json.dumps({'enabled': False, 'channel': channel}) + '\n').encode())
+        raise
     record(root, 'enabled' if enabled else 'disabled', channel=channel)
 
 
