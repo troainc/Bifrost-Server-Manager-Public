@@ -25,6 +25,7 @@ mkdir -p "$output/package"
 cp -a deployment/. "$output/package/"
 mkdir -p "$output/package/scripts"
 cp scripts/update-recovery.py "$output/package/scripts/update-recovery.py"
+cp scripts/automatic-panel-updates.py "$output/package/scripts/automatic-panel-updates.py"
 cp scripts/collect-prerequisite-evidence.py "$output/package/scripts/collect-prerequisite-evidence.py"
 mkdir -m 0755 "$output/package/Docs"
 for document in Supported-Release-Scope Recovery-and-Key-Rotation Standalone-Installation Prerequisite-Security-Review Manual-Acceptance-Checklist; do

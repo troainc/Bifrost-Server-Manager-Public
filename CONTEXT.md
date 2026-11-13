@@ -1,3 +1,7 @@
+## 2026-11-12 — Production preparation and scheduled panel update candidate
+
+The owner requests the latest local source first, production preparation for both editions, opt-in automatic updates, automatic audit context without user-entered reasons, and a strict UI/UX cleanup. All tests, builds, previews, containers and Ubuntu/WSL workloads are prohibited on the owner's PC. Run automated checks on GitHub-hosted runners, followed separately by deployed master and designated TROA server acceptance. The owner explicitly approved candidate branch pushes and draft PRs only; no merge, release publication or deployment is approved by that answer. Preserve all existing data, accounts, keys, enrollment, games and immutable releases. See `Docs/Automatic-Panel-Updates.md` for the candidate, execution boundary and remaining acceptance.
+
 ## 2026-10-23 - Test 38 Node security release
 
 Test 38 pins official Node 24.22.1 Linux x64 for fresh automatic Hosts; manual Hosts require at least 24.22.1 in 24.x. Matched signed Controller/web/Host assets, exact image scans, disposable preserved-state checks and anonymous downloads pass. Test 37 remains immutable. The main-site tester gate offers install and panel-only update commands. Real installation and game acceptance remain open. See Docs/Test-38-Node-Security-2026-10-23.md.

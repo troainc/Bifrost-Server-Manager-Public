@@ -1,3 +1,5 @@
+> November 12 source candidate: [opt-in scheduled panel updates](Docs/Automatic-Panel-Updates.md). Testing runs remotely; this is not a published release or enabled setting. Existing Test 38 assets remain immutable.
+
 > Signed Test 38 Node security testing assets and gated main-site commands are published and verified. Real installation and game acceptance remain open; see [release evidence and remaining checks](Docs/Test-38-Node-Security-2026-10-23.md).
 
 > Test 37 public package and main-site Debian/Ubuntu install/update commands are live and verified. [Delivery evidence and manual acceptance](Docs/Test-37-Rollout-2026-10-22.md). Panel updates preserve data and leave enrolled Hosts/games running; no real customer update was performed.

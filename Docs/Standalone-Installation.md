@@ -1,4 +1,4 @@
-# Linux installation and first game server — local candidate Test 35
+# Linux installation and first game server â€” local candidate Test 35
 
 The public administrator bootstrap is for Debian/Ubuntu x86_64 with systemd. The panel runs as `bifrost` in rootless Docker; games run as the separate `bifrost-games` account in rootless Podman. Administrator authentication prepares OS prerequisites once; neither application nor Agent runs as root. This candidate is unpublished. After approval/publication, use its exact checksum-pinned command; existing website commands refer to earlier prereleases.
 
@@ -7,8 +7,8 @@ The public administrator bootstrap is for Debian/Ubuntu x86_64 with systemd. The
 1. Install with `--instance`. Keep the terminal open through **Local Host prepared**. Default panel HTTPS is `https://YOUR-HOST:8443/install`. Verify the server's generated public certificate before trusting it in a browser.
 2. Select **Run independently**. Create the first administrator, configure MFA and save recovery codes. Review the platform terms/disclosure, then activate the free license. In an installation-test build, separately authorize the disclosed testing check-ins when requested; analytics remains optional and off.
 3. At **Connect your hosts**, approve the isolated local Host and the bundled signed game catalog, then select **Set up local Host**. No pairing code, external master membership or copied Host command is needed for this prepared standalone path.
-4. Wait for **Local Host online · reviewed catalog approved**. This requires the real Agent's authenticated heartbeat; an enrollment request alone is not readiness. If you entered the panel early, the same completion step remains under **Hosts → Local Host setup guide**. On an Instance, **Add host** also opens this automatic setup/status; manual pairing is offered only when no automatic Host was prepared.
-5. Open **Blueprints → Ready to install → Choose a host and install**, or **Game servers → Create instance**. Choose a reviewed recipe, online compatible Host, resources and game ports. Review that game's terms, preview placement, provide a meaningful creation reason of at least 8 characters, confirm and create it. Draft/candidate definitions cannot be accepted into an executable catalog from the browser.
+4. Wait for **Local Host online Â· reviewed catalog approved**. This requires the real Agent's authenticated heartbeat; an enrollment request alone is not readiness. If you entered the panel early, the same completion step remains under **Hosts â†’ Local Host setup guide**. On an Instance, **Add host** also opens this automatic setup/status; manual pairing is offered only when no automatic Host was prepared.
+5. Open **Blueprints â†’ Ready to install â†’ Choose a host and install**, or **Game servers â†’ Create instance**. Choose a reviewed recipe, online compatible Host, resources and game ports. Review that game's terms, preview placement, confirm and create it. The action is recorded automatically in the audit log. Draft/candidate definitions cannot be accepted into an executable catalog from the browser.
 6. Follow the installation job until readiness, then test the player connection. An online panel/Host or startup marker alone does not prove a player can join.
 
 ## Capacity and player access
@@ -19,7 +19,7 @@ Game ports are operator choices. Torch defaults remain UDP 27016 (game) and 8766
 
 ## Connecting to a separate Controller
 
-Choose **Connect to a Controller** only if a fleet administrator supplies that panel's HTTPS address. Verify its Node ID/signing identity, activate this Instance's own license, then use a fresh one-time code from that Controller's **Hosts → Add host**. The parent administrator approves the connection request. The prepared worker completes the signed join and starts its Agent after approval. Create games in the parent panel after the heartbeat. The TROA licensing-service URL is not the fleet pairing address.
+Choose **Connect to a Controller** only if a fleet administrator supplies that panel's HTTPS address. Verify its Node ID/signing identity, activate this Instance's own license, then use a fresh one-time code from that Controller's **Hosts â†’ Add host**. The parent administrator approves the connection request. The prepared worker completes the signed join and starts its Agent after approval. Create games in the parent panel after the heartbeat. The TROA licensing-service URL is not the fleet pairing address.
 
 ## Manual / remote Host-only installation
 

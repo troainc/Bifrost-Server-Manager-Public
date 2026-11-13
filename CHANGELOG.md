@@ -1,3 +1,5 @@
+> November 12 source candidate: [opt-in scheduled panel updates](Docs/Automatic-Panel-Updates.md). Testing runs remotely; this is not a published release or enabled setting. Existing Test 38 assets remain immutable.
+
 ## 2026-10-23 - Test 38 Node security testing release
 
 - Pin fresh automatic Host setup to official Node 24.22.1 Linux x64 with a verified checksum; require the same patch floor for manual Hosts.

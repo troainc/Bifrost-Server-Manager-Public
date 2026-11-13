@@ -1,3 +1,7 @@
+## 2026-11-12 — Production preparation and scheduled panel update candidate
+
+The owner requests the latest local source first, production preparation for both editions, opt-in automatic updates, automatic audit context without user-entered reasons, and a strict UI/UX cleanup. All tests, builds, previews, containers and Ubuntu/WSL workloads are prohibited on the owner's PC. Run automated checks on GitHub-hosted runners, followed separately by deployed master and designated TROA server acceptance. The owner explicitly approved candidate branch pushes and draft PRs only; no merge, release publication or deployment is approved by that answer. Preserve all existing data, accounts, keys, enrollment, games and immutable releases. See `Docs/Automatic-Panel-Updates.md` for the candidate, execution boundary and remaining acceptance.
+
 ## 2026-10-23 - Test 38 public Node security release
 
 The signed Test 38 customer release and all 28 assets are published and anonymously verified. The main-site tester gate serves the matched install and panel-only update commands. A panel-only update does not patch an enrolled Host Node runtime or game. Preserve existing data, credentials, keys, volumes, enrollment and worlds; never use a wipe as an update. Remote update controls require explicit customer trust/approval and a narrow local updater. See Docs/Test-38-Node-Security-2026-10-23.md.
