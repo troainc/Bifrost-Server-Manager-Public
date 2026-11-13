@@ -16,7 +16,7 @@ class UpdateRecovery(unittest.TestCase):
     def test_checkpoint_copy_supports_old_python_and_refuses_unsafe_entries(self):
         for entry in ['configuration/settings.json','../outside','configuration/link','checkpoint.tar']:
             with self.subTest(entry=entry),tempfile.TemporaryDirectory() as temp:
-                root=pathlib.Path(temp);checkpoint=root/'update-backups'/'safe';checkpoint.mkdir(parents=True,mode=0o700)
+                root=pathlib.Path(temp);(root/'update-backups').mkdir(mode=0o700);checkpoint=root/'update-backups'/'safe';checkpoint.mkdir(mode=0o700)
                 archive=checkpoint/'checkpoint.enc'
                 with tarfile.open(archive,'w') as tar:
                     data=b'retained';member=tarfile.TarInfo('database.dump');member.size=len(data);tar.addfile(member,io.BytesIO(data))
