@@ -264,7 +264,19 @@ def checkpoint_archive(root,state,stage):
             name=pathlib.PurePosixPath(member.name);total+=member.size
             if name.is_absolute() or '..'in name.parts or member.name.rstrip('/')!=str(name) or member.name in seen or len(seen)>=20000 or not(member.isfile()or member.isdir()) or total>100*1024**3:raise ValueError('Unsafe recovery checkpoint.')
             seen.add(member.name)
-        tar.extractall(stage,filter='data')
+        # Debian 12 can ship Python without tarfile's extraction filters.
+        # Only validated directories/regular files are copied into this private
+        # stage; do not restore archive ownership, modes, links or special files.
+        for member in tar.getmembers():
+            target=stage.joinpath(*pathlib.PurePosixPath(member.name).parts)
+            if member.isdir():
+                target.mkdir(mode=0o700,parents=True,exist_ok=True)
+            else:
+                target.parent.mkdir(mode=0o700,parents=True,exist_ok=True)
+                source=tar.extractfile(member)
+                if source is None:raise ValueError('Missing recovery checkpoint file.')
+                with source,os.fdopen(os.open(target,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600),'wb') as output:
+                    shutil.copyfileobj(source,output,1024*1024)
     regular(stage/'database.dump',True)
 
 def key_inventory(folder):
