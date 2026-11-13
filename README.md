@@ -1,6 +1,6 @@
 > Test 40 is published and its four TROA installation/update commands are verified live. [Current delivery and acceptance status](Docs/Test-40-Delivery-2026-11-13.md).
 
-> Test 40 UI redesign: [customer design audit and verification record](Docs/Operator-UI-Audit-2026-11-13.md). Customer design is rerated 7.9/10 after hosted validation. The redesign is delivered in Test 40; owner manual acceptance remains separate.
+> The earlier 7.9/10 UI rating is withdrawn. [Comprehensive customer interface review](Docs/Deep-Interface-Audit-2026-11-13.md) records the 4.4/10 baseline and the shared redesign candidate. The last fully checked candidate is rated 6.9/10; newer corrections still need validation. Published Test 40 is unchanged.
 
 > [Historical Test 39 delivery and acceptance status](Docs/Test-39-Delivery-2026-11-13.md).
 

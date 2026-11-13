@@ -1,0 +1,29 @@
+{
+  "sourceCommit": "e79c3d394d180bac43cedc2838e59d19099ad6f2",
+  "latestExecutableCandidate": "4a2045a91aab419216325aae9473cfdbd92dd29f",
+  "latestCandidateVerified": false,
+  "edition": "customer",
+  "scope": "Synthetic compiled customer fixtures; actual owner manual acceptance remains pending. Newer source changes differ from these images.",
+  "screenshots": [
+    {
+      "file": "backup-records-390.png",
+      "visuallyReviewed": true,
+      "manualAcceptance": false
+    },
+    {
+      "file": "operations-1045.png",
+      "visuallyReviewed": true,
+      "manualAcceptance": false
+    }
+  ],
+  "capturedCombinations": 276,
+  "operationalChecks": 150,
+  "syntheticWorkflows": 6,
+  "automatedAccessibilityStates": 69,
+  "reportedViolations": 0,
+  "incompleteCriteria": [
+    "aria-prohibited-attr",
+    "color-contrast",
+    "label-content-name-mismatch"
+  ]
+}

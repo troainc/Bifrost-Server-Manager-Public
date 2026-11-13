@@ -1,5 +1,7 @@
 # Customer interface audit — November 13, 2026
 
+> Historical record: its 7.9/10 UI rating is withdrawn. Use [the comprehensive customer review](Deep-Interface-Audit-2026-11-13.md). Earlier automated passes did not establish consistent visual quality.
+
 This record concerns the shared-interface candidate now delivered in [Test 40](Test-40-Delivery-2026-11-13.md). The earlier Test 39 download remains unchanged. The public repository contains distribution tooling and compiled release assets; private application source and owner licensing authority are not copied here.
 
 The baseline customer UI design judgment is **5.3/10**. The existing build/security checks establish useful engineering evidence but do not make a cluttered interface polished. The customer review uses shared-source analysis and the separately compiled customer edition on GitHub-hosted runners. Read-only deployed composition inspection informs shared layout findings; it is not customer server acceptance.
