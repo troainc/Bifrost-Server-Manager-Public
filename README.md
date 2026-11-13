@@ -1,6 +1,8 @@
-> Unreleased UI redesign: [customer design audit and verification record](Docs/Operator-UI-Audit-2026-11-13.md). Customer design is rerated 7.9/10 after hosted validation. The current published Test 39 download is unchanged.
+> Test 40 is published and its four TROA installation/update commands are verified live. [Current delivery and acceptance status](Docs/Test-40-Delivery-2026-11-13.md).
 
-> [Current Test 39 delivery and acceptance status](Docs/Test-39-Delivery-2026-11-13.md).
+> Test 40 UI redesign: [customer design audit and verification record](Docs/Operator-UI-Audit-2026-11-13.md). Customer design is rerated 7.9/10 after hosted validation. The redesign is delivered in Test 40; owner manual acceptance remains separate.
+
+> [Historical Test 39 delivery and acceptance status](Docs/Test-39-Delivery-2026-11-13.md).
 
 ## 2026-11-13 — Signed Test 39 published and anonymously verified
 
@@ -33,7 +35,7 @@ Bifrost manages customer Controllers, explicitly approved Hosts and game instanc
 
 ## Current status
 
-`v0.1.0-installtest.34` is published for owner-authorized controlled installation testing. Fresh setup offers the separately signed maintained prerequisite baseline only after explicit tester consent; independent review and real target-server acceptance remain pending. Its source adds whole-release signature verification and encrypted database/configuration/key checkpoints with recovery into a new database. Existing production/customer data and earlier release assets remain preserved. No candidate install command is advertised until publication and independent approval are complete.
+[Test 40](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.40) is the current owner-authorized controlled testing prerelease. It includes the operator UI redesign, signed in-place panel updates and retained encrypted recovery safeguards. [Exact delivery/download verification and manual acceptance](Docs/Test-40-Delivery-2026-11-13.md) remain separate. Use the verified Debian/Ubuntu fresh-install or panel-only update instructions on the [TROA tester page](https://therealmsofasgard.com/gaming-hub/bifrost-server-manager#testing-installation). Existing data and prior release assets are preserved; real target/game/player and full update/recovery acceptance remain open.
 
 The historical published prerelease is [Test 33](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.33). Its earlier acceptance and signature limitations remain historical; it is not evidence for this candidate. [Earlier delivery records](Docs/History/README-before-release-readiness-2026-10-21.md) are retained.
 
