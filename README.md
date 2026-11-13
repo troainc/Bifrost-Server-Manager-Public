@@ -1,6 +1,7 @@
-> Test 40 is published and its four TROA installation/update commands are verified live. [Current delivery and acceptance status](Docs/Test-40-Delivery-2026-11-13.md).
+> Current review candidate: [customer navigation, search and spacing revision](Docs/Interface-Flow-Redesign-2026-11-13.md). The owner rejected 6.9/10; newer source remains unbuilt, untested and unrendered. This record publishes no new application build.
 
-> Test 40 UI redesign: [customer design audit and verification record](Docs/Operator-UI-Audit-2026-11-13.md). Customer design is rerated 7.9/10 after hosted validation. The redesign is delivered in Test 40; owner manual acceptance remains separate.
+> Test 41 verification is complete and owner-authorized delivery is proceeding. [Current delivery](Docs/Test-41-Delivery-2026-11-13.md) and [reviewed interface ratings and manual acceptance](Docs/Interface-Production-Review-2026-11-13.md) distinguish automated evidence from real-target acceptance.
+
 
 > [Historical Test 39 delivery and acceptance status](Docs/Test-39-Delivery-2026-11-13.md).
 

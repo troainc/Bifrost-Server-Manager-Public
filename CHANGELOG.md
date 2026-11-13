@@ -1,3 +1,21 @@
+## 2026-11-13 — Verified Test 41 navigation, search and spacing
+
+Both editions gain task-based navigation, responsive section selectors, consistent search/control geometry and flatter forms/inventories; master gains frozen TROA identity/favicon/default theme. Final remote checks and rendered review are recorded in Docs/Test-41-Delivery-2026-11-13.md and Docs/Interface-Production-Review-2026-11-13.md. Debian checkpoint recovery supports Python without extraction filters using validated private file copies. Automatic audit context needs no user-entered reasons. Manual target acceptance remains open; no paid service or PC workload.
+
+## Unreleased — customer navigation/search review continuation
+
+- Record shared-source candidate 2f2f719b9a87e3fed8958b3a44245dded096b98e: joined search control, explicit results, task navigation, consistent local sections, spacing and marked-draft protection.
+- Keep customer Bifrost/Aurora separate from the new master TROA Frost identity.
+- No higher rating or new passing evidence; verification is pending under no-payment/no-PC constraints.
+- Documentation only. Existing public application assets, installation/update commands and tooling are retained.
+
+## Unreleased — customer interface audit record
+
+- Withdraw the earlier 7.9/10 visual rating and record the comprehensive shared-interface review.
+- Separate captured geometry, actual screenshot review, synthetic workflows and owner target acceptance.
+- Retain selected synthetic evidence and a conservative 6.9/10 rating for the last checked revision; latest source/rendered verification remains pending under the owner no-payment/no-PC constraints.
+- Documentation only; published Test 40, installer/updater behavior and website commands are unchanged.
+
 ## 2026-11-13 — Signed Test 40 and TROA instructions verified live
 
 Owner-authorized PR26 is merged as e8561996c04ba03d11cf642f1f827e1926b0076b. Signed testing release v0.1.0-installtest.40 (444602042) is published; all 25 anonymous HTTPS assets match exact sizes/SHA-256 and both bootstrap verifiers pass. Frozen application 96dafbca874da495bf9f51aaa48e14735afe97f3/public tooling 514950478f257475eb2635b60976e80431d2185f pass all matched hosted gates. Installer SHA-256 1c0c40ae1d1061d3b16195b3b7f53b1b02aedd320ce2f2f1fc849aae12fb5b36. TROA website PR130/5a8faed deployed; 488 hosted units/build/types and live four-command/password/no-store/no-wipe checks pass. See Docs/Test-40-Delivery-2026-11-13.md. Existing customer state, Agents, games, timers and every prior asset remain unchanged. Manual target/update-interruption/game/assistive-technology/soak acceptance belongs to owner; no stable promotion. No PC test/build/container/WSL work; offline key retained, only small manifest signed, no large local archive. Final docs use [skip ci] [skip cd]. This supersedes earlier candidate delivery holds.

@@ -3,6 +3,8 @@ import json
 import os
 import pathlib
 import tempfile
+import tarfile
+import io
 import unittest
 from unittest import mock
 
@@ -11,6 +13,28 @@ spec=importlib.util.spec_from_file_location('recovery',ROOT/'scripts/update-reco
 
 @unittest.skipUnless(os.name=='posix','POSIX service ownership and OpenSSL required')
 class UpdateRecovery(unittest.TestCase):
+    def test_checkpoint_copy_supports_old_python_and_refuses_unsafe_entries(self):
+        for entry in ['configuration/settings.json','../outside','configuration/link','checkpoint.tar']:
+            with self.subTest(entry=entry),tempfile.TemporaryDirectory() as temp:
+                root=pathlib.Path(temp);(root/'update-backups').mkdir(mode=0o700);checkpoint=root/'update-backups'/'safe';checkpoint.mkdir(mode=0o700)
+                archive=checkpoint/'checkpoint.enc'
+                with tarfile.open(archive,'w') as tar:
+                    data=b'retained';member=tarfile.TarInfo('database.dump');member.size=len(data);tar.addfile(member,io.BytesIO(data))
+                    member=tarfile.TarInfo(entry)
+                    if entry.endswith('/link'):member.type=tarfile.SYMTYPE;member.linkname='/outside'
+                    else:member.size=len(data)
+                    tar.addfile(member,None if member.issym() else io.BytesIO(data))
+                archive.chmod(0o600);stage=root/'stage';stage.mkdir(mode=0o700)
+                with mock.patch.object(recovery,'recovery_key',return_value=b''),mock.patch.object(recovery,'unseal',side_effect=lambda src,dst,key:recovery.shutil.copyfile(src,dst)),mock.patch.object(tarfile.TarFile,'extractall',side_effect=AssertionError('Unfiltered archive extraction must not run')):
+                    if entry=='configuration/settings.json':
+                        recovery.checkpoint_archive(root,{'id':'safe','archiveSha256':recovery.digest(archive)},stage)
+                        self.assertEqual((stage/entry).read_bytes(),b'retained')
+                        self.assertEqual((stage/entry).stat().st_mode&0o777,0o600)
+                    else:
+                        with self.assertRaises((ValueError,FileExistsError)):
+                            recovery.checkpoint_archive(root,{'id':'safe','archiveSha256':recovery.digest(archive)},stage)
+                self.assertFalse((root/'outside').exists())
+
     def test_authenticated_envelope_rejects_changed_bytes_wrong_keys_and_missing_escrow(self):
         with tempfile.TemporaryDirectory()as temp:
             root=pathlib.Path(temp);(root/'secrets').mkdir(mode=0o700)
