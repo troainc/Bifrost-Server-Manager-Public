@@ -1,3 +1,5 @@
+> Unreleased UI redesign: [customer design audit and verification record](Docs/Operator-UI-Audit-2026-11-13.md). Customer design is rerated 7.9/10 after hosted validation. The current published Test 39 download is unchanged.
+
 > [Current Test 39 delivery and acceptance status](Docs/Test-39-Delivery-2026-11-13.md).
 
 ## 2026-11-13 — Signed Test 39 published and anonymously verified

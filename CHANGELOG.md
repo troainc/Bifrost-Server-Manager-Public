@@ -1,3 +1,15 @@
+## 2026-11-13 — Test 40 delivery authorized
+
+Owner explicitly authorizes merging both UI review PRs, deploying the master, publishing the updated public build and updating TROA Debian/Ubuntu fresh-install and panel-only update commands for manual acceptance. This supersedes the UI candidate delivery hold. Prepare a new immutable signed Test 40; retain Test 39 and all older assets. Change only the matched release version in installer/updater/environment metadata. Preserve automatic-update opt-in, signatures, data/checkpoints, accounts/MFA, keys, enrollment, Agents and games. All tests/builds remain on hosted runners; owner manual target acceptance follows publication. Record exact evidence and delivery in Docs/Test-40-Delivery-2026-11-13.md.
+
+## 2026-11-13 — Customer UI audit finalized
+
+Customer design score improves from 5.3 to 7.9/10 after the shared-source redesign. Frozen application 914a5e1b8f87ec0d6093ea91a5b2071e687df86e passes all six hosted application workflows, including compiled-only customer packaging/owner isolation/recovery, 150 UI layout checks and 68 accessibility states with zero automated violations. Incomplete criteria and actual target acceptance remain manual. Docs/Operator-UI-Audit-2026-11-13.md records category ratings, source/evidence and a synthetic screenshot. This public change is documentation only; no private application/issuer source, installer/updater changes, Test 39 replacement, publication, deployed instance or timer change. No tests/builds/previews/containers/WSL ran on the owner's PC. Documentation closure uses [skip ci] [skip cd] because executable tooling is unchanged.
+
+## 2026-11-13 — Customer UI redesign review candidate
+
+Owner requests a harsh UI/UX audit, substantial changes and rerating, then will perform manual acceptance. The shared application candidate is built separately for master/customer on GitHub-hosted runners; this public repository receives its customer-facing audit record only. Private application/issuer source and credentials remain excluded. See Docs/Operator-UI-Audit-2026-11-13.md. Current Test 39 assets, installation commands and existing server state remain unchanged. No local testing/build/preview/container/WSL workload. Final hosted evidence and rerating are pending; candidate pushes/draft PRs are authorized, with no release promotion implied.
+
 ## 2026-11-13 — Signed Test 39 published and anonymously verified
 
 Owner authorized the matched public testing release and website install/update instructions. PR 25 merged into main as 69b3f1e58622a037dea1cb10eac0ce121be23546. Immutable signed v0.1.0-installtest.39 (release 444484964) is published; all 25 assets anonymously downloaded over HTTPS match exact signed size/SHA-256. Frozen application source is 5d10c56212dcd00ef01d6be7464fd8018242b738, packaging source 5813fc986226135d7e5629c82f7ee9c2c30767c2. Installer SHA-256: 64c6b79b37cac1c55ff87036184a607e8f7958e1c54ba2864d8a5bcab83a28c1. Both exact offline bootstrap verifiers pass before publication. Prior releases stay immutable. Publication does not apply an update to any existing server.
