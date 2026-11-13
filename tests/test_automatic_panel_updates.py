@@ -194,6 +194,33 @@ class AutomaticUpdates(unittest.TestCase):
             with self.assertRaises(subprocess.CalledProcessError): automatic.configure(self.root, True, 'testing')
         self.assertFalse(json.loads((self.root / 'automatic-update-policy.json').read_text())['enabled'])
 
+    def test_new_unit_directories_remain_private_under_group_writable_umask(self):
+        (self.root / 'scripts').mkdir()
+        (self.root / 'scripts/automatic-panel-updates.py').write_text('# fixture')
+        previous = os.umask(0o002)
+        try:
+            with patch.object(automatic.Path, 'home', return_value=self.root), patch.object(automatic.subprocess, 'run'):
+                automatic.configure(self.root, True, 'testing')
+            for relative in ('.config', '.config/systemd', '.config/systemd/user'):
+                self.assertEqual((self.root / relative).stat().st_mode & 0o777, 0o700)
+        finally:
+            os.umask(previous)
+
+    def test_unsafe_existing_unit_parent_is_refused_without_chmod_or_consent_change(self):
+        parent = self.root / '.config'
+        parent.mkdir()
+        parent.chmod(0o777)
+        with patch.object(automatic.Path, 'home', return_value=self.root):
+            with self.assertRaises(ValueError): automatic.configure(self.root, True, 'testing')
+        self.assertEqual(parent.stat().st_mode & 0o777, 0o777)
+        self.assertEqual(json.loads((self.root / 'automatic-update-policy.json').read_text()), self.policy)
+
+    def test_disable_revokes_consent_when_the_installed_driver_is_missing(self):
+        with patch.object(automatic.Path, 'home', return_value=self.root), patch.object(automatic.subprocess, 'run') as run:
+            automatic.configure(self.root, False, 'testing')
+        self.assertFalse(json.loads((self.root / 'automatic-update-policy.json').read_text())['enabled'])
+        self.assertEqual(run.call_args_list[-1].args[0], ['systemctl', '--user', 'disable', '--now', 'bifrost-panel-update.timer'])
+
     def test_failure_diagnostics_are_actionable_and_do_not_echo_untrusted_text(self):
         self.assertEqual(automatic.failure_code(ValueError('Insufficient free storage for staged update and recovery.')), 'storage-low')
         self.assertEqual(automatic.failure_code(subprocess.CalledProcessError(1, ['/bin/bash', '/private/path'])), 'update-apply-failed')

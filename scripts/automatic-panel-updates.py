@@ -199,10 +199,12 @@ def configure(root, enabled, channel):
     values = environment(root)
     if enabled: version(values.get('BIFROST_VERSION', ''), channel)
     units = Path.home() / '.config/systemd/user'
-    units.mkdir(parents=True, exist_ok=True)
-    protected(units, True)
-    driver = protected(root / 'scripts/automatic-panel-updates.py')
+    protected(Path.home(), True)
+    for directory in (Path.home() / '.config', units.parent, units):
+        directory.mkdir(mode=0o700, exist_ok=True)
+        protected(directory, True)
     if enabled:
+        driver = protected(root / 'scripts/automatic-panel-updates.py')
         # Quote systemd arguments, which are not shell expressions.
         def quote(value):
             if any(ord(c) < 32 for c in str(value)): raise ValueError('Unsafe systemd path.')
