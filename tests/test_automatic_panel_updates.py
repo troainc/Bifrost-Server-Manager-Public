@@ -110,6 +110,26 @@ class AutomaticUpdates(unittest.TestCase):
         self.assets['release-manifest.sig'] = b'x' * 64
         with self.assertRaises(subprocess.CalledProcessError): automatic.check(self.root)
 
+    def test_breaking_release_family_requires_review_before_asset_downloads(self):
+        for target in ('v0.2.0-installtest.1', 'v1.0.0-installtest.1'):
+            with self.subTest(target=target):
+                self.release['tag_name'] = target
+                automatic.fetch.reset_mock()
+                with self.assertRaisesRegex(ValueError, 'release family'):
+                    automatic.check(self.root, apply=True)
+                self.assertEqual(automatic.fetch.call_count, 1, 'only release discovery is permitted')
+                self.assertIn(self.installed, (self.root / '.env').read_text())
+
+    def test_new_family_does_not_hide_a_compatible_signed_update(self):
+        fetch = self.fetch
+        def mixed(url, limit):
+            if '/releases?' in url:
+                return json.dumps([self.release, {**self.release, 'tag_name': 'v1.0.0-installtest.1'}]).encode()
+            return fetch(url, limit)
+        with patch.object(automatic, 'fetch', side_effect=mixed):
+            automatic.check(self.root)
+        self.assertEqual(json.loads((self.root / 'automatic-update-status.json').read_text())['target'], self.target)
+
     def test_untrusted_signer_rejected(self):
         with patch.object(automatic, 'SIGNER', 'f' * 64):
             with self.assertRaises(ValueError): automatic.check(self.root)

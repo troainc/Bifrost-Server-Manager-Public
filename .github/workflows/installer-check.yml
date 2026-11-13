@@ -57,3 +57,33 @@ jobs:
           sudo useradd --no-create-home --uid "$game_id" --gid "$game_id" bifrost-games
       - name: Verify exact resume, retained mismatch and private-key/link refusal
         run: sudo env BIFROST_INSTALLER_DISPOSABLE_ROOT=1 python3 -m unittest discover -s tests -p test_bootstrap_configuration.py -v
+  systemd-updates:
+    name: Real opt-in user timer and signed fixture execution
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+      - name: Prepare only the disposable hosted service account
+        run: |
+          test "$GITHUB_ACTIONS" = true && test "$RUNNER_ENVIRONMENT" = github-hosted
+          test "$(cat /proc/1/comm)" = systemd
+          ! getent passwd bifrost
+          sudo useradd --create-home --shell /bin/bash bifrost
+          fixture_uid=$(id -u bifrost)
+          sudo loginctl enable-linger bifrost
+          sudo systemctl start "user@$fixture_uid.service"
+          sudo install -d -m 0755 -o bifrost -g bifrost /home/bifrost/fixture-source/scripts /home/bifrost/fixture-source/tests /home/bifrost/evidence
+          sudo install -m 0644 -o bifrost -g bifrost scripts/automatic-panel-updates.py scripts/release-manifest.py /home/bifrost/fixture-source/scripts/
+          sudo install -m 0644 -o bifrost -g bifrost tests/automatic-systemd-integration.py /home/bifrost/fixture-source/tests/
+      - name: Verify actual timer, confinement, concurrent lock and interrupted-journal behavior
+        run: |
+          fixture_uid=$(id -u bifrost)
+          cleanup() { sudo systemctl stop "user@$fixture_uid.service"; }
+          trap cleanup EXIT
+          sudo -u bifrost env HOME=/home/bifrost XDG_RUNTIME_DIR="/run/user/$fixture_uid" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$fixture_uid/bus" GITHUB_ACTIONS=true RUNNER_ENVIRONMENT=github-hosted BIFROST_SYSTEMD_OUTPUT=/home/bifrost/evidence/results.json python3 -B /home/bifrost/fixture-source/tests/automatic-systemd-integration.py
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        if: always()
+        with:
+          name: real-user-systemd-update-evidence
+          path: /home/bifrost/evidence/results.json
+          retention-days: 3

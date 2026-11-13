@@ -36,6 +36,7 @@ def failure_code(error):
         'Review and escrow retained update checkpoints before another automatic update.': 'checkpoint-review-required',
         'Insufficient free storage for staged update and recovery.': 'storage-low',
         'Update policy or installed version changed; update refused.': 'local-state-changed',
+        'A newer release family requires explicit manual upgrade review.': 'version-family-review-required',
     }
     if str(error) in known: return known[str(error)]
     if isinstance(error, subprocess.TimeoutExpired): return 'host-command-timeout'
@@ -138,6 +139,13 @@ def check(root, apply=False):
     if not candidates:
         record(root, 'current', installed=installed, channel=channel)
         return
+    # A stable major upgrade (or a 0.x minor upgrade) can break compatibility.
+    # Consent to routine updates must not silently authorize that transition.
+    family = lambda value: value[:1] if value[0] else value[:2]
+    compatible = [item for item in candidates if family(item[0]) == family(installed_order)]
+    if not compatible:
+        raise ValueError('A newer release family requires explicit manual upgrade review.')
+    candidates = compatible
     target = max(candidates)[1]
     base = f'https://github.com/{REPOSITORY}/releases/download/{target}'
     with tempfile.TemporaryDirectory(prefix='.bifrost-panel-update-', dir=root) as temporary:
