@@ -46,3 +46,5 @@ GitHub refused every job in the intervening revision before runner startup becau
 This public branch changes documentation and static review evidence only. No private application/issuer source, installer/updater changes, new release assets, website command changes, installed update, account/MFA/secret/enrollment changes, Host/Agent/game action or automatic-update timer activation. Immutable Test 40 and every older release/data/recovery path remain retained.
 
 No unrestricted production sign-off is claimed. Final automated and rendered verification, actual Debian/Ubuntu/update-interruption/recovery/game/player and assistive-technology acceptance remain outstanding.
+
+Draft customer audit record: [PR27](https://github.com/troainc/Bifrost-Server-Manager-Public/pull/27).
