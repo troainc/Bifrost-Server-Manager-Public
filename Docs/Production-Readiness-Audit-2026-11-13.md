@@ -1,5 +1,7 @@
 # Public distribution production-readiness audit — November 13, 2026
 
+> Delivery follow-up: signed Test 39 is now published and all 25 assets are anonymously verified. See [current delivery evidence](Test-39-Delivery-2026-11-13.md). The candidate/unpublished statements below record the earlier frozen audit; no real customer update or game acceptance is implied.
+
 ## Verdict and scoring
 
 **Engineering readiness: 8/10 as a release candidate with matched application checks passing. Operational acceptance is pending.** Scores are strict judgments from source and hosted evidence, not probabilities, a security certification, or a promise that every game works. Supported released functions are assessed separately from gated/optional features. A published catalog name does not establish an installable or accepted game.
