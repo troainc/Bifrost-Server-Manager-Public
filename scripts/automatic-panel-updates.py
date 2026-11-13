@@ -23,6 +23,29 @@ ALLOWED_HOSTS = {'api.github.com', 'github.com', 'release-assets.githubuserconte
 UNIT = 'bifrost-panel-update'
 
 
+def failure_code(error):
+    """Bounded operator diagnostics; never echo paths, subprocess output or data."""
+    known = {
+        'Release channel or version is unsupported.': 'channel-mismatch',
+        'Automatic updates are not enabled by the local operator.': 'not-enabled',
+        'An interrupted update requires explicit local recovery before scheduling can continue.': 'recovery-required',
+        'Cross-runtime database updates require separate migration review.': 'runtime-migration-required',
+        'Untrusted release signer.': 'publisher-mismatch',
+        'Release verifier does not match its signed identity.': 'artifact-mismatch',
+        'This release has no verified unattended updater; manual update required.': 'manual-update-required',
+        'Review and escrow retained update checkpoints before another automatic update.': 'checkpoint-review-required',
+        'Insufficient free storage for staged update and recovery.': 'storage-low',
+        'Update policy or installed version changed; update refused.': 'local-state-changed',
+    }
+    if str(error) in known: return known[str(error)]
+    if isinstance(error, subprocess.TimeoutExpired): return 'host-command-timeout'
+    if isinstance(error, subprocess.CalledProcessError):
+        command = error.cmd[0] if isinstance(error.cmd, (list, tuple)) else ''
+        return {'/bin/bash': 'update-apply-failed', 'systemctl': 'timer-setup-failed', 'openssl': 'signature-check-failed'}.get(command, 'host-command-failed')
+    if isinstance(error, OSError): return 'host-prerequisite-or-path-unavailable'
+    return 'release-verification-or-local-state-invalid'
+
+
 def version(value, channel):
     match = VERSION.fullmatch(value)
     if not match or (match[4] is not None) != (channel == 'testing'):
@@ -213,12 +236,12 @@ def main():
         protected(root / 'automatic-update.lock')
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         try: check(root, apply=args.action == 'run')
-        except Exception:
-            record(root, 'refused-or-failed', detail='Review the local systemd journal and retained checkpoint; no automatic retry or rollback was forced.')
+        except Exception as error:
+            record(root, 'refused-or-failed', code=failure_code(error), detail='Review the local systemd journal and retained checkpoint; no automatic retry or rollback was forced.')
             raise
 
 
 if __name__ == '__main__':
     try: main()
-    except (ValueError, OSError, KeyError, TypeError, subprocess.SubprocessError):
-        raise SystemExit('Automatic update refused or failed. Review local status and journal; retained data and checkpoints are not pruned.')
+    except Exception as error:
+        raise SystemExit(f'Automatic update refused or failed ({failure_code(error)}). Review local status and journal; retained data and checkpoints are not pruned.')

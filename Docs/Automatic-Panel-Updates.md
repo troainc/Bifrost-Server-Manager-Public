@@ -30,3 +30,7 @@ This source candidate does not modify Test 38 assets, install/enable any timer, 
 ## Validation
 
 No checks execute on the owner's PC. Hosted Python tests use temporary signed fixtures to exercise channel/consent, exact-version apply, substitution, signature/signer/expiry refusal, downgrade, interruption, storage/checkpoint bounds, destinations and cleanup. Existing installer, recovery and image-store suites remain required. Real systemd timer execution, concurrent manual update, lost network/power, preserved accounts/MFA/keys/Host/game state and operator recovery acceptance must pass on the designated server before production approval.
+
+## Operator failure codes
+
+Local status/journal diagnostics contain bounded codes rather than exception text, credentials or paths. `storage-low` requires free space; `checkpoint-review-required` requires reviewing/escrowing retained checkpoints; `recovery-required` requires the existing explicit recovery procedure. `manual-update-required` means the signed target predates unattended support. `channel-mismatch` requires a reviewed channel transition. Publisher/signature/artifact errors refuse all execution. Timer setup failure revokes saved automatic-update permission. An `update-apply-failed` outcome requires checkpoint/journal review before another attempt.

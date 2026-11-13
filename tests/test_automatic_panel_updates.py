@@ -174,5 +174,10 @@ class AutomaticUpdates(unittest.TestCase):
             with self.assertRaises(subprocess.CalledProcessError): automatic.configure(self.root, True, 'testing')
         self.assertFalse(json.loads((self.root / 'automatic-update-policy.json').read_text())['enabled'])
 
+    def test_failure_diagnostics_are_actionable_and_do_not_echo_untrusted_text(self):
+        self.assertEqual(automatic.failure_code(ValueError('Insufficient free storage for staged update and recovery.')), 'storage-low')
+        self.assertEqual(automatic.failure_code(subprocess.CalledProcessError(1, ['/bin/bash', '/private/path'])), 'update-apply-failed')
+        self.assertEqual(automatic.failure_code(ValueError('token=synthetic-secret /private/path')), 'release-verification-or-local-state-invalid')
+
 
 if __name__ == '__main__': unittest.main()
