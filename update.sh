@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.38
+VERSION=v0.1.0-installtest.39
+# BIFROST_UNATTENDED_UPDATE=1
 # BEGIN SIGNED_RELEASE_BOOTSTRAP
 # Local candidate identity. Private signing material is never part of this repository.
 readonly RELEASE_SIGNER_SPKI_SHA256=1dba79e7a3d2608b42a5324089d4db548567999210ffbf3dd96ce5cb63a92e6a
@@ -129,6 +130,13 @@ run_task(){
 
 fail(){ printf '\nBifrost update: %s\n' "$*" >&2; exit 1; }
 if [[ "${1:-}" == --verify-release ]];then shift;verify_local_release "$@";exit $?;fi
+unattended=false
+previous_version=''
+if [[ "${1:-}" == --unattended ]]; then
+  [[ $# -eq 2 && "$2" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-installtest\.[0-9]+)?$ ]] || fail 'Pass the exact installed version for an unattended update.'
+  [[ $(id -un) == bifrost && $(id -u) != 0 ]] || fail 'Unattended updates require the existing bifrost service account.'
+  unattended=true; previous_version="$2"
+elif [[ $# -ne 0 ]]; then fail 'Unexpected update arguments.'; fi
 script=$(readlink -f "${BASH_SOURCE[0]}")
 if [[ $(id -un) != bifrost ]]; then
   if [[ $(id -u) != 0 ]]; then
@@ -175,6 +183,18 @@ os.set_inheritable(fd,True);os.environ['BIFROST_UPDATE_LOCK_FD']=str(fd)
 os.execv('/bin/bash',['bash',*sys.argv[2:]])
 LOCK_PY
 fi
+if [[ "$unattended" == true ]]; then
+  python3 - "$root/.env" "$previous_version" "$VERSION" <<'AUTOMATIC_VERSION_PY'
+import pathlib,re,sys
+values=dict(line.split('=',1) for line in pathlib.Path(sys.argv[1]).read_text().splitlines() if '=' in line and not line.startswith('#'))
+def order(value):
+    match=re.fullmatch(r'v(\d+)\.(\d+)\.(\d+)(?:-installtest\.(\d+))?',value)
+    if not match:raise SystemExit('Unsupported installed version; automatic update refused.')
+    return tuple(int(match[i]) for i in range(1,4))+(int(match[4]) if match[4] else 0,),match[4] is not None
+current=values.get('BIFROST_VERSION','');before,channel=order(current);after,target_channel=order(sys.argv[3])
+if current!=sys.argv[2] or channel!=target_channel or after<=before:raise SystemExit('Installed version/channel changed or downgrade attempted; automatic update refused.')
+AUTOMATIC_VERSION_PY
+fi
 scratch=$(mktemp -d)
 checkpoint=''
 update_exit(){
@@ -212,7 +232,8 @@ recovery_helper="$scratch/package/scripts/update-recovery.py"
 checkpoint=$(python3 "$recovery_helper" begin --root "$root" --version "$VERSION") || fail 'Pre-update recovery checkpoint failed. Installation changes were refused.'
 printf '\nAn encrypted database/configuration/key checkpoint is retained. Escrow secrets/update_recovery.key separately.\n'
 printf '\nThis is a testing release. Qualified deployment review is still pending.\n'
-read -r -p 'Enable license testing before completing your local review? [y/N, Enter keeps setting]: ' test_intake </dev/tty
+test_intake=''
+if [[ "$unattended" != true ]]; then read -r -p 'Enable license testing before completing your local review? [y/N, Enter keeps setting]: ' test_intake </dev/tty; fi
 case "$test_intake" in
   [Yy]|[Nn])
     test_value=false; [[ "$test_intake" != [Yy] ]] || test_value=true
@@ -370,6 +391,12 @@ for file in "$scratch/package/config"/*; do
   [[ "$name" != provisioning-catalog.json && "$name" != provisioning-trust.json || ! -e "config/$name" ]] || continue
   cp "$file" "config/$name"
 done
+# Install only fixed-name updater support from the authenticated bundle.
+if [[ -f "$scratch/package/scripts/automatic-panel-updates.py" ]]; then
+  install -d -m 0700 "$root/scripts"
+  [[ ! -L "$root/scripts" && ! -L "$root/scripts/automatic-panel-updates.py" ]] || fail 'Unsafe updater support path.'
+  install -m 0600 "$scratch/package/scripts/automatic-panel-updates.py" "$root/scripts/automatic-panel-updates.py"
+fi
 cp "$scratch/package/IMAGE-LOCK.json" IMAGE-LOCK.json
 python3 - .env "$VERSION" <<'PY'
 import pathlib,sys
@@ -378,7 +405,8 @@ updates={'BIFROST_VERSION':version,'BIFROST_CONTROL_PLANE_IMAGE':f'bifrost/contr
 lines=[line for line in lines if line.partition('=')[0] not in updates]
 p.write_text('\n'.join(lines+[f'{k}={v}' for k,v in updates.items()])+'\n')
 PY
-read -r -p 'Master license HTTPS URL (Enter keeps existing configuration): ' license_url </dev/tty
+license_url=''
+if [[ "$unattended" != true ]]; then read -r -p 'Master license HTTPS URL (Enter keeps existing configuration): ' license_url </dev/tty; fi
 if [[ -n "$license_url" ]]; then
   read -r -p 'Public verification PEM file path (on this VM, readable by bifrost): ' key_file </dev/tty
   python3 - "$root" "$license_url" "$key_file" <<'LICENSE_SETUP_PY'
