@@ -22,6 +22,7 @@
 
 ## Additional corrections from this audit
 
+- Release discovery follows at most five 100-release pages. A full bounded history is refused with `release-discovery-limit`, instead of incorrectly claiming the installation is current. Malformed later pages also refuse before downloading or applying assets.
 - Routine automatic-update consent no longer authorizes a stable major-version change, or a 0.x minor-version change. Those transitions require manual review. An available compatible-family update is still selected when a newer family also exists.
 - Systemd directories are created privately under any caller umask, validating existing parents instead of changing their permissions. A group-writable Ubuntu umask previously made newly created directories fail the ownership/containment check. Existing unsafe parents still fail closed.
 - Disabling scheduling can revoke consent even if the installed driver file is missing. It disables future timer starts without killing an already applying service.
@@ -29,11 +30,11 @@
 
 ## Exact public source and hosted evidence
 
-Frozen executable/tooling source: `a35181f8557486893672260ff1f78088cd068c67`. Later documentation-only finalization does not change those tested bytes.
+Frozen executable/tooling source: `5813fc986226135d7e5629c82f7ee9c2c30767c2`. Later documentation-only finalization does not change those tested bytes.
 
-- [Installer/configuration and real systemd](https://github.com/troainc/Bifrost-Server-Manager-Public/actions/runs/43454660861): 145 Python cases, 142 passing and three root-only cases passing in the separate ownership job; 66 Node cases passing; focused signature/recovery checks also pass.
+- [Installer/configuration and real systemd](https://github.com/troainc/Bifrost-Server-Manager-Public/actions/runs/43458488311): 148 Python cases, 145 passing and three root-only cases passing in the separate ownership job; 66 Node cases passing; focused signature/recovery checks also pass.
 - The real non-root systemd job enables the local timer without applying immediately, authenticates and executes exactly one controlled signed Bash fixture, proves environment sanitization and NoNewPrivileges, rejects a concurrent helper and held installation lock, refuses an interrupted recovery journal, removes temporary staging, and disables future starts while allowing in-flight completion. Its disposable publisher is injected only in non-shipped test code. Production has no test trust override.
-- [Docker-store compatibility](https://github.com/troainc/Bifrost-Server-Manager-Public/actions/runs/43454660937): classic/containerd identity checks pass using the immutable Test 33 compatibility fixture. This is not evidence that Test 39 has been published or applied.
+- [Docker-store compatibility](https://github.com/troainc/Bifrost-Server-Manager-Public/actions/runs/43458488331): classic/containerd identity checks pass using the immutable Test 33 compatibility fixture. This is not evidence that Test 39 has been published or applied.
 - Shared interface, exact compiled package, private-module exclusion, security, sustained fleet profiles and real database checkpoint/restore evidence are recorded in the matched application's review report and release provenance. Do not substitute a package from another source revision.
 
 All tests/builds/browsers/containers for this audit run on GitHub-hosted runners. No test or runtime workload runs on the owner's PC.
@@ -44,4 +45,4 @@ Test 38 stays immutable. Test 39 is an unpublished candidate, not a current stab
 
 Before production acceptance, validate the actual OS/database layout, retained identities/MFA/keys/worlds, full signed panel update, real timer/apply and manual-update concurrency, lost network/power and explicit recovery, and exact game/player/plugin/mod behavior. Record the supported workload and backup/recovery objectives on the selected hardware. A panel-only update does not upgrade Agents or games.
 
-The [automatic-update runbook](Automatic-Panel-Updates.md) documents local opt-in/disable, recovery, storage/checkpoint limits, release channels and compatibility-family review. The new `version-family-review-required` diagnostic is a manual upgrade gate, not a fault to bypass.
+The [automatic-update runbook](Automatic-Panel-Updates.md) documents local opt-in/disable, recovery, storage/checkpoint limits, release channels, bounded release discovery and compatibility-family review. The new `version-family-review-required` diagnostic is a manual upgrade gate, not a fault to bypass.
