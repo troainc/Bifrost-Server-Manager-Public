@@ -130,6 +130,30 @@ class AutomaticUpdates(unittest.TestCase):
             automatic.check(self.root)
         self.assertEqual(json.loads((self.root / 'automatic-update-status.json').read_text())['target'], self.target)
 
+    def test_release_discovery_reads_a_later_page_before_claiming_current(self):
+        fetch = self.fetch
+        def paged(url, limit):
+            if '/releases?' in url:
+                return json.dumps([self.release] if '&page=2' in url else [{**self.release, 'tag_name': self.installed}] * 100).encode()
+            return fetch(url, limit)
+        with patch.object(automatic, 'fetch', side_effect=paged) as calls:
+            automatic.check(self.root)
+        self.assertEqual(sum('/releases?' in call.args[0] for call in calls.call_args_list), 2)
+        self.assertEqual(json.loads((self.root / 'automatic-update-status.json').read_text())['target'], self.target)
+
+    def test_truncated_release_history_refuses_instead_of_claiming_current(self):
+        with patch.object(automatic, 'fetch', return_value=json.dumps([{**self.release, 'tag_name': self.installed}] * 100).encode()) as calls:
+            with self.assertRaisesRegex(ValueError, 'bounded history'):
+                automatic.check(self.root, apply=True)
+        self.assertEqual(calls.call_count, 5)
+        self.assertFalse((self.root / 'automatic-update-status.json').exists())
+        self.assertIn(self.installed, (self.root / '.env').read_text())
+
+    def test_invalid_later_release_page_refuses(self):
+        with patch.object(automatic, 'fetch', side_effect=[json.dumps([self.release] * 100).encode(), b'{"unexpected":"object"}']):
+            with self.assertRaisesRegex(ValueError, 'Invalid release feed'):
+                automatic.check(self.root, apply=True)
+
     def test_untrusted_signer_rejected(self):
         with patch.object(automatic, 'SIGNER', 'f' * 64):
             with self.assertRaises(ValueError): automatic.check(self.root)

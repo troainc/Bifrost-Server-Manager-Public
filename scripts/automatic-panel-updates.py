@@ -37,6 +37,7 @@ def failure_code(error):
         'Insufficient free storage for staged update and recovery.': 'storage-low',
         'Update policy or installed version changed; update refused.': 'local-state-changed',
         'A newer release family requires explicit manual upgrade review.': 'version-family-review-required',
+        'Release discovery exceeded its bounded history; manual review required.': 'release-discovery-limit',
     }
     if str(error) in known: return known[str(error)]
     if isinstance(error, subprocess.TimeoutExpired): return 'host-command-timeout'
@@ -128,8 +129,16 @@ def check(root, apply=False):
     channel = policy['channel']
     installed = environment(root).get('BIFROST_VERSION', '')
     installed_order = version(installed, channel)
-    releases = json.loads(fetch(f'https://api.github.com/repos/{REPOSITORY}/releases?per_page=100', 4 * 1024 * 1024))
-    if not isinstance(releases, list): raise ValueError('Invalid release feed.')
+    releases = []
+    for page in range(1, 6):
+        suffix = '' if page == 1 else f'&page={page}'
+        batch = json.loads(fetch(f'https://api.github.com/repos/{REPOSITORY}/releases?per_page=100{suffix}', 4 * 1024 * 1024))
+        if not isinstance(batch, list) or len(batch) > 100: raise ValueError('Invalid release feed.')
+        releases.extend(batch)
+        if len(batch) < 100: break
+    else:
+        # A truncated history must never be reported as proof of being current.
+        raise ValueError('Release discovery exceeded its bounded history; manual review required.')
     candidates = []
     for release in releases:
         if not isinstance(release, dict) or release.get('draft') or release.get('prerelease') != (channel == 'testing'): continue
