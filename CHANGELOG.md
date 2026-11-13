@@ -1,3 +1,7 @@
+## 2026-11-13 — Verified Test 41 navigation, search and spacing
+
+Both editions gain task-based navigation, responsive section selectors, consistent search/control geometry and flatter forms/inventories; master gains frozen TROA identity/favicon/default theme. Final remote checks and rendered review are recorded in Docs/Test-41-Delivery-2026-11-13.md and Docs/Interface-Production-Review-2026-11-13.md. Debian checkpoint recovery supports Python without extraction filters using validated private file copies. Automatic audit context needs no user-entered reasons. Manual target acceptance remains open; no paid service or PC workload.
+
 ## Unreleased — customer navigation/search review continuation
 
 - Record shared-source candidate 2f2f719b9a87e3fed8958b3a44245dded096b98e: joined search control, explicit results, task navigation, consistent local sections, spacing and marked-draft protection.

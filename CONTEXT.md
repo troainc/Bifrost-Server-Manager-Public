@@ -1,3 +1,7 @@
+## 2026-11-13 — Test 41 final verification complete; delivery proceeding
+
+Owner-authorized no-cost remote checks, rendered review and final search corrections pass in the documented scope. Frozen application 78b464d770784e55364c9082065e9f6bc5a6d586 / public tooling 04a33306f68809be29132658a986ee729ad0e583. Design judgment 7.9/7.9; manual target/assistive-technology/soak acceptance and two nested rootless proc-mount cases remain open. Preserve all state and older assets; sign/merge/deploy/publish the matched Test41 and site commands as authorized. No paid capacity or PC workloads; all pushes/merge messages skip CI/CD. Docs/Test-41-Delivery-2026-11-13.md and Docs/Interface-Production-Review-2026-11-13.md are current.
+
 ## 2026-11-13 — Test 41 delivery authorized
 
 Owner requests no-cost remote verification of both editions, corrections, both main merges, master deployment, immutable public Test 41 publication and matched TROA Debian/Ubuntu installation/update commands for manual acceptance. Existing TROA server disposable containers are authorized; no PC workloads, paid capacity, billing/limit changes, installed customer updates, Agent/game operations or timer activation. Preserve Test 40 and every prior release, all data/accounts/MFA/keys/enrollment and recovery paths. Only version/image references change in public executable tooling; exact source and signed assets must pass verification before publication. Docs/Test-41-Delivery-2026-11-13.md records evidence and limits. All preservation pushes skip CI/CD to avoid charges.

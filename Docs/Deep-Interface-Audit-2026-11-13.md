@@ -1,3 +1,5 @@
+> Current verified continuation: [Test 41 interface review and rerating](Interface-Production-Review-2026-11-13.md). Historical candidate-only statements below apply to their stated earlier revisions.
+
 # Customer interface — comprehensive audit
 
 > Current continuation: [customer navigation/search revision](Interface-Flow-Redesign-2026-11-13.md). The owner rejected 6.9/10; the newer shared-source candidate is unrendered and untested. Historical category scores below do not apply to it.

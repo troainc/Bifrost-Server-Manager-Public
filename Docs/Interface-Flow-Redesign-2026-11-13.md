@@ -1,3 +1,5 @@
+> Current verified continuation: [Test 41 interface review and rerating](Interface-Production-Review-2026-11-13.md). Historical candidate-only statements below apply to their stated earlier revisions.
+
 # Customer navigation and search revision
 
 Status: shared-source candidate 2f2f719b9a87e3fed8958b3a44245dded096b98e, unbuilt, untested and unrendered. No new customer build has been published. This public branch contains audit documentation/static synthetic evidence only; private application/issuer source is excluded.
