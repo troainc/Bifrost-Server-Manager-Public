@@ -1,3 +1,5 @@
+> Current review candidate: [customer navigation, search and spacing revision](Docs/Interface-Flow-Redesign-2026-11-13.md). The owner rejected 6.9/10; newer source remains unbuilt, untested and unrendered. This record publishes no new application build.
+
 > Test 40 is published and its four TROA installation/update commands are verified live. [Current delivery and acceptance status](Docs/Test-40-Delivery-2026-11-13.md).
 
 > The earlier 7.9/10 UI rating is withdrawn. [Comprehensive customer interface review](Docs/Deep-Interface-Audit-2026-11-13.md) records the 4.4/10 baseline and the shared redesign candidate. The last fully checked candidate is rated 6.9/10; newer corrections still need validation. Published Test 40 is unchanged.

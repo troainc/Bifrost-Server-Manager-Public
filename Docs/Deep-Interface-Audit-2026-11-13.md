@@ -1,5 +1,7 @@
 # Customer interface — comprehensive audit
 
+> Current continuation: [customer navigation/search revision](Interface-Flow-Redesign-2026-11-13.md). The owner rejected 6.9/10; the newer shared-source candidate is unrendered and untested. Historical category scores below do not apply to it.
+
 The earlier 7.9/10 UI rating is withdrawn. This review records a 4.4/10 shared/source baseline and a conservative **6.9/10 for the last fully checked customer revision**, e79c3d394d180bac43cedc2838e59d19099ad6f2. Newer source corrections are not covered by that score. Published Test 40 is unchanged; this documentation is not a new application release.
 
 ## Evidence and limits

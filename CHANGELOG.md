@@ -1,3 +1,10 @@
+## Unreleased — customer navigation/search review continuation
+
+- Record shared-source candidate 2f2f719b9a87e3fed8958b3a44245dded096b98e: joined search control, explicit results, task navigation, consistent local sections, spacing and marked-draft protection.
+- Keep customer Bifrost/Aurora separate from the new master TROA Frost identity.
+- No higher rating or new passing evidence; verification is pending under no-payment/no-PC constraints.
+- Documentation only. Existing public application assets, installation/update commands and tooling are retained.
+
 ## Unreleased — customer interface audit record
 
 - Withdraw the earlier 7.9/10 visual rating and record the comprehensive shared-interface review.
