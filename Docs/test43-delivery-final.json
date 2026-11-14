@@ -1,0 +1,53 @@
+{
+  "version": "v0.1.0-installtest.43",
+  "completedAt": "2026-11-14T01:34:58.393401+00:00",
+  "privateMain": "770a20bee617fbb6bc40fb90c991d5f613e3f453",
+  "publicMain": "e50ac6f41bc81738747219f4d99f9982ea9cdab0",
+  "websiteMaster": "a6563678d433b380f197e66aed72262e2e361c57",
+  "frozenApplication": "6b398d758188916612ad0025848359a183a695fe",
+  "frozenPublicPackaging": "3d747f78b2c19ba38951f401ee5cb252a7db2985",
+  "deployments": [
+    {
+      "application": "vaqge8poxod0wwflpri7nolb",
+      "status": "running:healthy",
+      "deployment": "gv4i3ueuout7ouyo5g2hb11a",
+      "deploymentStatus": "finished",
+      "source": "770a20bee617fbb6bc40fb90c991d5f613e3f453",
+      "finished": "2026-11-14T01:27:26.000000Z"
+    },
+    {
+      "application": "xw0s444sc0w4gwwwscgwok8o",
+      "status": "running:unknown",
+      "deployment": "qy7elpsuzhvi4f7uyjdfw4du",
+      "deploymentStatus": "finished",
+      "source": "a6563678d433b380f197e66aed72262e2e361c57",
+      "finished": "2026-11-14T01:29:59.000000Z"
+    }
+  ],
+  "releaseId": 444910184,
+  "publicRelease": "https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.43",
+  "anonymousVerifiedAssets": 25,
+  "installerSha256": "7b90b5ce777de51eb0fbc212a02fdf5f00f18db9d1d7749b1bcb79ace5ca4757",
+  "manifestSha256": "d70f29bfad34bff7c3ba8457493b3d4eb6155363ef80757fcd37989d95ef1236",
+  "masterSixHealthy": true,
+  "dataMountsAndRollbackRetained": true,
+  "secretFilesExact": 16,
+  "migrationJournalExactRows": 79,
+  "allOtherAccountSecurityFieldsExact": true,
+  "observedUserActivity": "One MFA replay counter advanced monotonically with matching successful authentication audit; all other identity/password/MFA/role/permission fields exact. Installation profile differs only updated_at. Current activity preserved.",
+  "canonicalHelmPixelsExact": true,
+  "logoAndFaviconSameAsset": true,
+  "publishedJsMatchesImage": true,
+  "coldAnonymousFalseExpiryAbsent": true,
+  "websiteLiveCommandsVerified": 4,
+  "noStore": true,
+  "wipeUiAbsent": true,
+  "uiDesignJudgment": {
+    "master": 8.0,
+    "customer": 8.0
+  },
+  "noPaidServicesOrPcTesting": true,
+  "manualTargetAcceptanceComplete": false,
+  "remainingManual": "Actual target install/update/interruption, Host/game/player/provider behavior, assistive technology and soak. Two nested rootless cases remain unpassed. No customer update/timer/game operation.",
+  "scope": "Verified authorized delivery and bounded automated checks; not universal perfect/no-regression or completed manual production acceptance."
+}
