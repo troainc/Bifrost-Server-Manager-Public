@@ -1,3 +1,5 @@
+> Historical Test41 review. Its identity judgment was rejected by the owner and is superseded by [the canonical Test42 review](Interface-Ecosystem-Review-2026-11-13.md). Do not use this report as current visual acceptance.
+
 # Test 41 interface review and rerating
 
 Reviewed application source: 78b464d770784e55364c9082065e9f6bc5a6d586. Public runtime tooling: 04a33306f68809be29132658a986ee729ad0e583. Later delivery records do not change these frozen product bytes.
