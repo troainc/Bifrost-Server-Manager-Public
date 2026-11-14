@@ -1,3 +1,7 @@
+## 2026-11-14 - Cold sign-in feedback correction
+
+Live anonymous Test42 readback exposed a pre-existing false session-expiry message on first visit. Correct both editions so only a previously authenticated query reports expiry; retain all401 cleanup and real expiry feedback. Prepare new immutable Test43; keep42 and all prior assets/data/keys/checkpoints. No paid service or PC workload; all verification stays bounded on existing TROA capacity. Existing merge/deploy/publication/site authorization continues. Manual target acceptance remains owner-run.
+
 ## 2026-11-13 - Test42 canonical identity and ecosystem shell verified
 
 Final product13a3a2a/public4f69b0c verified on existing bounded TROA capacity; no paid services or PC workloads. Actual TROA pixels preserved in frozen logo/favicon, Data/MH header/rail/typography, original six themes and guarded navigation retained. Final334 enabled application regressions, public149 Python/66 Node, website488, both118-case shell matrices and75/73 accessibility states pass. Earlier brand-name failure is retained; corrected final source passes. Review judgment8.0/8.0, not full production acceptance; two nested rootless and real-target/manual gates remain open. Signed42 offline verification passes. Delivery authorized and proceeding; preserve all data/keys/accounts and older releases. Docs/Test-42-Delivery-2026-11-13.md and Docs/Interface-Ecosystem-Review-2026-11-13.md supersede earlier candidate/identity judgments.
