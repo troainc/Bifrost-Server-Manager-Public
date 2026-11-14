@@ -1,3 +1,5 @@
+> Test43 follow-up retains this visual system and scoped8.0/8.0 judgment. [Latest verification and first-visit/real-expiry correction](Test-43-Delivery-2026-11-14.md) distinguishes new checks from inherited unchanged-component evidence.
+
 # Test42 ecosystem interface review
 
 Reviewed product source: 13a3a2ac82e1f5a403c06cf16f471678454ed8bd. Frozen public packaging: 4f69b0c85af8b4da0e2014b14ada5d5594397735. The following documentation closure does not change those executable bytes.
