@@ -1,3 +1,7 @@
+## 2026-11-14 - Test43 verification complete, final delivery authorized
+
+Frozen application6b398d7/public3d747f7 correct false cold-sign-in expiry while retaining real expiry/security cleanup. All remote334 enabled application regressions,149Python/66Node,497website units/build/types, both118-case shell matrices/75-73 accessibility states, actual expiry journeys, compiled isolation/scans and two authenticated restores pass. Unchanged Controller/Postgres IDs inherit42 real DB gates explicitly; two rootless cases/manual target acceptance remain open. Fresh encrypted master checkpoint and signed43offline verification pass. Preserve all prior assets/data/accounts/MFA/keys/enrollment. No paid service or PC workloads. Docs/Test-43-Delivery-2026-11-14.md is current; design judgment8.0/8.0 remains scoped.
+
 ## 2026-11-14 - Cold sign-in feedback correction
 
 Live anonymous Test42 readback exposed a pre-existing false session-expiry message on first visit. Correct both editions so only a previously authenticated query reports expiry; retain all401 cleanup and real expiry feedback. Prepare new immutable Test43; keep42 and all prior assets/data/keys/checkpoints. No paid service or PC workload; all verification stays bounded on existing TROA capacity. Existing merge/deploy/publication/site authorization continues. Manual target acceptance remains owner-run.
