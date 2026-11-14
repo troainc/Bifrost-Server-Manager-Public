@@ -1,7 +1,4 @@
-> Current review candidate: [customer navigation, search and spacing revision](Docs/Interface-Flow-Redesign-2026-11-13.md). The owner rejected 6.9/10; newer source remains unbuilt, untested and unrendered. This record publishes no new application build.
-
-> Test 41 verification is complete and owner-authorized delivery is proceeding. [Current delivery](Docs/Test-41-Delivery-2026-11-13.md) and [reviewed interface ratings and manual acceptance](Docs/Interface-Production-Review-2026-11-13.md) distinguish automated evidence from real-target acceptance.
-
+> Test42 canonical TROA identity and shared Data/MH shell: [review and category ratings](Docs/Interface-Ecosystem-Review-2026-11-13.md), [exact automated evidence and delivery status](Docs/Test-42-Delivery-2026-11-13.md). Master/customer8.0/8.0 is a scoped design judgment; real-target manual acceptance remains open. No paid services or PC tests/builds. Historical records follow.
 
 > [Historical Test 39 delivery and acceptance status](Docs/Test-39-Delivery-2026-11-13.md).
 

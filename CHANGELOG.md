@@ -1,3 +1,7 @@
+## 2026-11-13 - Test42 canonical identity and ecosystem shell verified
+
+Final product13a3a2a/public4f69b0c verified on existing bounded TROA capacity; no paid services or PC workloads. Actual TROA pixels preserved in frozen logo/favicon, Data/MH header/rail/typography, original six themes and guarded navigation retained. Final334 enabled application regressions, public149 Python/66 Node, website488, both118-case shell matrices and75/73 accessibility states pass. Earlier brand-name failure is retained; corrected final source passes. Review judgment8.0/8.0, not full production acceptance; two nested rootless and real-target/manual gates remain open. Signed42 offline verification passes. Delivery authorized and proceeding; preserve all data/keys/accounts and older releases. Docs/Test-42-Delivery-2026-11-13.md and Docs/Interface-Ecosystem-Review-2026-11-13.md supersede earlier candidate/identity judgments.
+
 ## 2026-11-13 — Verified Test 41 navigation, search and spacing
 
 Both editions gain task-based navigation, responsive section selectors, consistent search/control geometry and flatter forms/inventories; master gains frozen TROA identity/favicon/default theme. Final remote checks and rendered review are recorded in Docs/Test-41-Delivery-2026-11-13.md and Docs/Interface-Production-Review-2026-11-13.md. Debian checkpoint recovery supports Python without extraction filters using validated private file copies. Automatic audit context needs no user-entered reasons. Manual target acceptance remains open; no paid service or PC workload.
