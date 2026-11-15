@@ -1,3 +1,9 @@
+## Unreleased — November 14 audit remediation verified
+
+- Pin the candidate Host runtime/archive and actual admission floor to Node 24.22.3; reject older patch versions and verify historical upgrade/preservation cases.
+- Record shared customer UI/security corrections, measured regression scope, harsh category rerating and remaining real-target/release gates in Docs/Remediation-2026-11-14.md.
+- No new signed public build, deployed update, timer change or immutable-release replacement. Installer source b61438f is the checked executable; this entry is documentation only. All owned Ubuntu test resources were cleaned; no paid services used.
+
 ## 2026-11-14 - Test43 verification complete, final delivery authorized
 
 Frozen application6b398d7/public3d747f7 correct false cold-sign-in expiry while retaining real expiry/security cleanup. All remote334 enabled application regressions,149Python/66Node,497website units/build/types, both118-case shell matrices/75-73 accessibility states, actual expiry journeys, compiled isolation/scans and two authenticated restores pass. Unchanged Controller/Postgres IDs inherit42 real DB gates explicitly; two rootless cases/manual target acceptance remain open. Fresh encrypted master checkpoint and signed43offline verification pass. Preserve all prior assets/data/accounts/MFA/keys/enrollment. No paid service or PC workloads. Docs/Test-43-Delivery-2026-11-14.md is current; design judgment8.0/8.0 remains scoped.
