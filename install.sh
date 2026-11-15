@@ -582,7 +582,7 @@ require_host_runtime() {
   if [[ -z "$BIFROST_NODE_BIN" && -x /opt/bifrost-node-v24.22.3/bin/node ]]; then BIFROST_NODE_BIN=/opt/bifrost-node-v24.22.3/bin/node; fi
   if [[ -z "$BIFROST_NODE_BIN" ]]; then BIFROST_NODE_BIN="$(command -v node || true)"; fi
   export BIFROST_NODE_BIN
-  [[ -x "$BIFROST_NODE_BIN" ]] && "$BIFROST_NODE_BIN" -e 'const [major,minor,patch]=process.versions.node.split(".").map(Number);process.exit(major===24 && (minor>22 || (minor===22 && patch>=1)) ? 0 : 1)' || fail 'Instance Host needs Node.js 24.22.3 or later in 24.x. Use the prepared runtime or update Node for this account, then rerun.'
+  [[ -x "$BIFROST_NODE_BIN" ]] && "$BIFROST_NODE_BIN" -e 'const [major,minor,patch]=process.versions.node.split(".").map(Number);process.exit(major===24 && (minor>22 || (minor===22 && patch>=3)) ? 0 : 1)' || fail 'Instance Host needs Node.js 24.22.3 or later in 24.x. Use the prepared runtime or update Node for this account, then rerun.'
   command -v podman >/dev/null || fail 'Instance Host needs rootless Podman available to this account.'
   [[ "$(podman info --format '{{.Host.Security.Rootless}}' 2>/dev/null || true)" == true ]] || fail 'Could not verify rootless Podman. Run podman info from this account home directory to inspect the error.'
   systemctl --user show-environment >/dev/null 2>&1 || fail 'A systemd user manager is unavailable. Sign in as the regular game-server operator account and retry.'
