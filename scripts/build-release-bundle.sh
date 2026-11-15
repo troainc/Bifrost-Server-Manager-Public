@@ -28,7 +28,7 @@ cp scripts/update-recovery.py "$output/package/scripts/update-recovery.py"
 cp scripts/automatic-panel-updates.py "$output/package/scripts/automatic-panel-updates.py"
 cp scripts/collect-prerequisite-evidence.py "$output/package/scripts/collect-prerequisite-evidence.py"
 mkdir -m 0755 "$output/package/Docs"
-for document in Supported-Release-Scope Production-Core-2026-11-14 Game-Workflows-Candidate-2026-11-15 Recovery-and-Key-Rotation Standalone-Installation Prerequisite-Security-Review Manual-Acceptance-Checklist Automatic-Panel-Updates; do
+for document in Supported-Release-Scope Production-Core-2026-11-14 Game-Workflows-Candidate-2026-11-15 Frost-Telemetry-Audit-2026-11-15 Host-Telemetry-and-Catalog-Recipes Test-46-Delivery-2026-11-15 Recovery-and-Key-Rotation Standalone-Installation Prerequisite-Security-Review Manual-Acceptance-Checklist Automatic-Panel-Updates; do
   cp "Docs/$document.md" "$output/package/Docs/$document.md"
   chmod 0644 "$output/package/Docs/$document.md"
 done

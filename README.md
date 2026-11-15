@@ -1,3 +1,5 @@
+> **Unreleased Frost/telemetry candidate:** [full category audit and evidence](Docs/Frost-Telemetry-Audit-2026-11-15.md). UI/UX review: master 8.4/10, public instance 8.4/10. Existing Test45 remains deployed/published; the candidate does not update an enrolled Agent or complete every Steam runtime recipe. No paid services; bounded Ubuntu verification and scoped cleanup.
+
 > **Test45 is published and verified.** [Delivery evidence and manual acceptance](Docs/Test-45-Delivery-2026-11-15.md). Use the matched [Debian/Ubuntu install and update instructions](https://therealmsofasgard.com/gaming-hub/bifrost-server-manager#testing-installation). Includes the Explorer, retained Console and game-management workflows. Host Agent updates remain separate; Gate stays opt-in experimental.
 
 Historical release records below retain their original dates and status. The Test45 delivery report above is current.

@@ -1,3 +1,11 @@
+## Unreleased - Frost, process telemetry and strict game adapters
+
+- Restore distinct Host/game live measurements and full-range resource history; preserve missing/stale/offline states and history selection.
+- Correct NULL-telemetry Fleet retention, bounded cold Host observations, shared settings receipts, console unavailable/filter states and owner action spacing.
+- Add A2S/Bedrock queries, Source/Rust/Terraria/ARK typed settings, original navigation glyphs and a restrained Frost theme; retain permissions, recovery and canonical branding.
+- Expand bounded catalog transport and safe unsigned Steam recipe tooling. 471 definitions/452 launch records do not imply universal automatic provisioning.
+- Verification, actual artifact isolation, harsh ratings and remaining acceptance: [candidate audit](Docs/Frost-Telemetry-Audit-2026-11-15.md). No new release/deployment or enrolled Host change.
+
 ## Unreleased — November 14 audit remediation verified
 
 - Pin the candidate Host runtime/archive and actual admission floor to Node 24.22.3; reject older patch versions and verify historical upgrade/preservation cases.
