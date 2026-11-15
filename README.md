@@ -1,3 +1,5 @@
+> November 14 unreleased remediation candidate: [verified changes, harsh category ratings and remaining acceptance](Docs/Remediation-2026-11-14.md). This supersedes historical 8.0 judgments. Source changes remain local/unpublished; Test43 downloads and deployed services are unchanged. No paid services; owned Ubuntu test resources cleaned.
+
 > Current Test43: [verified correction, delivery status and manual limits](Docs/Test-43-Delivery-2026-11-14.md). The [canonical TROA/ecosystem category review](Docs/Interface-Ecosystem-Review-2026-11-13.md) remains8.0/8.0. No paid service or PC workloads. Historical records follow.
 
 > Test42 canonical TROA identity and shared Data/MH shell: [review and category ratings](Docs/Interface-Ecosystem-Review-2026-11-13.md), [exact automated evidence and delivery status](Docs/Test-42-Delivery-2026-11-13.md). Master/customer8.0/8.0 is a scoped design judgment; real-target manual acceptance remains open. No paid services or PC tests/builds. Historical records follow.
