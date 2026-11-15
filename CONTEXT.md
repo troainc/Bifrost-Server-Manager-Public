@@ -1,3 +1,7 @@
+## Test44 delivery authorized — November 14, 2026
+
+The owner now explicitly authorizes both main merges, master deployment, a new immutable signed public build and matched TROA Debian/Ubuntu install/update commands. Prepare v0.1.0-installtest.44 from the verified production-core candidate. No paid services or workflow dispatch; Ubuntu execution must remain bounded with owned-resource cleanup. Preserve all identities/MFA/keys/data/mounts and old releases. Checkpoint master before cutover, verify exact signed downloads and live commands before claiming delivery. Core management is the target; Gate remains opt-in experimental. Existing unrelated website work stays isolated. Current delivery evidence: work/bifrost44-delivery-20261114. Delivery is not yet complete.
+
 ## 2026-11-14 — Production core verified; owner target acceptance pending
 
 The owner explicitly selects production core management with Gate kept opt-in experimental. Frozen application/harness: `99b87e56a96ec0320687e6a12f4142b9f938edba`; public distribution scope: `15a39360ac8faf6a2a605d8a5343ec323ea56841`. `Docs/Production-Core-2026-11-14.md` is the current category audit. Overall core: master 8.2 / customer 8.0; UI 8.3 both. Unrestricted release confidence: 7.8 / 7.6, with signed delivery and owner target acceptance pending. Candidate is local; Test43 remains deployed/published. No new push, merge, deployment, release, website promotion or timer activation occurred. Subsequent context/report commits are documentation only.
