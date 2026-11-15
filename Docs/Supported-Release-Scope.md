@@ -2,7 +2,7 @@
 
 Updated November 14, 2026. The production target is the **core server manager**. The owner explicitly keeps Gate as an opt-in experimental preview; unfinished cross-world gameplay is excluded from the core production promise. This is a scope decision, not completion of Gate gameplay.
 
-The delivered baseline is immutable Test43. The `codex/bifrost-production-core-20261114` candidate is newer local source and remains unpublished until exact-source verification and matched signed delivery are complete. Do not replace an older release asset or imply that editing this repository updates any installed Controller, Host Agent, runtime or game. A build, scan or signed candidate alone is not installed-target acceptance.
+The delivered controlled-testing build is immutable Test44. Its 25 signed assets, both offline verifiers, master deployment and four live TROA Debian/Ubuntu commands are verified; see [Test44 delivery](Test-44-Delivery-2026-11-15.md). Real target/game/provider and sustained operation remain owner acceptance. Editing this repository does not update any installed Controller, Host Agent, runtime or game. Older release assets remain immutable; Gate remains outside the core production promise.
 
 Current candidate evidence and category ratings: [Production core verification](Production-Core-2026-11-14.md). That candidate report does not promote the published commands.
 

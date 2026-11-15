@@ -1,3 +1,5 @@
+> **Test44 is published and anonymously verified.** [Delivery evidence and manual acceptance](Docs/Test-44-Delivery-2026-11-15.md). Use the matched Debian/Ubuntu install/update instructions on the TROA tester page; Gate stays opt-in experimental.
+
 > Current target: **Test44**, the verified production-core manager candidate. Gate stays opt-in experimental. [Current core audit](Docs/Production-Core-2026-11-14.md) and [supported scope](Docs/Supported-Release-Scope.md) supersede historical ratings below. Delivery/download verification and manual target acceptance are separate; older releases stay immutable.
 
 > November 14 unreleased remediation candidate: [verified changes, harsh category ratings and remaining acceptance](Docs/Remediation-2026-11-14.md). This supersedes historical 8.0 judgments. Source changes remain local/unpublished; Test43 downloads and deployed services are unchanged. No paid services; owned Ubuntu test resources cleaned.
