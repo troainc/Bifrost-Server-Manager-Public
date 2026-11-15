@@ -14,8 +14,8 @@ def install(source,expected_key,destination):
         data=path.read_bytes()
         if b'PRIVATE KEY' in data:raise ValueError('Private keys are not distribution inputs')
         return data
-    release_bytes=read('catalog-release.json',65536);release=json.loads(release_bytes)
-    catalog=read('provisioning-catalog.json',1048576);keys=read('provisioning-trust.json',65536)
+    release_bytes=read('catalog-release.json',524288);release=json.loads(release_bytes)
+    catalog=read('provisioning-catalog.json',8388608);keys=read('provisioning-trust.json',65536)
     trust=json.loads(keys)
     if not isinstance(trust,dict) or list(trust)!=[expected_key] or not isinstance(trust[expected_key],str):raise ValueError('Use one exact pinned public publisher key')
     pem=trust[expected_key]
@@ -23,7 +23,7 @@ def install(source,expected_key,destination):
     der=base64.b64decode(''.join(pem.strip().splitlines()[1:-1]),validate=True)
     if len(der)!=44 or not der.startswith(bytes.fromhex('302a300506032b6570032100')) or 'ed25519-sha256:'+hashlib.sha256(der).hexdigest()!=expected_key:
         raise ValueError('Publisher key identity/type differs')
-    if not isinstance(release,dict) or set(release)!={'signedPayload','signature'} or not re.fullmatch(r'[A-Za-z0-9_-]{1,65536}',release.get('signedPayload','')) or not re.fullmatch(r'[A-Za-z0-9_-]{86}',release.get('signature','')):
+    if not isinstance(release,dict) or set(release)!={'signedPayload','signature'} or not re.fullmatch(r'[A-Za-z0-9_-]{1,524288}',release.get('signedPayload','')) or not re.fullmatch(r'[A-Za-z0-9_-]{86}',release.get('signature','')):
         raise ValueError('Invalid signed catalog release')
     decode=lambda value:base64.urlsafe_b64decode(value+'='*((-len(value))%4))
     payload=decode(release['signedPayload']);signature=decode(release['signature'])
@@ -39,7 +39,7 @@ def install(source,expected_key,destination):
     if hashlib.sha256(catalog).hexdigest()!=metadata.get('catalogSha256') or hashlib.sha256(keys).hexdigest()!=metadata.get('trustSha256'):
         raise ValueError('Catalog handoff hashes differ')
     records=json.loads(catalog)
-    if not isinstance(records,list) or not 1<=len(records)<=64:raise ValueError('Catalog must contain reviewed targets')
+    if not isinstance(records,list) or not 1<=len(records)<=1024:raise ValueError('Catalog must contain reviewed targets')
     targets=[]
     for r in records:
         if not isinstance(r,dict) or set(r)!={'manifest','digest','keyId','signature'} or r['keyId']!=expected_key or not isinstance(r['manifest'],dict) or not r['manifest'].get('download') or 'windows' in r['manifest']:
