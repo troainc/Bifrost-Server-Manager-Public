@@ -1,4 +1,6 @@
-> **Unreleased Frost/telemetry candidate:** [full category audit and evidence](Docs/Frost-Telemetry-Audit-2026-11-15.md). UI/UX review: master 8.4/10, public instance 8.4/10. Existing Test45 remains deployed/published; the candidate does not update an enrolled Agent or complete every Steam runtime recipe. No paid services; bounded Ubuntu verification and scoped cleanup.
+> **Detailed Bifrost Frost artwork:** original intricate desktop/mobile scenery and readable frosted glass are in verification for Test47. [Artwork prompts and provenance](Docs/Bifrost-Artwork-2026-11-15.md). [Test46 delivery and current limits](Docs/Test-46-Delivery-2026-11-15.md). Canonical TROA identity remains.
+
+Historical records below retain their original release dates/status; they do not represent current artwork approval.
 
 > **Test45 is published and verified.** [Delivery evidence and manual acceptance](Docs/Test-45-Delivery-2026-11-15.md). Use the matched [Debian/Ubuntu install and update instructions](https://therealmsofasgard.com/gaming-hub/bifrost-server-manager#testing-installation). Includes the Explorer, retained Console and game-management workflows. Host Agent updates remain separate; Gate stays opt-in experimental.
 
