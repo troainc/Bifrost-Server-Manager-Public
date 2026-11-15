@@ -4,6 +4,8 @@ Updated November 14, 2026. The production target is the **core server manager**.
 
 The delivered baseline is immutable Test43. The `codex/bifrost-production-core-20261114` candidate is newer local source and remains unpublished until exact-source verification and matched signed delivery are complete. Do not replace an older release asset or imply that editing this repository updates any installed Controller, Host Agent, runtime or game. A build, scan or signed candidate alone is not installed-target acceptance.
 
+Current candidate evidence and category ratings: [Production core verification](Production-Core-2026-11-14.md). That candidate report does not promote the published commands.
+
 ## Two separate products
 
 | Deployment | Included responsibility | Excluded authority |
