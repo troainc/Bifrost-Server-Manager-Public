@@ -1,6 +1,8 @@
 # Supported candidate scope and acceptance
 
-The October 21 work is local. Candidate `v0.1.0-installtest.35` is unpublished. Test 33 remains the historical published prerelease. Neither a source build nor a signed candidate authorizes deployment, general customer intake or a stable-release claim.
+Updated November 14, 2026. The production target is the **core server manager**. The owner explicitly keeps Gate as an opt-in experimental preview; unfinished cross-world gameplay is excluded from the core production promise. This is a scope decision, not completion of Gate gameplay.
+
+The delivered baseline is immutable Test43. The `codex/bifrost-production-core-20261114` candidate is newer local source and remains unpublished until exact-source verification and matched signed delivery are complete. Do not replace an older release asset or imply that editing this repository updates any installed Controller, Host Agent, runtime or game. A build, scan or signed candidate alone is not installed-target acceptance.
 
 ## Two separate products
 
@@ -30,14 +32,24 @@ Expand the envelope only after repeatable measurements at the proposed load, out
 | Reviewed Java/Bedrock recipes | Only recipes actually present in the signed handoff | Each exact vendor/runtime recipe needs its own target and player acceptance; synthetic package tests establish validation, not working games |
 | Windows SCM and native Host | Source/contract work retained, excluded from this Linux release promise | New matched Windows package, dedicated service account/ACLs, recovery and real runtime acceptance |
 | Space Engineers 2 and no-Wine SE1 | Roadmap, unavailable | Supported vendor interfaces and implementation before any support claim |
-| Gate world coordination, map publishing and bridges | Optional preview; disabled/unconfigured unless explicitly set up with reviewed policies | Bridge/game/network integration, rollback and operator acceptance; no public beta guarantee |
+| Gate world coordination, map publishing and bridges | Experimental planning, hidden by default. Each account explicitly opts in through Profile or Settings → Experimental features, in that browser only. Disabling the preview retains saved plans. Activation, live travel and isolated Gate recovery execution remain locked/unavailable. | Separate bridge/game/network integration, rollback and operator acceptance; excluded from core readiness and no gameplay support promise |
 | Extension registry and remote storage providers | Policy and configuration boundaries exist; no installed/connected claim follows from a catalog entry | Signed compatible package and explicit local approval; real destination/auth/recovery testing for each provider |
 | AMP migration | Retired | `/api/migrations/*` stays unavailable; historical data/contracts are retained |
 
 ## Release gates
 
-Locally actionable gates include clean dependency audit, build/typecheck, customer/owner exclusion, regression and concurrency tests, database migration/grant checks, data-preserving update/master recovery, overlapping key trust, signed release verification, artifact scans and source-bound evidence. Failed gates stop promotion.
+Core candidate gates include clean dependency audit, build/typecheck, customer/owner exclusion, regression and concurrency tests, database migration/grant checks, data-preserving update/master recovery, overlapping key trust, signed release verification, artifact scans and source-bound evidence. Failed gates stop promotion.
 
-Separate human/external gates remain: independently reviewed code and security findings, approved signer custody/escrow, actual branch/ruleset/environment activation, successful exact-revision hosted CI, qualified privacy/legal review before general customer intake, target OS/game/player and accessibility acceptance, production secret/backup configuration, off-host restore and an agreed support/on-call owner. None is marked approved by local source changes.
+Separate human/external gates remain: independently reviewed code and security findings, approved signer custody/escrow, actual branch/ruleset/environment activation, successful exact-revision verification on authorized isolated capacity (free bounded Ubuntu workers are allowed; paid CI is not required), qualified privacy/legal review before general customer intake, target OS/game/player and accessibility acceptance, production secret/backup configuration, off-host restore and an agreed support/on-call owner. None is marked approved by local source changes.
 
 Stable release additionally requires beta observation, recorded incidents/recovery, accepted performance/storage budgets, a supported-version/lifecycle policy and complete exact-target acceptance. A testing label must remain until those requirements are met.
+
+## Core operator journeys
+
+- First administrator: select the machine role, optionally name the installation, create the administrator, configure MFA/recovery, accept the agreements and activate the free license, then connect the explicitly selected Host. Going back before account creation preserves draft fields. The installer-selected role remains authoritative.
+- Daily operation: select a Host/server, review freshness and capability, authorize the specific consequence, follow its exact job in Activity. Uncertain results are not success and must not be blindly resubmitted.
+- File replacement: choose the server file, read its current digest, choose a replacement allowed by the Host policy, and renew authorization. Changing the selected file clears stale digest, file, preview and confirmation state.
+- Backup restore: select an archive belonging to that server with a valid retained local copy and a verification receipt less than 24 hours old. Check the online Host's recovery state, then authorize replacement within one minute. The Controller independently rechecks permissions, archive binding and integrity. A queued restore keeps its job reference; uncertainty requires investigation before retry.
+- Updates: panel update preserves configuration, accounts, MFA, keys and database, using the authenticated recovery checkpoint. Optional scheduled panel updates remain explicit opt-in. Host Agent, Host Node runtime and vendor games have separate update procedures; no timer is enabled by these source changes.
+
+The candidate acceptance report must distinguish compiled fixture UI, real isolated database/container tests, exact signed delivery and the owner's manual production-target checks. Zero automated accessibility findings are not assistive-technology certification. Synthetic OCI execution is not vendor-game or player acceptance.
