@@ -1,3 +1,13 @@
+## 2026-11-15 - Test45 delivery authorized; pending
+
+Owner explicitly requests both main merges, master deployment, a signed updated public build and matched Debian/Ubuntu install/update commands on the TROA site. Prepare immutable Test45 from the verified game-workflow candidate; preserve all data/accounts/MFA/keys/Host identity/volumes and older releases. No paid services, workflow dispatch or full private-source remote test staging. Ubuntu testing is bounded and owned workers/images/workspaces must be cleaned. Compile master/customer separately; public repo remains distribution-only. Gate remains opt-in experimental. Owner performs real target/game/player acceptance. Evidence work/bifrost45-delivery-20261115. Current delivery is not complete until live receipts pass.
+
+## 2026-11-15 - Shared game-management candidate verified; not published
+
+Distribution guide Docs/Game-Workflows-Candidate-2026-11-15.md describes the shared app's new Explorer hierarchy/icons/keyboard/drag-drop, retained Console, typed settings, telemetry, Game blueprints, Glacier theme and toast feedback. Shared application remains in the private repository and is compiled separately for master/customer. Never copy private source here. Test44 and installer scripts are unchanged; this candidate has not been signed, published or promoted on the website.
+
+Private run15: 2302 enabled Node pass; five actual DB and two generic rootless OCI cases cover environment gates. Both compiled editions run14: 17 expanded workflows/21 measured accessibility states each with zero page errors, with wider run11 sweeps recorded separately. This public distribution: 149 unique Python/67 Node pass; only documentation changed. No paid service. Owned Ubuntu workers, new images and workspaces cleaned, final worker about 1.28 GiB. No new commit/push/merge/deployment/publication. Preserve signed install/update authority, rootless Podman, all data and immutable releases. Real vendor/runtime/owner target acceptance remains; catalog definitions are not universal compatibility evidence.
+
 ## 2026-11-15 — Test44 delivered and verified
 
 Owner-authorized delivery is complete: private main `10b9bbc`, public main `17dabd3`, website runtime master `5a451b6`. Master deployment `vbfunm4z5s1pg5kbyzbu6c66` finished 05:27 UTC with six healthy services, exact account/MFA rows, original mounts, 16 secret files, managed keys/branding and the 79-row migration journal retained. Protected Host/instance/license identity and credential fields match the checkpoint; only explicit heartbeat/provisioning/freshness/license-renewal fields changed. Controller and issuer actually run Node24.22.3; HTTPS readiness, deployed JS bytes and canonical logo/favicon pass.

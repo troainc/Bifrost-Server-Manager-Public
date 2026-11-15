@@ -1,0 +1,27 @@
+# Game management candidate — November 15, 2026
+
+These are candidate notes for a future compiled customer build. Published Test44 and its immutable installers, checksums and update commands have not changed. The public repository distributes compiled software; application source is maintained separately and is not copied here.
+
+Both editions receive the same instance file explorer: expandable folder tree, breadcrumbs, file-type icons, multiple selection, keyboard navigation, context menus, rename/move, cut/paste, drag-and-drop, new folders, properties, bounded redacted previews, verified batch uploads and selected-item Trash/restore/permanent deletion. Organization requires an online capable Host, file/control permission and a reported stopped game. Linux moves preserve existing destinations atomically; interrupted changes retain explicit recovery state. Existing Hosts keep their supported listing and legacy upload controls until their Agent is updated.
+
+The explorer operates inside each instance's approved files root. It does not provide unrestricted Host filesystem access. Upload limits remain explicit: up to 50 distinct nonempty files per batch and 32 MiB per file, further restricted by Host policy. Native folder upload/extraction, unrestricted editing, full binary downloads and recursive search are not included. The filter is labelled “Filter loaded items.” Links, unsafe paths, protected content and overwrites remain restricted. Trash never purges automatically; permanent deletion requires an explicit separate confirmation.
+
+Console opens with the Host's retained output and follows automatically. Pause/Resume controls the viewer, not collection or the game process. Both Podman stdout and stderr are included. The viewer is bounded and redacted; complete logs still depend on the Host runtime's retention policy.
+
+Game blueprints replaces the Game catalog name. The catalog includes all 472 records in the retrieved SteamAppInfo dedicated-server snapshot, alongside the existing definitions. Steam definitions are searchable, paginated, downloadable, attributed under MIT, and loaded with the catalog instead of the initial application script. They are not 472 new verified one-click installation recipes. Generic packages still require actual startup files, runtime/dependencies, explicit ports/resources and download entitlement; missing platform metadata and Windows-in-Wine constraints remain visible. No manual-testing approval flag has been added.
+
+Game-specific telemetry adapters support Minecraft Java status and the Keen Space Engineers Remote API through explicit loopback Host policy. Keen keys remain in private Host-owned files. Existing custom profiles are not guessed or rewritten. Typed configuration supports Minecraft Java/Bedrock, Space Engineers and Palworld; it preserves untouched options and rejects stale file versions. Space Engineers separates server identity from saved-world gameplay. Automatic provisioning adds matching settings/query policy for supported new Minecraft profiles; other existing layouts need the matching Host policy.
+
+Live fleet/activity visuals, Glacier default colors and dismissible action toasts are shared by both editions. Other themes remain. Queued jobs are distinguished from completed actions; failed/uncertain operations retain job references. Late notifications are scoped to the account that initiated them. Audit context stays automatic, without asking operators to type a reason. Gate remains opt-in experimental.
+
+A matched release needs compiled Controller/UI and Host Agent artifacts. Controller migration 0080 adds nullable game telemetry; the authenticated feature handshake prevents new Agents from sending unsupported fields/capabilities to older Controllers. Updating website text or installer commands alone cannot deliver these features.
+
+No new publication, deployment, game installation or automatic update activation is claimed by these notes. Real game/player, target install/update, Windows executable, assistive-technology and soak acceptance remain separate from automated candidate verification.
+
+## Candidate verification
+
+Both separately compiled editions pass 17 expanded game-management workflows and 21 measured accessibility states each, including real fixture file moves, uploads, partial collision handling, Trash/restore, keyboard hierarchy navigation, phone controls and retained Console protocols. Private source types/backends and 2,302 enabled Node checks pass; five actual database and two generic rootless Podman cases cover the seven explicit environment gates. Distribution checks pass 149 unique Python and 67 Node cases. Wider UI sweeps, exact source stages and remaining limits are recorded in the private audit; this does not prove every vendor game or Windows filesystem target.
+
+The harsh shared-candidate ratings are: visual design 8.4/10, navigation 8.4, workflow UX 8.5, consistency 8.4, accessibility 8.1, performance 8.1, security 8.3 and product coverage 8.0. Both editions are ready for controlled owner acceptance within that scope. A new signed build, matched Host rollout, real game/player and manual accessibility/soak acceptance remain.
+
+Owned Ubuntu workers, temporary instances and new unused worker images were cleaned. No paid service, new public release or website install/update command change occurred in this task. Test44 remains the available release.
