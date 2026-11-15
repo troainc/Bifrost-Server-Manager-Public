@@ -1,0 +1,13 @@
+# Test45 delivered — November 15, 2026
+
+[Signed Test45 testing build](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.45) is published. All25 assets pass anonymous HTTPS size/SHA-256 verification, and both offline install/update signature verifiers pass. The [TROA tester page](https://therealmsofasgard.com/gaming-hub/bifrost-server-manager#testing-installation) now supplies matched Debian/Ubuntu fresh-install and panel-only update commands. Its password/origin/no-store safeguards and absence of wipe/reinstall controls remain.
+
+Installer SHA-256: `ad5fe4de0d6d6c58e1b502b351acd483c538effd81f9635689b8799d0cb37497`. Signed manifest SHA-256: `e568ccf5fb4d2443443f944b144b3f82515a95e4f6c78912e9825aaece079ae4`. Frozen public packaging: `9f573296f42c65f2a637ffdb9332ee77d8356e2d`; main code merge: `65c66698dea1f69798041c829224287bbb949f13` (PR31). Later documentation commits do not alter these immutable bytes.
+
+Both editions add the Explorer with hierarchy, icons, keyboard/drag-drop, selection, uploads, rename/move and Trash/restore; retained automatic Console; live visuals and bounded game telemetry; typed settings; Glacier theme; Game blueprints and toast feedback. See the [workflow/setup guide](Game-Workflows-Candidate-2026-11-15.md). Application source remains private; customer artifacts exclude owner administration and issuer components.
+
+Verification:2,302 enabled Node checks; five real DB and two generic rootless Podman cases; each edition17 expanded workflows,22 core,27 focused,118 navigation cases, eight interface workflows and session expiry;224 measured accessibility states. Public distribution149 unique Python/67 Node. Current three-image scans/SBOMs, exact-image migrations and two encrypted DB restores pass. Website507 units/build/types pass. Automated fixtures do not prove actual vendor games or assistive-technology behavior.
+
+Panel updates preserve existing data and do not update enrolled Host Agents, Host Node runtimes, games or timers. Use the separate matched Agent procedure for new file/settings capabilities. Older Hosts retain legacy controls. The472 Steam catalog definitions are not472 proven one-click installers or universal compatibility evidence. Gate stays opt-in experimental.
+
+Actual target install/update/interruption, game/player/provider, manual accessibility and soak checks remain owner-run. No paid service or workflow dispatch occurred. Owned Ubuntu workers, workspaces, images and build volumes were cleaned; no global prune or VHD compaction. Earlier releases remain immutable. The package contains frozen review-stage documentation; these post-publication delivery notes supply the current status.

@@ -1,6 +1,6 @@
 # Game management candidate — November 15, 2026
 
-These are candidate notes for a future compiled customer build. Published Test44 and its immutable installers, checksums and update commands have not changed. The public repository distributes compiled software; application source is maintained separately and is not copied here.
+These workflows are delivered in immutable Test45. [Current delivery and manual acceptance](Test-45-Delivery-2026-11-15.md). Older Test44 assets remain unchanged. The public repository distributes compiled software; application source is maintained separately and is not copied here.
 
 Both editions receive the same instance file explorer: expandable folder tree, breadcrumbs, file-type icons, multiple selection, keyboard navigation, context menus, rename/move, cut/paste, drag-and-drop, new folders, properties, bounded redacted previews, verified batch uploads and selected-item Trash/restore/permanent deletion. Organization requires an online capable Host, file/control permission and a reported stopped game. Linux moves preserve existing destinations atomically; interrupted changes retain explicit recovery state. Existing Hosts keep their supported listing and legacy upload controls until their Agent is updated.
 
@@ -24,4 +24,4 @@ Both separately compiled editions pass 17 expanded game-management workflows and
 
 The harsh shared-candidate ratings are: visual design 8.4/10, navigation 8.4, workflow UX 8.5, consistency 8.4, accessibility 8.1, performance 8.1, security 8.3 and product coverage 8.0. Both editions are ready for controlled owner acceptance within that scope. A new signed build, matched Host rollout, real game/player and manual accessibility/soak acceptance remain.
 
-Owned Ubuntu workers, temporary instances and new unused worker images were cleaned. No paid service, new public release or website install/update command change occurred in this task. Test44 remains the available release.
+Owned Ubuntu workers, temporary instances and new unused worker images were cleaned. No paid service was used. Test45 is now published with matched website install/update commands; see the delivery report for exact identities and manual acceptance.

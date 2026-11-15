@@ -1,6 +1,6 @@
-> **Test44 is published and anonymously verified.** [Delivery evidence and manual acceptance](Docs/Test-44-Delivery-2026-11-15.md). Use the matched Debian/Ubuntu install/update instructions on the TROA tester page; Gate stays opt-in experimental.
+> **Test45 is published and verified.** [Delivery evidence and manual acceptance](Docs/Test-45-Delivery-2026-11-15.md). Use the matched [Debian/Ubuntu install and update instructions](https://therealmsofasgard.com/gaming-hub/bifrost-server-manager#testing-installation). Includes the Explorer, retained Console and game-management workflows. Host Agent updates remain separate; Gate stays opt-in experimental.
 
-> Current target: **Test44**, the verified production-core manager candidate. Gate stays opt-in experimental. [Current core audit](Docs/Production-Core-2026-11-14.md) and [supported scope](Docs/Supported-Release-Scope.md) supersede historical ratings below. Delivery/download verification and manual target acceptance are separate; older releases stay immutable.
+Historical release records below retain their original dates and status. The Test45 delivery report above is current.
 
 > November 14 unreleased remediation candidate: [verified changes, harsh category ratings and remaining acceptance](Docs/Remediation-2026-11-14.md). This supersedes historical 8.0 judgments. Source changes remain local/unpublished; Test43 downloads and deployed services are unchanged. No paid services; owned Ubuntu test resources cleaned.
 
@@ -41,7 +41,7 @@ Bifrost manages customer Controllers, explicitly approved Hosts and game instanc
 
 ## Current status
 
-This distribution targets [Test44](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.44), an owner-authorized controlled testing prerelease of the core manager. It includes reviewed setup/restore workflows, explicitly opt-in Gate planning, signed in-place panel updates and encrypted recovery safeguards. Use the checksum-pinned Debian/Ubuntu fresh-install or panel-only update instructions on the [TROA tester page](https://therealmsofasgard.com/gaming-hub/bifrost-server-manager#testing-installation) once the matched signed release is available. An available source branch is not proof of installed-target acceptance. Existing data and all older release assets are preserved; real target/game/player and full update/recovery acceptance remain owner-run.
+This distribution targets [Test45](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.45), an owner-authorized controlled testing prerelease of the core manager. It includes reviewed setup/restore workflows, explicitly opt-in Gate planning, signed in-place panel updates and encrypted recovery safeguards. Use the checksum-pinned Debian/Ubuntu fresh-install or panel-only update instructions on the [TROA tester page](https://therealmsofasgard.com/gaming-hub/bifrost-server-manager#testing-installation) once the matched signed release is available. An available source branch is not proof of installed-target acceptance. Existing data and all older release assets are preserved; real target/game/player and full update/recovery acceptance remain owner-run.
 
 The historical published prerelease is [Test 33](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.33). Its earlier acceptance and signature limitations remain historical; it is not evidence for this candidate. [Earlier delivery records](Docs/History/README-before-release-readiness-2026-10-21.md) are retained.
 
