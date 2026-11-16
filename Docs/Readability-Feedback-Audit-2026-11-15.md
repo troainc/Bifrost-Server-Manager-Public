@@ -1,12 +1,10 @@
 # Bifrost master and public instance: harsh UI/UX and release audit
 
-**Live master sign-off is blocked.** After Test49 deployment, the owner-browser path returned502, then loaded the protected temporary-unavailability screen because setup/API requests still returned502. All six application services and server-origin HTTPS checks are healthy. Sanitized Caddy errors show requests dialling the removed web address while its active route points to the current container. A forced graceful reload of the identical configuration did not resolve it. Retained connection/config handling is an inference; the stale-dial/current-route mismatch is directly observed. A brief restart of the shared Coolify proxy is prepared but has **not** been run: owner approval is pending because it can interrupt every TROA site. No security/TLS/data/billing setting was changed. [Documented Caddy reload method](https://caddyserver.com/docs/api#post-load).
-
-Scores below assess the verified compiled UI, not successful owner-browser availability. **Current live master production readiness:5.5/10 while this gateway blocker remains. Public candidate core confidence:8.0/10 pending real target acceptance.** The table's master8.2 production-core judgment is conditional on clearing the gateway and completing owner acceptance; it is not the current deployed sign-off.
-
 November 15, 2026, New York. This assessment covers the actual master and customer application editions, including interaction states. The public repository is distribution tooling; the customer UI is compiled separately from the private application source. Gate remains opt-in experimental. Category scores are critical design judgments, not percentages of proven correctness or a guarantee against regressions.
 
 Test47 missed a basic requirement: licensing and other text could appear directly over detailed artwork. Its positive visual rating was not sufficient evidence. Test48 corrects shared content protection and notification behavior; Test49 completes browser-local AMP feedback and repairs actual multiline entry. This review supersedes earlier visual/readiness claims for the delivered builds. Final release identities and live receipts are in the matching delivery report.
+
+The post-deployment gateway blocker is now resolved: the owner-approved shared-proxy restart preserved its complete semantic configuration and all six application container identities/start times. The real authenticated browser subsequently loaded Test49, reported Fleet connected and displayed a successful refresh toast. Nine public HTTPS checks and the observed post-restart error-log window passed. Exact retained-handler causation remains unproven; future deploys need real browser/API acceptance and shared-proxy connection-drain hardening remains an infrastructure follow-up. The former blocked5.5 readiness score is historical, not the current result.
 
 ## Category ratings, out of 10
 
