@@ -2,7 +2,7 @@
 
 Updated November 16, 2026. The production target is the **core server manager**. The owner explicitly keeps Gate as an opt-in experimental preview; unfinished cross-world gameplay is excluded from the core production promise. This is a scope decision, not completion of Gate gameplay.
 
-The delivered controlled-testing build is immutable Test49; see [Test49 delivery](Test-49-Delivery-2026-11-15.md). Test50 is being prepared with a signed22-target catalogue,16 actual Steam vendor lifecycle checks and additive Explorer/live-visual improvements; see [Test50 candidate](Test-50-Candidate-2026-11-16.md). It remains unreleased until publication and anonymous verification complete. Real target/game/provider and sustained operation remain owner acceptance. Editing this repository does not update any installed Controller, Host Agent, runtime or game. Existing Host policies remain locally approved; updating Agent code does not silently replace that policy. Older release assets remain immutable; Gate remains outside the core production promise.
+The delivered controlled-testing build is immutable Test50;see [delivery and scope](Test-50-Delivery-2026-11-16.md). All28 assets,both offline verifiers,master deployment and four live TROA commands are verified. The catalogue has22 signed targets,not471 executable recipes. Owner target/manual/player/soak acceptance and broader requested engineering remain. Existing Host policy approval is preserved;editing this repository does not update an installed Controller,Agent or game. Older releases remain immutable;Gate stays opt-in experimental.
 
 Current candidate evidence and category ratings: [Production core verification](Production-Core-2026-11-14.md). That candidate report does not promote the published commands.
 
