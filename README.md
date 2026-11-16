@@ -1,10 +1,10 @@
-> **Detailed Bifrost Frost artwork:** original intricate desktop/mobile scenery and readable frosted glass are in verification for Test47. [Artwork prompts and provenance](Docs/Bifrost-Artwork-2026-11-15.md). [Test46 delivery and current limits](Docs/Test-46-Delivery-2026-11-15.md). Canonical TROA identity remains.
+> **Test47 is delivered; Test48 readability/toast fixes are in verification.** [Current delivery and limits](Docs/Test-47-Delivery-2026-11-15.md) · [Follow-up](Docs/Test-48-Delivery-2026-11-15.md) · [Original artwork/prompts](Docs/Bifrost-Artwork-2026-11-15.md). No Test48 delivery or full production certification is claimed.
 
 Historical records below retain their original release dates/status; they do not represent current artwork approval.
 
 > **Test45 is published and verified.** [Delivery evidence and manual acceptance](Docs/Test-45-Delivery-2026-11-15.md). Use the matched [Debian/Ubuntu install and update instructions](https://therealmsofasgard.com/gaming-hub/bifrost-server-manager#testing-installation). Includes the Explorer, retained Console and game-management workflows. Host Agent updates remain separate; Gate stays opt-in experimental.
 
-Historical release records below retain their original dates and status. The Test45 delivery report above is current.
+Historical release records below retain their original dates and status. That Test45 report describes its historical delivery.
 
 > November 14 unreleased remediation candidate: [verified changes, harsh category ratings and remaining acceptance](Docs/Remediation-2026-11-14.md). This supersedes historical 8.0 judgments. Source changes remain local/unpublished; Test43 downloads and deployed services are unchanged. No paid services; owned Ubuntu test resources cleaned.
 

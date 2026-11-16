@@ -1,0 +1,5 @@
+# Test48 readable surfaces and action toasts candidate
+
+This follows deliveredTest47. The owner found exposed text over the intricate background; the shared panel-only coverage missed the license layout. This candidate adds semantic page-intro/route glass surfaces and stronger glass opacity while flattening inner sections. All action-result notifications use the shared scoped toast system, including direct clipboard/download/local-configuration actions; durable receipts, validation and command output remain available in context. Original paintings and canonical TROA branding remain.
+
+Verification, audit/rating and delivery receipts are pending. Do not carry forward prior visual approval or imply every possible regression is disproved. Preserve all accounts/MFA/keys/enrollment/worlds/volumes, immutable47/older releases, rootlessPodman and opt-in Gate. No paid services or Windows app tests. Clean bounded Ubuntu fixtures. Universal Steam provisioning and real target/Host/game acceptance are not complete.
