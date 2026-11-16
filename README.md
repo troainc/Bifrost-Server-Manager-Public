@@ -1,3 +1,5 @@
+Test50 is an unreleased Steam/Explorer/live-visuals candidate; Test49 remains delivered. See [candidate scope and verification](Docs/Test-50-Candidate-2026-11-16.md).
+
 Test49 is delivered for owner acceptance: readable Frost glass, shared action toasts and corrected AMP multiline entry. [Delivery record](Docs/Test-49-Delivery-2026-11-15.md) · [Full harsh audit and ratings](Docs/Readability-Feedback-Audit-2026-11-15.md). Older release notes below are historical.
 
 > **Test47 is delivered; Test48 readability/toast fixes are in verification.** [Current delivery and limits](Docs/Test-47-Delivery-2026-11-15.md) · [Follow-up](Docs/Test-48-Delivery-2026-11-15.md) · [Original artwork/prompts](Docs/Bifrost-Artwork-2026-11-15.md). No Test48 delivery or full production certification is claimed.
