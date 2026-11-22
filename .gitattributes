@@ -4,3 +4,5 @@
 *.yaml text eol=lf
 *.conf text eol=lf
 .env.example text eol=lf
+SHA256SUMS text eol=lf
+*.sha256 text eol=lf

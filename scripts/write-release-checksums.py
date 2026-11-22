@@ -8,8 +8,11 @@ def write_checksums(directory):
  if any((root/name).exists()for name in ['release-manifest.json','release-manifest.sig']):raise ValueError('Do not rewrite a signed release inventory.')
  lines=[]
  for p in sorted(root.iterdir()):
-  if p.name=='SHA256SUMS' or p.is_dir():continue
   info=p.lstat()
+  if p.name=='SHA256SUMS':
+   if not stat.S_ISREG(info.st_mode)or info.st_nlink!=1:raise ValueError('Unsafe existing checksum inventory.')
+   continue
+  if stat.S_ISDIR(info.st_mode):continue
   if not stat.S_ISREG(info.st_mode)or info.st_nlink!=1 or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,159}',p.name)or'..'in p.name:raise ValueError('Unsafe public release asset.')
   digest=hashlib.sha256()
   with p.open('rb')as source:
