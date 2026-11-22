@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.51
+VERSION=v0.1.0-installtest.52
 # BEGIN SIGNED_RELEASE_BOOTSTRAP
 # Local candidate identity. Private signing material is never part of this repository.
 readonly RELEASE_SIGNER_SPKI_SHA256=1dba79e7a3d2608b42a5324089d4db548567999210ffbf3dd96ce5cb63a92e6a
@@ -280,6 +280,26 @@ assert_service_account() {
   fi
 }
 
+verify_matched_host_checksum() {
+  python3 - "$1" <<'MATCHED_HOST_CHECKSUM_PY'
+import hashlib,pathlib,re,sys
+root=pathlib.Path(sys.argv[1])
+data=(root/'SHA256SUMS').read_bytes()
+if not 0<len(data)<=1048576:raise SystemExit('Invalid Host checksum inventory size.')
+records=[]
+for line in data.split(b'\n'):
+    if line.endswith(b'\r'):line=line[:-1]
+    match=re.fullmatch(rb'([a-f0-9]{64})  bifrost-linux-host-agent\.zip',line)
+    if match:records.append(match.group(1).decode('ascii'))
+if len(records)!=1:raise SystemExit('Expected exactly one matched Host checksum record.')
+digest=hashlib.sha256()
+with (root/'host.zip').open('rb') as source:
+    for block in iter(lambda:source.read(1048576),b''):digest.update(block)
+if digest.hexdigest()!=records[0]:raise SystemExit('Matched Host package checksum differs.')
+print('Verified matched Host package checksum.')
+MATCHED_HOST_CHECKSUM_PY
+}
+
 prepare_automatic_instance_host() {
   [[ $(id -u) -eq 0 ]] || fail 'Local Host preparation requires the initial VM administrator.'
   # A non-login su session can retain the ordinary user's PATH. Both fresh
@@ -334,7 +354,7 @@ NODE_RUNTIME_PY
   fetch_release_asset "bifrost-linux-host-agent.zip" "$stage/host.zip"
   fetch_release_asset "SHA256SUMS" "$stage/SHA256SUMS"
   verify_signed_release "$stage" host.zip bifrost-linux-host-agent.zip
-  (cd "$stage" && sed 's/  bifrost-linux-host-agent.zip$/  host.zip/' SHA256SUMS | grep -E '^[a-f0-9]{64}  host.zip$' | sha256sum --check --status) || fail 'Matched Host package checksum failed.'
+  verify_matched_host_checksum "$stage" || fail 'Matched Host package checksum failed.'
   digest=$(sha256sum "$stage/host.zip" | awk '{print $1}')
   chmod 0644 "$stage/host.zip"
   package_root="$game_home/.local/opt/bifrost-host-agent-$digest"

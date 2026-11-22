@@ -28,7 +28,7 @@ cp scripts/update-recovery.py "$output/package/scripts/update-recovery.py"
 cp scripts/automatic-panel-updates.py "$output/package/scripts/automatic-panel-updates.py"
 cp scripts/collect-prerequisite-evidence.py "$output/package/scripts/collect-prerequisite-evidence.py"
 mkdir -m 0755 "$output/package/Docs"
-for document in Test-51-SE2-2026-11-22 Test-50-Candidate-2026-11-16 Supported-Release-Scope Production-Core-2026-11-14 Game-Workflows-Candidate-2026-11-15 Frost-Telemetry-Audit-2026-11-15 Host-Telemetry-and-Catalog-Recipes Test-46-Delivery-2026-11-15 Bifrost-Artwork-2026-11-15 Test-47-Delivery-2026-11-15 Test-48-Delivery-2026-11-15 Test-49-Delivery-2026-11-15 Recovery-and-Key-Rotation Standalone-Installation Prerequisite-Security-Review Manual-Acceptance-Checklist Automatic-Panel-Updates; do
+for document in Test-52-Installer-Repair-2026-11-22 Test-51-SE2-2026-11-22 Test-50-Candidate-2026-11-16 Supported-Release-Scope Production-Core-2026-11-14 Game-Workflows-Candidate-2026-11-15 Frost-Telemetry-Audit-2026-11-15 Host-Telemetry-and-Catalog-Recipes Test-46-Delivery-2026-11-15 Bifrost-Artwork-2026-11-15 Test-47-Delivery-2026-11-15 Test-48-Delivery-2026-11-15 Test-49-Delivery-2026-11-15 Recovery-and-Key-Rotation Standalone-Installation Prerequisite-Security-Review Manual-Acceptance-Checklist Automatic-Panel-Updates; do
   cp "Docs/$document.md" "$output/package/Docs/$document.md"
   chmod 0644 "$output/package/Docs/$document.md"
 done
@@ -69,11 +69,5 @@ python3 scripts/write-image-identities.py "$output/package/customer-images.tar" 
 
 tar -czf "$output/bifrost-linux-amd64-$version.tar.gz" -C "$output/package" .
 cp install.sh update.sh "$output/"
-(
-  cd "$output"
-  for asset in "bifrost-linux-amd64-$version.tar.gz" install.sh update.sh; do
-    digest=$(sha256sum -- "$asset" | awk '{print $1}')
-    printf '%s  %s\n' "$digest" "$asset"
-  done > SHA256SUMS
-)
+python3 scripts/write-release-checksums.py "$output"
 printf 'Created compiled customer release %s; host/game acceptance remains pending.\n' "$version"
