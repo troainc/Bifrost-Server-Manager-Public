@@ -1,4 +1,4 @@
-Test50 is published for controlled owner acceptance. [Current delivery and scope](Docs/Test-50-Delivery-2026-11-16.md). Full all-Steam/AMP3 scope remains unfinished.
+Test51 is published for controlled owner acceptance. [Current delivery and scope](Docs/Test-50-Delivery-2026-11-16.md). Full all-Steam/AMP3 scope remains unfinished.
 
 Older delivery notes below are historical.
 
@@ -51,9 +51,9 @@ Bifrost manages customer Controllers, explicitly approved Hosts and game instanc
 
 ## Current status
 
-The current testing prerelease is [Test 50](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.50). Use the [TROA tester page](https://therealmsofasgard.com/gaming-hub/bifrost-server-manager#testing-installation) for the checksum-pinned Debian and Ubuntu commands to install a fresh instance or update an existing panel in place.
+The current testing prerelease is [Test 51](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.51). Use the [TROA tester page](https://therealmsofasgard.com/gaming-hub/bifrost-server-manager#testing-installation) for the checksum-pinned Debian and Ubuntu commands to install a fresh instance or update an existing panel in place.
 
-Test 50 ships 22 signed game targets. See the [delivery notes](Docs/Test-50-Delivery-2026-11-16.md) for supported games, Host policy approval and the remaining acceptance checks. Gate remains opt-in and experimental.
+Test 51 ships 22 signed game targets. See the [delivery notes](Docs/Test-50-Delivery-2026-11-16.md) for supported games, Host policy approval and the remaining acceptance checks. Gate remains opt-in and experimental.
 
 The historical published prerelease is [Test 33](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.33). Its earlier acceptance and signature limitations remain historical; it is not evidence for this candidate. [Earlier delivery records](Docs/History/README-before-release-readiness-2026-10-21.md) are retained.
 

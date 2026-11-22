@@ -837,4 +837,3 @@ The owner authorized a matched master/customer release and website Ubuntu/Debian
 ## 2026-11-22 — Separate wipe first; new SE2 installer follows
 
 Owner selected full Bifrost-data wipe on the public Debian test server and asked for the wipe script before the new installer. Reset helper now recognizes the exact 24.19.0 and 24.22.3 installer service paths, preserving all other service/ownership/role/shared-volume guards. All 29 reset regressions pass in a network-isolated disposable Debian container. No actual target reset was run. Test 50 remains the published application release until a separately verified SE2 build is published; retain its assets. Private master is healthy with readable SE2 supplemental catalogue; four live site commands and the anonymous Test 50 installer hash match.
-

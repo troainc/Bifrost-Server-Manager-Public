@@ -860,4 +860,3 @@ The owner authorized a matched master/customer release and website Ubuntu/Debian
 ## 2026-11-22 — Reviewed Debian reset runtime paths
 
 Accept the two exact installer-owned Node service paths (24.19.0 and 24.22.3) without weakening template or runtime identity checks. Twenty-nine Linux reset tests pass in an isolated Debian container, including custom executable/version/hardening refusal and existing shared-volume, enrollment and shutdown checks. Owner requested a separate wipe first and a new SE2 public installer later. No actual server wipe, release replacement or private master mutation occurred.
-

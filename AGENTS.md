@@ -748,4 +748,3 @@ The owner authorized a matched master/customer release and website Ubuntu/Debian
 ## 2026-11-22 — Debian public test-server reset and SE2 release
 
 The owner authorizes a wipe script for the separate public Debian test server, including all local Bifrost databases, accounts, enrollment and worlds. Provide the wipe separately now; publish a new compiled public SE2 build and matched website install commands afterward. Do not execute the wipe remotely. Preserve the private master, unrelated workloads and immutable releases. The reset accepts only exact reviewed installer services; 29 Debian reset tests pass, including both known Node paths. No game content or private runtime archive may be published.
-
