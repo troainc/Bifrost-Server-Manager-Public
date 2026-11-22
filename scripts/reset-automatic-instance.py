@@ -21,6 +21,7 @@ UUID = r"[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}"
 SERVICES = {"postgres", "migrate", "control-plane", "web", "https"}
 UNITS = ("bifrost-instance-setup.service", "bifrost-host-agent.service")
 NODE = "/opt/bifrost-node-v24.19.0/bin/node"
+REVIEWED_NODES = (NODE, "/opt/bifrost-node-v24.22.3/bin/node")
 
 
 def require(condition, message):
@@ -65,10 +66,13 @@ def optional_tree(path, uid):
 
 def check_game_unit(data, package, setup):
     prefix = "[Unit]\nDescription=Bifrost " + ("automatic Instance connection" if setup else "local game Host Agent") + "\n[Service]\n"
-    command = f"ExecStart={NODE} {package}/dist/" + ("automatic-instance-setup.js /home/bifrost-games/.config/bifrost-host-agent/local-bootstrap.json" if setup else "main.js") + "\n"
     rest = (f"WorkingDirectory={package}\n" if setup else "Environment=BIFROST_HOST_AGENT_CONFIG=/home/bifrost-games/.config/bifrost-host-agent/host-agent.json\n")
-    expected = prefix + command + rest + "Restart=on-failure\nRestartSec=10\nUMask=0077\n" + ("NoNewPrivileges=true\n" if setup else "") + "[Install]\nWantedBy=default.target\n"
-    require(data.decode() == expected, "Custom Host service; preserve it")
+    suffix = rest + "Restart=on-failure\nRestartSec=10\nUMask=0077\n" + ("NoNewPrivileges=true\n" if setup else "") + "[Install]\nWantedBy=default.target\n"
+    entrypoint = "automatic-instance-setup.js /home/bifrost-games/.config/bifrost-host-agent/local-bootstrap.json" if setup else "main.js"
+    # Older test VMs and Test 50 use these exact installer-owned runtimes.
+    # Do not accept arbitrary Node executables or relax the service template.
+    require(any(data.decode() == prefix + f"ExecStart={node} {package}/dist/{entrypoint}\n" + suffix
+                for node in REVIEWED_NODES), "Custom Host service; preserve it")
 
 
 def bootstrap_binding(value):

@@ -834,3 +834,7 @@ Ten disposable Linux checks pass: seven focused tests and three production CLI f
 ## 2026-10-16 - Test 33 audit remediation release preparation
 
 The owner authorized a matched master/customer release and website Ubuntu/Debian command update. Test 33 will include the compiled Controller/web/Linux Host audit fixes for refresh, heartbeat freshness, bounded Fleet reads, account-scoped local drafts and operational security. Customer packages continue to exclude the private issuer and owner administration. Earlier assets, installed data, keys and game/runtime catalog approvals remain unchanged. The updater is pinned to its exact source commit and SHA-256. Compilation and package-integrity checks are release work; manual QA and test suites are deferred. Publication and downloaded-asset evidence are recorded separately when complete.
+## 2026-11-22 — Separate wipe first; new SE2 installer follows
+
+Owner selected full Bifrost-data wipe on the public Debian test server and asked for the wipe script before the new installer. Reset helper now recognizes the exact 24.19.0 and 24.22.3 installer service paths, preserving all other service/ownership/role/shared-volume guards. All 29 reset regressions pass in a network-isolated disposable Debian container. No actual target reset was run. Test 50 remains the published application release until a separately verified SE2 build is published; retain its assets. Private master is healthy with readable SE2 supplemental catalogue; four live site commands and the anonymous Test 50 installer hash match.
+

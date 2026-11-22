@@ -745,3 +745,7 @@ Ten disposable Linux checks pass: seven focused tests and three production CLI f
 ## 2026-10-16 - Test 33 audit remediation release preparation
 
 The owner authorized a matched master/customer release and website Ubuntu/Debian command update. Test 33 will include the compiled Controller/web/Linux Host audit fixes for refresh, heartbeat freshness, bounded Fleet reads, account-scoped local drafts and operational security. Customer packages continue to exclude the private issuer and owner administration. Earlier assets, installed data, keys and game/runtime catalog approvals remain unchanged. The updater is pinned to its exact source commit and SHA-256. Compilation and package-integrity checks are release work; manual QA and test suites are deferred. Publication and downloaded-asset evidence are recorded separately when complete.
+## 2026-11-22 — Debian public test-server reset and SE2 release
+
+The owner authorizes a wipe script for the separate public Debian test server, including all local Bifrost databases, accounts, enrollment and worlds. Provide the wipe separately now; publish a new compiled public SE2 build and matched website install commands afterward. Do not execute the wipe remotely. Preserve the private master, unrelated workloads and immutable releases. The reset accepts only exact reviewed installer services; 29 Debian reset tests pass, including both known Node paths. No game content or private runtime archive may be published.
+

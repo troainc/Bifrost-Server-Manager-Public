@@ -68,9 +68,23 @@ class FullResetTests(unittest.TestCase):
                 "Environment=BIFROST_HOST_AGENT_CONFIG=/home/bifrost-games/.config/bifrost-host-agent/host-agent.json\n" +
                 "Restart=on-failure\nRestartSec=10\nUMask=0077\n[Install]\nWantedBy=default.target\n")
         self.m.check_game_unit(unit.encode(), package, False)
-        for altered in (unit.replace("dist/main.js", "dist/foreign.js"), unit + "Environment=FOREIGN=1\n"):
+        for node in self.m.REVIEWED_NODES:
+            self.m.check_game_unit(unit.replace(self.m.NODE, node).encode(), package, False)
+        for altered in (unit.replace("dist/main.js", "dist/foreign.js"), unit + "Environment=FOREIGN=1\n",
+                        unit.replace(self.m.NODE, "/tmp/node"), unit.replace("v24.19.0", "v24.99.0")):
             with self.assertRaises(RuntimeError):
                 self.m.check_game_unit(altered.encode(), package, False)
+
+    def test_setup_unit_accepts_only_reviewed_installer_node_paths(self):
+        package = "/home/bifrost-games/.local/opt/bifrost-host-agent-" + "a" * 64
+        suffix = (f" {package}/dist/automatic-instance-setup.js /home/bifrost-games/.config/bifrost-host-agent/local-bootstrap.json\n"
+                  f"WorkingDirectory={package}\nRestart=on-failure\nRestartSec=10\nUMask=0077\n"
+                  "NoNewPrivileges=true\n[Install]\nWantedBy=default.target\n")
+        for node in self.m.REVIEWED_NODES:
+            unit = "[Unit]\nDescription=Bifrost automatic Instance connection\n[Service]\nExecStart=" + node + suffix
+            self.m.check_game_unit(unit.encode(), package, True)
+            with self.assertRaises(RuntimeError):
+                self.m.check_game_unit(unit.replace("NoNewPrivileges=true", "NoNewPrivileges=false").encode(), package, True)
 
     def test_changed_review_refuses_before_shutdown_or_cleanup(self):
         with patch.object(self.m, "game_review", return_value={"changed": True}), patch.object(self.m, "run") as command:
