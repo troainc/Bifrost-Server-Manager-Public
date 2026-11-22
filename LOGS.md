@@ -857,3 +857,6 @@ Ten disposable Linux checks pass: seven focused tests and three production CLI f
 ## 2026-10-16 - Test 33 audit remediation release preparation
 
 The owner authorized a matched master/customer release and website Ubuntu/Debian command update. Test 33 will include the compiled Controller/web/Linux Host audit fixes for refresh, heartbeat freshness, bounded Fleet reads, account-scoped local drafts and operational security. Customer packages continue to exclude the private issuer and owner administration. Earlier assets, installed data, keys and game/runtime catalog approvals remain unchanged. The updater is pinned to its exact source commit and SHA-256. Compilation and package-integrity checks are release work; manual QA and test suites are deferred. Publication and downloaded-asset evidence are recorded separately when complete.
+## 2026-11-22 — Reviewed Debian reset runtime paths
+
+Accept the two exact installer-owned Node service paths (24.19.0 and 24.22.3) without weakening template or runtime identity checks. Twenty-nine Linux reset tests pass in an isolated Debian container, including custom executable/version/hardening refusal and existing shared-volume, enrollment and shutdown checks. Owner requested a separate wipe first and a new SE2 public installer later. No actual server wipe, release replacement or private master mutation occurred.
