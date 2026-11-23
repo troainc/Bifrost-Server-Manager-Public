@@ -1,3 +1,5 @@
+Test54 replaces the storage waiver with installation disk-space recommendations. [Behavior, verification and limits](Docs/Test-54-Storage-Recommendations-2026-11-23.md). Disk estimates are advisory; signatures, resource policy and fleet isolation remain enforced. Prior releases remain immutable.
+
 Test 53 consolidates browser onboarding and safely recovers an explicitly approved empty revoked local Host. [Onboarding and pairing](Docs/Test-53-Onboarding-and-Pairing-2026-11-22.md).
 
 Test 52 repairs automatic local Host checksum parsing and canonical release checksum bytes. [Repair and recovery](Docs/Test-52-Installer-Repair-2026-11-22.md).
@@ -55,7 +57,7 @@ Bifrost manages customer Controllers, explicitly approved Hosts and game instanc
 
 ## Current status
 
-The current testing prerelease is [Test 53](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.53). Use the [TROA tester page](https://therealmsofasgard.com/gaming-hub/bifrost-server-manager#testing-installation) for the checksum-pinned Debian and Ubuntu commands to install a fresh instance or update an existing panel in place.
+The current testing prerelease is [Test 53](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-installtest.54). Use the [TROA tester page](https://therealmsofasgard.com/gaming-hub/bifrost-server-manager#testing-installation) for the checksum-pinned Debian and Ubuntu commands to install a fresh instance or update an existing panel in place.
 
 Test 51 retains 22 signed download targets and adds the separately signed SE2 local-package blueprint. See the [release notes](Docs/Test-51-SE2-2026-11-22.md) for supported games, Host policy approval and the remaining acceptance checks. Gate remains opt-in and experimental.
 
