@@ -1,5 +1,9 @@
 Test54 replaces the storage waiver with installation disk-space recommendations. [Behavior, verification and limits](Docs/Test-54-Storage-Recommendations-2026-11-23.md). Disk estimates are advisory; signatures, resource policy and fleet isolation remain enforced. Prior releases remain immutable.
 
+Current main includes the [SE2 Host preparation guide](Docs/SE2-Host-Preparation.md)
+for new candidate packages. Main-branch build results are separate from the
+published signed Test 54 download; rebuilding does not replace its release assets.
+
 Test 53 consolidates browser onboarding and safely recovers an explicitly approved empty revoked local Host. [Onboarding and pairing](Docs/Test-53-Onboarding-and-Pairing-2026-11-22.md).
 
 Test 52 repairs automatic local Host checksum parsing and canonical release checksum bytes. [Repair and recovery](Docs/Test-52-Installer-Repair-2026-11-22.md).

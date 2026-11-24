@@ -1,3 +1,7 @@
+## 2026-11-24 — Owner requests fresh main builds
+
+The owner explicitly requests pushing both main branches with builds enabled. This supersedes the previous documentation-only skip-ci/skip-cd delivery for this build request. Include the SE2 preparation guide in new candidate packages and retain the current Test 54 runtime/version and exact signed recipe inputs. Push this update without skip flags. A candidate build does not replace immutable Test 54 release assets or prove actual SE2 startup; report its exact run/result separately. bfsm preparation remains deferred, with no new SSH, account, pairing or game changes authorized by this build request.
+
 ## 2026-11-24 — SE2 operator preparation and current scope
 
 Document exact private input sizes/hashes, use of the currently installed Agent's approval helper, separate game-service ownership, protected preparation and normal GUI/readiness/lifecycle acceptance. Correct the scope page to Test 54, 22 signed download recipes plus SE2, and advisory installation storage. SE2 is controlled testing under Podman/Wine; native no-Wine servers remain unavailable. Original private assets have been recovered and verified by the owner team but are not published here. Owner deferred target SSH/install work in favor of repository updates; no new target startup acceptance is claimed. Signed Test 54 assets, pins and recipes remain unchanged. Documentation-only delivery uses skip-ci/skip-cd; no new release or deployment is required.
