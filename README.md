@@ -4,7 +4,7 @@ Test 53 consolidates browser onboarding and safely recovers an explicitly approv
 
 Test 52 repairs automatic local Host checksum parsing and canonical release checksum bytes. [Repair and recovery](Docs/Test-52-Installer-Repair-2026-11-22.md).
 
-Test 51 adds the compiled SE2 Online blueprint and explicit Linux Host preparation. [Release scope and prerequisites](Docs/Test-51-SE2-2026-11-22.md). Full all-Steam/AMP3 scope remains unfinished.
+Test 51 adds the compiled SE2 Online blueprint and explicit Linux Host preparation. [Prepare the Host and install SE2](Docs/SE2-Host-Preparation.md) · [Release scope and prerequisites](Docs/Test-51-SE2-2026-11-22.md). Full all-Steam/AMP3 scope remains unfinished.
 
 Older delivery notes below are historical.
 

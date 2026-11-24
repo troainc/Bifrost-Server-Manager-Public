@@ -1,3 +1,9 @@
+## 2026-11-24 — SE2 installation documentation
+
+- Add exact private asset verification and existing-Host preparation guidance.
+- Correct current scope to Test 54, the controlled-testing SE2 blueprint and advisory storage.
+- Keep existing signed release assets, installer pins and recipes unchanged; no new target game acceptance.
+
 ## Unreleased - Frost, process telemetry and strict game adapters
 
 - Restore distinct Host/game live measurements and full-range resource history; preserve missing/stale/offline states and history selection.
