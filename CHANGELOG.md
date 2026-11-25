@@ -1,6 +1,65 @@
-## Alpha 55 — UI Overhaul (candidate)
+## 2026-11-25 — Alpha 55: UI Overhaul and Bifrost Forge
 
-Main now prepares `v0.1.0-alpha.55`. [Changes and limits](Docs/Alpha-55-UI-Overhaul.md) · [Forge operator guide](Docs/Bifrost-Forge-Operator-Guide.md). The signed Test 54 download remains unchanged until Alpha 55 is independently built, signed and verified.
+Candidate version: `v0.1.0-alpha.55`. Application source and distribution inputs are committed to main. The existing signed Test 54 release remains unchanged; these notes do not announce a signed Alpha 55 download or certify every game.
+
+### Server workspaces and live telemetry
+
+- Refresh fleet overview, server inventory, individual server workspaces and Host pages with game banners, clearer status, resource readings and consistent flat layouts. Keep the main menu unchanged.
+- Add overall CPU, RAM, storage and player gauges, plus game FPS and simulation speed where an adapter reports them. Distinguish game-process usage from shared Host resources.
+- Refresh visible Host and game-server pages through fleet events and bounded polling. Show report time, freshness, offline/reconnecting and paused states; stop background reads when hidden or offline. Unreported FPS and stale measurements are never invented.
+- Replace content-area triangle disclosures with named buttons, dialogs and section navigation. Improve blueprint details, readable forms, console presentation and server file workflows.
+- Add acknowledged per-file and overall upload progress for drag-and-drop transfers, with separate verification/commit states and retained completion feedback. Remote folder reads still depend on Host responses.
+
+### Blueprints, artwork and installation
+
+- Add branded game banners/logos, cached Steam artwork and administrator artwork replacement/reset controls. New catalog entries can use their own artwork without changing the main navigation.
+- Clean up blueprint search and details. Keep definition-only listings separate from executable recipes and show SE2 configuration preparation even when no compatible Host currently approves its package.
+- Preserve the guided Host selection, game/server/world settings and installation review flow. Retain selected values while moving between steps and keep readiness, resource, port and vendor-license checks before installation.
+- Expand Space Engineers session settings and dedicated-server controls, add a separate Torch settings scope, and improve validated game-specific settings handling. Preserve protected paths, ports, credentials and unsupported-field boundaries.
+- Show SE2 server, world and water configuration through its supported setup workflow. The current SE2 local-package loader remains pinned to 0.18.4; this is not an official Keen native Linux server or an automatic 0.18.5 upgrade.
+
+### Players, Analytics and per-server Discord
+
+- Add player search, identity/details, reported Steam IDs, IPv4/IPv6 address detection and optional local approximate geolocation. Kick/ban actions require the corresponding reviewed game bridge and authorization; count-only status queries do not supply moderation.
+- Add per-server Analytics with 7/30/90-day ranges, activity timeline, session/player/playtime totals, period comparisons, country map/list, player rankings and detailed daily values. Refresh visible supported adapters automatically and label synthetic previews explicitly.
+- Require recorded-session support for real Analytics; player-count polling does not manufacture historical sessions. Preserve authorization and transient-result limits. Do not collect Discord custom status text or chat bodies.
+- Add independent Discord connections per server with webhook or bot delivery, bot channel selection, server display names, event preferences, explicit test notifications and delivery history.
+- Encrypt stored Discord credentials, keep them out of browser drafts and game files, and distinguish queued/delivered/failed/uncertain sends. Webhooks use their configured Discord destination. Real external delivery still requires operator-provided credentials.
+
+### Settings and feedback
+
+- Add debounced autosave and success/error toasts for supported general, appearance, existing Discord preferences and saved draft workflows. Retain edits after failures and offer explicit retry.
+- Keep game-setting drafts isolated by account, Host, instance and configuration scope; restore valid non-secret edits when reopening the editor.
+- Keep applying real game changes, replacing credentials, installing games, lifecycle operations and sending external notification tests as explicit actions. Draft autosave does not restart a server or enqueue a Host write.
+
+### Bifrost Forge — master publishing
+
+- Add the master-only Blueprint releases workbench with Build package, Library, Validation, Releases, Delivery and Guide. Customer editions receive catalogs and do not expose publishing endpoints.
+- Support one game or batches of up to 32 additions/withdrawals, Lab/Pilot/Stable channels, optimistic draft revisions, autosave, release notes and explicit recipient selection.
+- Bind administrator-attested test reports to exact recipe digests and advertised targets. Require install, settings, start, stop/start, backup/restore and rollback evidence before publication; a successful schema check is not a runtime test.
+- Sign immutable release envelopes and recipes with a separately configured protected Ed25519 publisher key. Enforce publisher permissions, existing authentication/MFA/CSRF checks and a durable publishing event ledger.
+- Add purpose-specific subscriber credentials, authenticated HTTPS pull, recipient/channel/signature/expiry/replay checks, durable acknowledgement retry and offline catch-up within release validity.
+- Atomically activate accepted catalog revisions and retain trusted older digests for existing previews/jobs. Withdraw affected recipes from new-install choices and recover through a newly signed higher sequence. Catalog receipt does not install or restart a game.
+- Keep game files, private runtime archives, signing keys and production credentials outside public catalog releases. Existing Host policy approval and provider compatibility remain required.
+
+### Bifrost Forge — templates and file preparation
+
+- Add guided new-game and update forms backed by 23 signed recipe sources. Preserve copied runtime/provider fields, persistent-data layouts, ports and adapters; increment ordinary recipe patch revisions for updates.
+- Provide reusable Minecraft Java, SE1 Torch and pinned SE2 authoring examples, portable package JSON import/export, an in-app operator guide and downloadable instructions.
+- Stream private file uploads in chunks up to 8 MiB, show acknowledged-byte progress, and verify SHA-256 asynchronously. Enforce account isolation, exact offsets, an 8 GiB per-file limit, 20 GiB reserved staging total and 128 receipts.
+- Import verified configuration text into safe relative default-file paths. Fill selected vendor-artifact checksums and sizes from verified staging receipts while retaining approved vendor URLs and separate Windows policies.
+- Check package structure, runtime identities, resource/path/download policy, placeholder values and common embedded credential patterns before creating a Lab draft.
+- Keep uploaded archives inert: staging does not extract or execute files, generate a provider, publish game bytes or make an unsupported runtime installable. Exported templates contain metadata and fingerprints rather than staged archive contents.
+
+### Alpha compatibility, verification and remaining gates
+
+- Continue the prerelease sequence as Alpha 55 while accepting legacy signed `installtest.N` versions. Keep stable users out of prerelease discovery and retain signatures, exact artifact hashes and update-recovery protections.
+- Verify local template/configuration upload, checksum receipts, reusable-template and guide downloads, autosaved drafts and Lab draft creation. Focused tests cover authoring, staging authorization, release trust, replay rejection, delivery retry, restart reconstruction, withdrawal and recovery. TypeScript checks cover the shared packages, Controller, web and both Host Agents.
+- Treat local demo telemetry, mocked notification delivery and isolated subscriber fixtures as scoped evidence, not real game/Discord/fleet acceptance. Missing adapters and unreported fields remain visible.
+- Keep automatic test-Host orchestration, scheduled publication, new providers/settings adapters, signed artwork bundles, customer catalog pin policies and very-long-offline snapshot recovery as remaining work. Releases expire after 90 days.
+- Preserve existing accounts, MFA, Host pairing, persistent worlds and volumes. No public vendor binaries, private application source or credentials are added by this distribution update.
+
+[Alpha 55 scope and limits](Docs/Alpha-55-UI-Overhaul.md) · [Forge operator guide](Docs/Bifrost-Forge-Operator-Guide.md) · [Blueprint subscriptions](Docs/Blueprint-Subscriptions.md)
 
 ## 2026-11-24 — SE2 installation documentation
 
