@@ -1,3 +1,7 @@
+## Alpha 55 — UI Overhaul (candidate)
+
+Main now prepares `v0.1.0-alpha.55`. [Changes and limits](Docs/Alpha-55-UI-Overhaul.md) · [Forge operator guide](Docs/Bifrost-Forge-Operator-Guide.md). The signed Test 54 download remains unchanged until Alpha 55 is independently built, signed and verified.
+
 ## 2026-11-24 — SE2 installation documentation
 
 - Add exact private asset verification and existing-Host preparation guidance.

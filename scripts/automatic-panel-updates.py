@@ -18,7 +18,7 @@ import urllib.request
 
 REPOSITORY = 'troainc/Bifrost-Server-Manager-Public'
 SIGNER = '1dba79e7a3d2608b42a5324089d4db548567999210ffbf3dd96ce5cb63a92e6a'
-VERSION = re.compile(r'v(\d+)\.(\d+)\.(\d+)(?:-installtest\.(\d+))?')
+VERSION = re.compile(r'v(\d+)\.(\d+)\.(\d+)(?:-(?:installtest|alpha)\.(\d+))?')
 ALLOWED_HOSTS = {'api.github.com', 'github.com', 'release-assets.githubusercontent.com', 'objects.githubusercontent.com'}
 UNIT = 'bifrost-panel-update'
 

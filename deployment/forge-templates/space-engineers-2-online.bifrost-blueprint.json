@@ -1,0 +1,57 @@
+{
+  "format": "bifrost-forge-package",
+  "schemaVersion": 1,
+  "manifest": {
+    "schemaVersion": 1,
+    "id": "space-engineers-2-online",
+    "version": "0.18.4",
+    "displayName": "Space Engineers 2 · SE2 Online",
+    "architecture": "x64",
+    "image": "localhost/bifrost-se2online-automatic@sha256:12ebe17eef05fc1808f87cde94c77469dc2a3149fe592c9004c6e10d9d23029b",
+    "imageId": "sha256:7ae1d89dbc3c79da751a4c858d7f56a335ef282f83cc512aeadeb15193821b08",
+    "executable": "/usr/bin/python3",
+    "args": [
+      "/usr/local/lib/bifrost-se2/entrypoint.py",
+      "start"
+    ],
+    "uid": 1000,
+    "gid": 1000,
+    "ports": [
+      {
+        "id": "game",
+        "containerPort": 27016,
+        "protocol": "udp",
+        "defaultHostPort": 27016,
+        "containerPortFromHost": true
+      },
+      {
+        "id": "query",
+        "containerPort": 27017,
+        "protocol": "udp",
+        "defaultHostPort": 27017,
+        "containerPortFromHost": true
+      }
+    ],
+    "minimumMemoryBytes": 8589934592,
+    "maximumMemoryBytes": 34359738368,
+    "minimumDiskBytes": 42949672960,
+    "maximumNanoCpus": 4000000000,
+    "readiness": {
+      "mode": "se2-status",
+      "timeoutSeconds": 900
+    },
+    "initialFiles": [
+      {
+        "path": "server.json",
+        "content": "{\"AutoRestart\":{\"EveryHours\":0,\"MaxCrashRestartsPerHour\":3,\"MinUptimeMinutes\":30,\"RestartOnCrash\":false,\"Times\":[],\"WarnMinutes\":[15,5,1]},\"AutoUpdate\":{\"CheckMinutes\":30,\"Enabled\":false},\"CatchUpMs\":1000,\"Cleanup\":{\"Debris\":{\"Enabled\":true,\"MaxBlocks\":5,\"MinAgeMinutes\":30,\"MinDistanceMeters\":300,\"RequireUnpowered\":true},\"DryRun\":true,\"Enabled\":true,\"EveryMinutes\":60,\"FloatingItems\":{\"Enabled\":true,\"MinAgeMinutes\":15,\"MinDistanceMeters\":100},\"KeepTag\":\"[KEEP]\",\"MaxRemovalsPerSecond\":5,\"NpcGrids\":{\"Enabled\":false,\"IdleDays\":7,\"IdleHours\":0,\"MinDistanceMeters\":1000},\"PlayerGrids\":{\"Enabled\":false,\"FactionShared\":true,\"InactiveDays\":30,\"InactiveHours\":0,\"MinDistanceMeters\":1000},\"ProtectWithinMeters\":300,\"SaveBefore\":true,\"VanillaGridPcu\":\"npc-only\",\"WarnSeconds\":60},\"CommandFile\":\"dedicated-command.txt\",\"DefinitionDumpFile\":\"native-definitions.json\",\"DefinitionSettings\":{\"Keen.Game2.Simulation.RuntimeSystems.Saves.SaveSessionComponentDefinition\":{\"AutosaveTime\":3000000000,\"CockpitEntryAutosaveCooldown\":300000000},\"Keen.Game2.Simulation.RuntimeSystems.WorldSettings.WorldSettingsConfiguration\":{\"BackpackRemovalTimeout\":9000000000,\"DeadCharacterRemovalTimeout\":600000000}},\"EnableAutosave\":true,\"LoopPriority\":\"AboveNormal\",\"Mods\":[],\"ModUpdates\":{\"CheckMinutes\":30,\"Restart\":false},\"Motd\":\"\",\"MotdTitle\":\"\",\"Network\":{\"AdminKey\":\"Ctrl+F10\",\"Advertise\":false,\"AllowDirectIp\":true,\"AllowHackingPlayerGrids\":false,\"AutoReconnect\":true,\"AutoUpdate\":false,\"BindAddress\":\"0.0.0.0\",\"BroadcastKey\":\"O\",\"BuildGhosts\":true,\"CargoInventoryMultiplier\":1,\"ChatKey\":\"Enter\",\"CheckForUpdates\":true,\"ClientMovement\":true,\"ContractSharing\":\"everyone\",\"Country\":\"auto\",\"Description\":\"\",\"DesyncChecks\":true,\"EmoteKey\":\"N\",\"EnergyUsageMultiplier\":1,\"FriendsOnly\":false,\"Hacking\":false,\"HackKey\":\"Alt+H\",\"HackLockdownCooldownSeconds\":300,\"HackLockdownSeconds\":60,\"HackTimeMultiplier\":1,\"HydrogenUsageMultiplier\":1,\"InterpolationMs\":60,\"ListenPort\":27016,\"MarkerAimDegrees\":8,\"MarkerDefaults\":{\"MaxRangeMeters\":{},\"Mode\":\"relevant\",\"Off\":[]},\"MarkerFilterKey\":\"Alt+M\",\"MarkerFullCount\":6,\"MarkerMode\":\"\",\"MarkersOff\":null,\"MaxModDownloadGiB\":10,\"MaxPlayers\":8,\"MutedVoices\":[],\"NametagRange\":200,\"Nametags\":true,\"OfflineRaidProtection\":true,\"OnePilot\":true,\"OwnReplication\":true,\"OxygenUsageMultiplier\":1,\"Password\":\"\",\"PauseOfflineStats\":true,\"PcuLimit\":null,\"PingAudience\":\"faction\",\"PingBurst\":3,\"PingKey\":\"Alt+G\",\"PingLifetimeSeconds\":60,\"PingMaxRangeMeters\":2000,\"PingRangeMeters\":5000,\"PingRefillSeconds\":5,\"PingWordFilter\":[],\"PlayerInventoryMultiplier\":1,\"PlayerName\":\"\",\"PlayersKey\":\"F3\",\"Progression\":true,\"PublicAddress\":\"\",\"Pvp\":true,\"ResearchSharing\":\"everyone\",\"RespawnBlueprints\":[{\"Detail\":\"Ion ship with a survival kit, reactor, refinery, assembler, O2/H2 generator and gravity generator\",\"Name\":\"Banana Boat\",\"Offer\":[\"space\",\"moon\"],\"Path\":\"SE1 Banana Boat\"},{\"Detail\":\"Atmospheric lander with a survival kit, reactor, refinery, assembler, O2/H2 generator, ore detector and landing gear\",\"Name\":\"Atmospheric Lander\",\"Offer\":[\"atmosphere\"],\"Path\":\"SE1 Atmospheric Lander\"}],\"RespawnShipCooldownMinutes\":10,\"RespawnShips\":[],\"ServersDirectory\":\"https://se2-online-servers.yellow51.dev\",\"SessionName\":\"Default SE2 Online Server\",\"SessionsDirectory\":\"https://se2-online-sessions.yellow51.dev\",\"SkippedUpdate\":\"\",\"SpawnNearHost\":false,\"StateBudgetKiB\":1024,\"StreamingRadiusMeters\":0,\"SuitBroadcast\":true,\"SunPeriodMinutes\":null,\"SunRotation\":null,\"TeamGrids\":false,\"VanillaRespawnShips\":false,\"VoiceEnabled\":true,\"VoiceKey\":\"I\",\"VoiceOpenMic\":false,\"VoiceRadiusMeters\":50,\"VoiceVolume\":100,\"WaterSync\":false},\"OverrideModList\":null,\"OwnerSteamIds\":[],\"PlayMission\":null,\"PreciseTimer\":true,\"ProfileFile\":\"\",\"RconBindAddress\":\"\",\"RconEnabled\":false,\"RconPassword\":\"\",\"RconPort\":27020,\"RconRoles\":{\"Admin\":[\"status\",\"players\",\"json\",\"save\",\"say\",\"kick\",\"ban\",\"unban\",\"bans\",\"admins\",\"whitelist\",\"pvp\",\"raid\",\"pcu\",\"sun\",\"usage\",\"mods\",\"motd\"],\"Player\":[]},\"RconSteamAuth\":true,\"ResumeFile\":\"dedicated-state.json\",\"SaveId\":\"\",\"SaveIntervalSeconds\":300,\"SaveOnExit\":true,\"SessionSettings\":{\"Keen.Game2.Simulation.GameSystems.Player.GameModeObjectBuilder\":{\"CreativeGlobal\":true,\"SuperDampeners\":true}},\"SettingsDumpFile\":\"native-settings.json\",\"ShutdownCountdownSeconds\":60,\"StartContent\":\"\",\"StartWorkshop\":\"\",\"WorkerThreads\":0,\"WorldName\":\"Default SE2 Online World\"}"
+      }
+    ],
+    "localPackage": {
+      "kind": "se2online-0.18.4",
+      "runtimeArchiveSha256": "efa359e0fd3ce24aa9d83e2a3741e0818143f7fa9e25f462eb76a0b61798a98d",
+      "runtimeArchiveBytes": 634207232
+    }
+  },
+  "stagedFiles": [],
+  "instructions": "Import into Forge > Build package. This is a starting recipe, not proof of testing or installation approval. Update its authorized sources and runtime values, check the package, create a Lab draft and record actual per-target test reports before publication. SE2 remains pinned to its supported 0.18.4 local-package contract."
+}

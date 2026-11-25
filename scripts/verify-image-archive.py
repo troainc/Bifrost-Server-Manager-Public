@@ -107,7 +107,7 @@ def main(args):
     if not isinstance(lock, dict) or len(lock) != 3:
         raise ValueError("Exactly three locked release images are required")
     for tag, expected in lock.items():
-        if not re.fullmatch(r"bifrost/(control-plane|web|postgres):v[0-9]+\.[0-9]+\.[0-9]+-installtest\.[0-9]+", tag):
+        if not re.fullmatch(r"bifrost/(control-plane|web|postgres):v[0-9]+\.[0-9]+\.[0-9]+-(?:installtest|alpha)\.[0-9]+", tag):
             raise ValueError("Unexpected release image tag: " + tag)
         if not isinstance(expected, str) or not re.fullmatch(r"sha256:[a-f0-9]{64}", expected):
             raise ValueError("Invalid locked configuration digest: " + tag)

@@ -1,0 +1,83 @@
+{
+  "format": "bifrost-forge-package",
+  "schemaVersion": 1,
+  "manifest": {
+    "schemaVersion": 1,
+    "id": "space-engineers-1-torch",
+    "version": "1.0.2",
+    "displayName": "Space Engineers · Torch",
+    "architecture": "x64",
+    "image": "ghcr.io/troainc/bifrost-game-torch-wine@sha256:a06a70c4f10c6fab5da4e412637a0d8d017756e3fb09a968982c2699dcc46e49",
+    "imageId": "sha256:846cf26195187951ce84de1ee26035b24cf7fa0ed4a9442d27afa23aafc71e20",
+    "executable": "/usr/local/bin/bifrost-torch",
+    "args": [],
+    "uid": 1000,
+    "gid": 1000,
+    "ports": [
+      {
+        "id": "game",
+        "containerPort": 27016,
+        "defaultHostPort": 27016,
+        "protocol": "udp",
+        "containerPortFromHost": true
+      },
+      {
+        "id": "steam",
+        "containerPort": 8766,
+        "defaultHostPort": 8766,
+        "protocol": "udp",
+        "containerPortFromHost": true
+      }
+    ],
+    "minimumMemoryBytes": 6442450944,
+    "maximumMemoryBytes": 68719476736,
+    "minimumDiskBytes": 21474836480,
+    "maximumNanoCpus": 16000000000,
+    "readiness": {
+      "mode": "log",
+      "marker": "Keen: Game ready...",
+      "timeoutSeconds": 900
+    },
+    "initialFiles": [
+      {
+        "path": "torch/Torch.cfg",
+        "content": "<?xml version=\"1.0\" encoding=\"utf-8\"?><TorchConfig><InstanceName>Bifrost Torch test</InstanceName><GetTorchUpdates>false</GetTorchUpdates><GetPluginUpdates>false</GetPluginUpdates><RestartOnCrash>false</RestartOnCrash><RestartOnGameUpdate>false</RestartOnGameUpdate><EnableAnalytics>false</EnableAnalytics><SendLogsToKeen>false</SendLogsToKeen><Plugins /></TorchConfig>\n"
+      },
+      {
+        "path": "Instance/SpaceEngineers-Dedicated.cfg",
+        "content": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<MyConfigDedicated xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><SessionSettings><GameMode>Survival</GameMode><MaxPlayers>4</MaxPlayers><OnlineMode>PUBLIC</OnlineMode><EnableCopyPaste>false</EnableCopyPaste><EnableSpectator>false</EnableSpectator><EnableIngameScripts>false</EnableIngameScripts><ViewDistance>10000</ViewDistance></SessionSettings><LoadWorld>Z:\\bifrost\\files\\Instance\\Saves\\BifrostWorld</LoadWorld><IP>0.0.0.0</IP><SteamPort>{{port:steam}}</SteamPort><ServerPort>{{port:game}}</ServerPort><AsteroidAmount>0</AsteroidAmount><Administrators /><Banned /><Mods /><GroupID>0</GroupID><ServerName>Bifrost Torch testing</ServerName><WorldName>Bifrost Torch testing</WorldName><PauseGameWhenEmpty>true</PauseGameWhenEmpty><IgnoreLastSession>true</IgnoreLastSession><PremadeCheckpointPath /><AutoRestartEnabled>false</AutoRestartEnabled><AutoUpdateEnabled>false</AutoUpdateEnabled><RemoteApiEnabled>false</RemoteApiEnabled></MyConfigDedicated>\n"
+      }
+    ],
+    "download": {
+      "gameId": "space-engineers-1-torch",
+      "gameVersion": "steam-current-torch.build.347",
+      "artifacts": [
+        {
+          "url": "https://build.torchapi.com/job/Torch/job/master/347/artifact/bin/torch-server.zip",
+          "sha256": "b298f781e8d82cef366ad00285643a1684a2c7558418bca4a54e18a6f6fbba31",
+          "sizeBytes": 4705001,
+          "path": "torch.zip",
+          "format": "zip"
+        }
+      ],
+      "requiredFiles": [
+        "DedicatedServer64/SpaceEngineersDedicated.exe",
+        "Torch.Server.exe",
+        "Content/CustomWorlds/Star System/Sandbox.sbc",
+        "Content/CustomWorlds/Star System/Sandbox_config.sbc"
+      ],
+      "steam": {
+        "appId": 298740,
+        "platform": "windows",
+        "buildId": "current",
+        "executable": "/usr/local/bin/bifrost-steamcmd"
+      },
+      "maximumBytes": 21474836480,
+      "maximumFiles": 40000,
+      "timeoutSeconds": 3600
+    },
+    "downloadStorageMode": "direct-steam"
+  },
+  "stagedFiles": [],
+  "instructions": "Import into Forge > Build package. This is a starting recipe, not proof of testing or installation approval. Update its authorized sources and runtime values, check the package, create a Lab draft and record actual per-target test reports before publication. SE2 remains pinned to its supported 0.18.4 local-package contract."
+}

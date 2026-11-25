@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.54
+VERSION=v0.1.0-alpha.55
 # BIFROST_UNATTENDED_UPDATE=1
 # BEGIN SIGNED_RELEASE_BOOTSTRAP
 # Local candidate identity. Private signing material is never part of this repository.
@@ -133,7 +133,7 @@ if [[ "${1:-}" == --verify-release ]];then shift;verify_local_release "$@";exit 
 unattended=false
 previous_version=''
 if [[ "${1:-}" == --unattended ]]; then
-  [[ $# -eq 2 && "$2" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-installtest\.[0-9]+)?$ ]] || fail 'Pass the exact installed version for an unattended update.'
+  [[ $# -eq 2 && "$2" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-(installtest|alpha)\.[0-9]+)?$ ]] || fail 'Pass the exact installed version for an unattended update.'
   [[ $(id -un) == bifrost && $(id -u) != 0 ]] || fail 'Unattended updates require the existing bifrost service account.'
   unattended=true; previous_version="$2"
 elif [[ $# -ne 0 ]]; then fail 'Unexpected update arguments.'; fi
@@ -188,7 +188,7 @@ if [[ "$unattended" == true ]]; then
 import pathlib,re,sys
 values=dict(line.split('=',1) for line in pathlib.Path(sys.argv[1]).read_text().splitlines() if '=' in line and not line.startswith('#'))
 def order(value):
-    match=re.fullmatch(r'v(\d+)\.(\d+)\.(\d+)(?:-installtest\.(\d+))?',value)
+    match=re.fullmatch(r'v(\d+)\.(\d+)\.(\d+)(?:-(?:installtest|alpha)\.(\d+))?',value)
     if not match:raise SystemExit('Unsupported installed version; automatic update refused.')
     return tuple(int(match[i]) for i in range(1,4))+(int(match[4]) if match[4] else 0,),match[4] is not None
 current=values.get('BIFROST_VERSION','');before,channel=order(current);after,target_channel=order(sys.argv[3])
@@ -357,7 +357,7 @@ def main(args):
     if not isinstance(lock, dict) or len(lock) != 3:
         raise ValueError("Exactly three locked release images are required")
     for tag, expected in lock.items():
-        if not re.fullmatch(r"bifrost/(control-plane|web|postgres):v[0-9]+\.[0-9]+\.[0-9]+-installtest\.[0-9]+", tag):
+        if not re.fullmatch(r"bifrost/(control-plane|web|postgres):v[0-9]+\.[0-9]+\.[0-9]+-(?:installtest|alpha)\.[0-9]+", tag):
             raise ValueError("Unexpected release image tag: " + tag)
         if not isinstance(expected, str) or not re.fullmatch(r"sha256:[a-f0-9]{64}", expected):
             raise ValueError("Invalid locked configuration digest: " + tag)

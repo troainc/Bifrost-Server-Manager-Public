@@ -1,0 +1,71 @@
+{
+  "format": "bifrost-forge-package",
+  "schemaVersion": 1,
+  "manifest": {
+    "schemaVersion": 1,
+    "id": "minecraft-java",
+    "version": "1.0.0",
+    "displayName": "Minecraft · Java vanilla",
+    "architecture": "x64",
+    "image": "docker.io/library/eclipse-temurin@sha256:743b453cb8639d815a8251e128f7d8e88840c684e43fdbde1b1e79788437b5cf",
+    "imageId": "sha256:5b87e2cf305796b0082d40718341f9b75c2754e9cf81d228262b6902cae4e0b1",
+    "executable": "/opt/java/openjdk/bin/java",
+    "args": [
+      "-XX:MaxRAMPercentage=75",
+      "-XX:+ExitOnOutOfMemoryError",
+      "-jar",
+      "/bifrost/server/server.jar",
+      "nogui"
+    ],
+    "uid": 1000,
+    "gid": 1000,
+    "ports": [
+      {
+        "id": "game",
+        "containerPort": 25565,
+        "defaultHostPort": 25565,
+        "protocol": "tcp"
+      }
+    ],
+    "minimumMemoryBytes": 4294967296,
+    "maximumMemoryBytes": 68719476736,
+    "minimumDiskBytes": 4294967296,
+    "maximumNanoCpus": 16000000000,
+    "readiness": {
+      "mode": "tcp",
+      "portId": "game",
+      "timeoutSeconds": 900
+    },
+    "initialFiles": [
+      {
+        "path": "server.properties",
+        "content": "server-port={{port:game}}\nlevel-name=world\nonline-mode=true\nenable-rcon=false\nmotd=Bifrost test server\n"
+      }
+    ],
+    "download": {
+      "gameId": "minecraft-java",
+      "gameVersion": "1.21.1",
+      "artifacts": [
+        {
+          "url": "https://piston-data.mojang.com/v1/objects/59353fb40c36d304f2035d51e7d6e6baa98dc05c/server.jar",
+          "sha256": "e3bc55693e93cda0188f2e60aea28113fc647c5e85a15fa3d1b347349231b4bb",
+          "sizeBytes": 51627615,
+          "path": "server.jar",
+          "format": "file"
+        }
+      ],
+      "requiredFiles": [
+        "server.jar"
+      ],
+      "maximumBytes": 2147483648,
+      "maximumFiles": 30000,
+      "timeoutSeconds": 3600,
+      "terms": {
+        "id": "minecraft-eula",
+        "url": "https://www.minecraft.net/en-us/eula"
+      }
+    }
+  },
+  "stagedFiles": [],
+  "instructions": "Import into Forge > Build package. This is a starting recipe, not proof of testing or installation approval. Update its authorized sources and runtime values, check the package, create a Lab draft and record actual per-target test reports before publication. SE2 remains pinned to its supported 0.18.4 local-package contract."
+}

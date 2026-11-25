@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 umask 077
-VERSION=v0.1.0-installtest.54
+VERSION=v0.1.0-alpha.55
 # BEGIN SIGNED_RELEASE_BOOTSTRAP
 # Local candidate identity. Private signing material is never part of this repository.
 readonly RELEASE_SIGNER_SPKI_SHA256=1dba79e7a3d2608b42a5324089d4db548567999210ffbf3dd96ce5cb63a92e6a
@@ -1007,7 +1007,7 @@ def main(args):
     if not isinstance(lock, dict) or len(lock) != 3:
         raise ValueError("Exactly three locked release images are required")
     for tag, expected in lock.items():
-        if not re.fullmatch(r"bifrost/(control-plane|web|postgres):v[0-9]+\.[0-9]+\.[0-9]+-installtest\.[0-9]+", tag):
+        if not re.fullmatch(r"bifrost/(control-plane|web|postgres):v[0-9]+\.[0-9]+\.[0-9]+-(?:installtest|alpha)\.[0-9]+", tag):
             raise ValueError("Unexpected release image tag: " + tag)
         if not isinstance(expected, str) or not re.fullmatch(r"sha256:[a-f0-9]{64}", expected):
             raise ValueError("Invalid locked configuration digest: " + tag)

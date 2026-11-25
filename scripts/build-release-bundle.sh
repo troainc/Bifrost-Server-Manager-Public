@@ -4,7 +4,7 @@ umask 077
 version=${1:?version}; key=${2:?public verification key}; output=${3:?new output directory}
 catalog=${4:-}; publisher=${5:-}
 [[ $# -eq 3 || $# -eq 5 ]] || { printf 'Pass both reviewed catalog directory and pinned publisher ID, or neither.\n' >&2; exit 1; }
-[[ "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-installtest\.[0-9]+$ ]] || exit 1
+[[ "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-(installtest|alpha)\.[0-9]+$ ]] || exit 1
 [[ ! -e "$output" && -f "$key" && ! -L "$key" ]] || exit 1
 grep -qx "VERSION=$version" install.sh
 grep -qx "VERSION=$version" update.sh
@@ -28,7 +28,7 @@ cp scripts/update-recovery.py "$output/package/scripts/update-recovery.py"
 cp scripts/automatic-panel-updates.py "$output/package/scripts/automatic-panel-updates.py"
 cp scripts/collect-prerequisite-evidence.py "$output/package/scripts/collect-prerequisite-evidence.py"
 mkdir -m 0755 "$output/package/Docs"
-for document in SE2-Host-Preparation Test-54-Storage-Recommendations-2026-11-23 Test-53-Onboarding-and-Pairing-2026-11-22 Test-52-Installer-Repair-2026-11-22 Test-51-SE2-2026-11-22 Test-50-Candidate-2026-11-16 Supported-Release-Scope Production-Core-2026-11-14 Game-Workflows-Candidate-2026-11-15 Frost-Telemetry-Audit-2026-11-15 Host-Telemetry-and-Catalog-Recipes Test-46-Delivery-2026-11-15 Bifrost-Artwork-2026-11-15 Test-47-Delivery-2026-11-15 Test-48-Delivery-2026-11-15 Test-49-Delivery-2026-11-15 Recovery-and-Key-Rotation Standalone-Installation Prerequisite-Security-Review Manual-Acceptance-Checklist Automatic-Panel-Updates; do
+for document in Alpha-55-UI-Overhaul Bifrost-Forge-Operator-Guide Blueprint-Subscriptions SE2-Host-Preparation Test-54-Storage-Recommendations-2026-11-23 Test-53-Onboarding-and-Pairing-2026-11-22 Test-52-Installer-Repair-2026-11-22 Test-51-SE2-2026-11-22 Test-50-Candidate-2026-11-16 Supported-Release-Scope Production-Core-2026-11-14 Game-Workflows-Candidate-2026-11-15 Frost-Telemetry-Audit-2026-11-15 Host-Telemetry-and-Catalog-Recipes Test-46-Delivery-2026-11-15 Bifrost-Artwork-2026-11-15 Test-47-Delivery-2026-11-15 Test-48-Delivery-2026-11-15 Test-49-Delivery-2026-11-15 Recovery-and-Key-Rotation Standalone-Installation Prerequisite-Security-Review Manual-Acceptance-Checklist Automatic-Panel-Updates; do
   cp "Docs/$document.md" "$output/package/Docs/$document.md"
   chmod 0644 "$output/package/Docs/$document.md"
 done

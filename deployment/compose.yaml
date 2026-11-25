@@ -78,6 +78,11 @@ services:
       BIFROST_MFA_KEYRING_FILE: ${BIFROST_MFA_KEYRING_FILE:-}
       BIFROST_LICENSE_PUBLIC_KEYS_FILE: ${BIFROST_LICENSE_PUBLIC_KEYS_FILE:-}
       BIFROST_AGENT_JOB_SIGNING_PRIVATE_KEY_FILE: /run/secrets/agent_job_signing_private
+      BIFROST_FORGE_MASTER_URL: ${BIFROST_FORGE_MASTER_URL:-}
+      BIFROST_FORGE_RECIPIENT_ID: ${BIFROST_FORGE_RECIPIENT_ID:-}
+      BIFROST_FORGE_TOKEN_FILE: ${BIFROST_FORGE_TOKEN_FILE:-}
+      BIFROST_FORGE_TRUST_FILE: ${BIFROST_FORGE_TRUST_FILE:-}
+      BIFROST_FORGE_CHANNELS: ${BIFROST_FORGE_CHANNELS:-stable}
       BIFROST_BRANDING_DIR: /var/lib/bifrost/branding
       MFA_REQUIRED_ADMINS: "true"
     secrets: [bifrost_app_password, rate_limit_pepper, mfa_encryption_key, agent_job_signing_private, local_host_bootstrap]
