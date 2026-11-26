@@ -6,3 +6,4 @@
 .env.example text eol=lf
 SHA256SUMS text eol=lf
 *.sha256 text eol=lf
+deployment/survival-catalog/*.json -text

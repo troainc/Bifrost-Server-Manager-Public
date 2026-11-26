@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 1,
+  "scope": "controlled-testing",
+  "reviewer": "Codex automated exact-artifact package verification; operator gameplay acceptance pending",
+  "reviewedAt": "2026-11-26T03:40:12.588Z",
+  "verification": {
+    "kind": "isolated-linux-artifacts",
+    "networkServicesPaid": false
+  },
+  "targets": [
+    {
+      "id": "steam-896660",
+      "manifestDigest": "sha256:f3be76c667718cca842af0cb19b940887de1c462cdf81bf9ee045e559e96c4f8",
+      "image": "ghcr.io/troainc/bifrost-survival-native@sha256:b14bd57d6d087abc87669b2b61c632e95a8d0e7c4f590c490cdc8892a5cf65f3",
+      "imageId": "sha256:14ec895b30f12e93ce51dc2ba404412e4b1e76a3c81c36293f185b973cec91dc",
+      "highCriticalFindings": 0,
+      "nonRootReadOnlySmoke": true,
+      "downloadLayoutVerified": true,
+      "scanDigest": "sha256:d3d7beed5eeaf5c11485938d6bd5eb75ea312d07521d088379e730a86a1d9b57",
+      "smokeDigest": "sha256:db32a58796c0ca2d117eb62a564b425763cc0b2cd9c697cebe7710be1b831968",
+      "localEvidence": {
+        "scan": {
+          "file": "scan.json",
+          "digest": "sha256:d3d7beed5eeaf5c11485938d6bd5eb75ea312d07521d088379e730a86a1d9b57"
+        },
+        "archive": {
+          "file": "archive.json",
+          "digest": "sha256:7be039318297ea356d14dd571e6ba7622abd67681a4b061a795236aa4731b562"
+        },
+        "coldImport": {
+          "file": "cold-import.json",
+          "digest": "sha256:26794120c9527aa90097a7fce34b9860e2dcaf9d518fd088f63ea5735444d710"
+        },
+        "smoke": {
+          "file": "steam-896660.smoke.json",
+          "digest": "sha256:db32a58796c0ca2d117eb62a564b425763cc0b2cd9c697cebe7710be1b831968"
+        },
+        "layout": {
+          "file": "steam-896660.layout.json",
+          "digest": "sha256:0670a5eff38cffc1dc9cff8af75b3048c1d67550311c06223096b7b4b3cc40c4"
+        },
+        "sourceManifest": {
+          "file": "steam-896660.sourceManifest.json",
+          "digest": "sha256:c40595df8f954484467b3c3d95b8096988aefe1130d6808daf181ec9b350ce85"
+        },
+        "sourceResult": {
+          "file": "steam-896660.sourceResult.json",
+          "digest": "sha256:54b3e7660f8fdb9b9839711931ff76f5a462ea0cff5ce50fe89d593e0c053832"
+        },
+        "sourceRestart": {
+          "file": "steam-896660.sourceRestart.json",
+          "digest": "sha256:6ab31d00e8d3b4c002454858198970e108fac94af8943864faefa1962b188c42"
+        },
+        "sourceSettings": {
+          "file": "steam-896660.sourceSettings.json",
+          "digest": "sha256:7515ee5d90d63fd23cff81f83c3b1c270757a5dc37ba184eb0ab89d30f2a1e02"
+        },
+        "sourceStop": {
+          "file": "steam-896660.sourceStop.json",
+          "digest": "sha256:274bb1cfce573c340d883ada651d7d1ef72b928e8f90dde8e09efb4da102d4f6"
+        },
+        "sourceConfinement": {
+          "file": "steam-896660.confinement.json",
+          "digest": "sha256:59cb11ef6e8e4764cc614265b472cb3745fb45f468940983fd1b5363cd1ef240"
+        }
+      }
+    },
+    {
+      "id": "steam-600760",
+      "manifestDigest": "sha256:dd2a4343dbe3fd9f3e6544b59e27fb3b02010136eb08be50ad3e07dad673918e",
+      "image": "ghcr.io/troainc/bifrost-survival-native@sha256:b14bd57d6d087abc87669b2b61c632e95a8d0e7c4f590c490cdc8892a5cf65f3",
+      "imageId": "sha256:14ec895b30f12e93ce51dc2ba404412e4b1e76a3c81c36293f185b973cec91dc",
+      "highCriticalFindings": 0,
+      "nonRootReadOnlySmoke": true,
+      "downloadLayoutVerified": true,
+      "scanDigest": "sha256:d3d7beed5eeaf5c11485938d6bd5eb75ea312d07521d088379e730a86a1d9b57",
+      "smokeDigest": "sha256:7efe8bc855e3e6a42beb1eff748748d583fa1cf04bf921d9a5a41c9c8bed9e5e",
+      "localEvidence": {
+        "scan": {
+          "file": "scan.json",
+          "digest": "sha256:d3d7beed5eeaf5c11485938d6bd5eb75ea312d07521d088379e730a86a1d9b57"
+        },
+        "archive": {
+          "file": "archive.json",
+          "digest": "sha256:7be039318297ea356d14dd571e6ba7622abd67681a4b061a795236aa4731b562"
+        },
+        "coldImport": {
+          "file": "cold-import.json",
+          "digest": "sha256:26794120c9527aa90097a7fce34b9860e2dcaf9d518fd088f63ea5735444d710"
+        },
+        "smoke": {
+          "file": "steam-600760.smoke.json",
+          "digest": "sha256:7efe8bc855e3e6a42beb1eff748748d583fa1cf04bf921d9a5a41c9c8bed9e5e"
+        },
+        "layout": {
+          "file": "steam-600760.layout.json",
+          "digest": "sha256:4c1d283203057dee274664ece8c927f80f5e44f2a0f3aebd3b42a9fe54aeee42"
+        },
+        "sourceManifest": {
+          "file": "steam-600760.sourceManifest.json",
+          "digest": "sha256:5dc331d128234c106027a269213ccbc24e0eeb365f03d4c8e96ec8d458cd71ae"
+        },
+        "sourceResult": {
+          "file": "steam-600760.sourceResult.json",
+          "digest": "sha256:d303c7080abc086f510b06daa6fd4e7618676d95edbef2985dd486c1e181fbac"
+        },
+        "sourceRestart": {
+          "file": "steam-600760.sourceRestart.json",
+          "digest": "sha256:812e2cfbfcde082a4f06d5aeac881292ffca9ddbbcafa8fa8f64f496b07197ed"
+        },
+        "sourceSettings": {
+          "file": "steam-600760.sourceSettings.json",
+          "digest": "sha256:7515ee5d90d63fd23cff81f83c3b1c270757a5dc37ba184eb0ab89d30f2a1e02"
+        },
+        "sourceStop": {
+          "file": "steam-600760.sourceStop.json",
+          "digest": "sha256:02f182b5ab03265bd484592403bde1e98f9feabc735e0c2f3fca6b52add616e8"
+        },
+        "sourceConfinement": {
+          "file": "steam-600760.confinement.json",
+          "digest": "sha256:59cb11ef6e8e4764cc614265b472cb3745fb45f468940983fd1b5363cd1ef240"
+        }
+      }
+    },
+    {
+      "id": "palworld-dedicated",
+      "manifestDigest": "sha256:0001666368b7af9453df447deeb0096bce2002389e77315768b19a35574dd015",
+      "image": "ghcr.io/troainc/bifrost-survival-native@sha256:b14bd57d6d087abc87669b2b61c632e95a8d0e7c4f590c490cdc8892a5cf65f3",
+      "imageId": "sha256:14ec895b30f12e93ce51dc2ba404412e4b1e76a3c81c36293f185b973cec91dc",
+      "highCriticalFindings": 0,
+      "nonRootReadOnlySmoke": true,
+      "downloadLayoutVerified": true,
+      "scanDigest": "sha256:d3d7beed5eeaf5c11485938d6bd5eb75ea312d07521d088379e730a86a1d9b57",
+      "smokeDigest": "sha256:7904866fff3ed8d598da6dc114c18fe56dd6e897c6b408e3fe20d3f4bf948860",
+      "localEvidence": {
+        "scan": {
+          "file": "scan.json",
+          "digest": "sha256:d3d7beed5eeaf5c11485938d6bd5eb75ea312d07521d088379e730a86a1d9b57"
+        },
+        "archive": {
+          "file": "archive.json",
+          "digest": "sha256:7be039318297ea356d14dd571e6ba7622abd67681a4b061a795236aa4731b562"
+        },
+        "coldImport": {
+          "file": "cold-import.json",
+          "digest": "sha256:26794120c9527aa90097a7fce34b9860e2dcaf9d518fd088f63ea5735444d710"
+        },
+        "smoke": {
+          "file": "palworld-dedicated.smoke.json",
+          "digest": "sha256:7904866fff3ed8d598da6dc114c18fe56dd6e897c6b408e3fe20d3f4bf948860"
+        },
+        "layout": {
+          "file": "palworld-dedicated.layout.json",
+          "digest": "sha256:c1c95122dbfa8874a46c43391fba2cf37b966d5602aa9d3a470d4079ca096d5e"
+        },
+        "sourceManifest": {
+          "file": "palworld-dedicated.sourceManifest.json",
+          "digest": "sha256:aa52fcc620c0f065dfb8971ab806b98d78d3ba1436cb720b6f16271af1593b98"
+        },
+        "sourceResult": {
+          "file": "palworld-dedicated.sourceResult.json",
+          "digest": "sha256:e3eeea2ab2249eecdb1469e140b884e589e55424e088dc4471184ac0754e192b"
+        },
+        "sourceRestart": {
+          "file": "palworld-dedicated.sourceRestart.json",
+          "digest": "sha256:6ab31d00e8d3b4c002454858198970e108fac94af8943864faefa1962b188c42"
+        },
+        "sourceSettings": {
+          "file": "palworld-dedicated.sourceSettings.json",
+          "digest": "sha256:7515ee5d90d63fd23cff81f83c3b1c270757a5dc37ba184eb0ab89d30f2a1e02"
+        },
+        "sourceStop": {
+          "file": "palworld-dedicated.sourceStop.json",
+          "digest": "sha256:7247df7d113a807791c07172e233ca6ae0f8128abe6da0f41e703449902c35a0"
+        },
+        "sourceConfinement": {
+          "file": "palworld-dedicated.confinement.json",
+          "digest": "sha256:59cb11ef6e8e4764cc614265b472cb3745fb45f468940983fd1b5363cd1ef240"
+        }
+      }
+    }
+  ]
+}

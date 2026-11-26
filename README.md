@@ -1,3 +1,7 @@
+## Native Linux game install test package
+
+[Download Stationeers, Valheim and Palworld](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/v0.1.0-runtime.55/bifrost-native-games.55.1.zip) · [Install guide](Docs/Native-Survival-Install-Test-Package.md). Three signed blueprints, matched compiled Host candidate and guarded upgrade path; runtime and official SteamCMD downloads are automatic during game installation. This controlled test add-on preserves the current full signed application release. Existing Hosts need the included reviewed update and catalog approval before GUI installation.
+
 ## Alpha 55 — UI Overhaul (candidate)
 
 Main now prepares `v0.1.0-alpha.55`. [Changes and limits](Docs/Alpha-55-UI-Overhaul.md) · [Forge operator guide](Docs/Bifrost-Forge-Operator-Guide.md). The signed Test 54 download remains unchanged until Alpha 55 is independently built, signed and verified.

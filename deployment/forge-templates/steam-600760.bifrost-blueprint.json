@@ -78,7 +78,8 @@
     "dataMounts": [
       {
         "path": "stationeers-worlds",
-        "destination": "/bifrost/server/rocketstation_DedicatedServer_Data/StreamingAssets/Worlds"
+        "destination": "/bifrost/server/rocketstation_DedicatedServer_Data/StreamingAssets/Worlds",
+        "seed": "move"
       }
     ]
   },

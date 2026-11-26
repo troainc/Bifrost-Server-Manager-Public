@@ -1,0 +1,250 @@
+[
+  {
+    "manifest": {
+      "schemaVersion": 1,
+      "id": "steam-896660",
+      "version": "1.0.0",
+      "displayName": "Valheim · dedicated",
+      "architecture": "x64",
+      "image": "ghcr.io/troainc/bifrost-survival-native@sha256:b14bd57d6d087abc87669b2b61c632e95a8d0e7c4f590c490cdc8892a5cf65f3",
+      "imageId": "sha256:14ec895b30f12e93ce51dc2ba404412e4b1e76a3c81c36293f185b973cec91dc",
+      "imageArchive": {
+        "url": "https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/v0.1.0-runtime.55/bifrost-runtime-survival-native-380f226ad53f.oci.tar",
+        "sha256": "380f226ad53f0a0d1d3f4f8b8e131f4e9dbee7df9f4ef5f15255265b65b43924",
+        "sizeBytes": 143081984,
+        "unpackedBytes": 572586200
+      },
+      "executable": "/usr/local/bin/bifrost-survival-server",
+      "args": [
+        "valheim",
+        "{{port:game}}",
+        "{{port:query}}"
+      ],
+      "uid": 1000,
+      "gid": 1000,
+      "ports": [
+        {
+          "id": "game",
+          "protocol": "udp",
+          "containerPort": 2456,
+          "defaultHostPort": 2456,
+          "containerPortFromHost": true
+        },
+        {
+          "id": "query",
+          "protocol": "udp",
+          "containerPort": 2457,
+          "defaultHostPort": 2457,
+          "containerPortFromHost": true
+        }
+      ],
+      "minimumMemoryBytes": 4294967296,
+      "maximumMemoryBytes": 68719476736,
+      "minimumDiskBytes": 13600570072,
+      "maximumNanoCpus": 16000000000,
+      "readiness": {
+        "mode": "log",
+        "marker": "Game server connected",
+        "timeoutSeconds": 900
+      },
+      "gameSettings": {
+        "adapter": "valheim",
+        "path": "valheim/server.json"
+      },
+      "initialFiles": [
+        {
+          "path": "valheim/server.json",
+          "content": "{\n  \"ServerName\": \"Bifrost Valheim\",\n  \"WorldName\": \"BifrostWorld\",\n  \"Password\": \"\",\n  \"Public\": true,\n  \"Crossplay\": false,\n  \"InstanceId\": \"bifrost\",\n  \"SaveInterval\": 1800,\n  \"Backups\": 4,\n  \"BackupShort\": 7200,\n  \"BackupLong\": 43200,\n  \"Preset\": \"Unchanged\",\n  \"Combat\": \"Unchanged\",\n  \"DeathPenalty\": \"Unchanged\",\n  \"Resources\": \"Unchanged\",\n  \"Raids\": \"Unchanged\",\n  \"Portals\": \"Unchanged\",\n  \"NoBuildCost\": false,\n  \"PlayerEvents\": false,\n  \"PassiveMobs\": false,\n  \"NoMap\": false\n}\n"
+        }
+      ],
+      "download": {
+        "gameId": "steam-896660",
+        "gameVersion": "steam-26870897",
+        "steam": {
+          "appId": 896660,
+          "platform": "linux",
+          "buildId": "26870897",
+          "executable": "/usr/local/bin/bifrost-steamcmd"
+        },
+        "artifacts": [],
+        "requiredFiles": [
+          "start_server_xterm.sh",
+          "valheim_server.x86_64"
+        ],
+        "maximumBytes": 6442450944,
+        "maximumFiles": 40000,
+        "timeoutSeconds": 3600
+      }
+    },
+    "digest": "sha256:f3be76c667718cca842af0cb19b940887de1c462cdf81bf9ee045e559e96c4f8",
+    "keyId": "ed25519-sha256:0c0369412260010ab125acf2f77a922a59aefbdb06d83d21b817bcf2ece8abfd",
+    "signature": "8nwntnACvJhVJ3FcRklldczqB2kb-L5JfRiOgbhhSAwL18ACxns30B7Mp8HIdczlwRaq6Mz1e7gLFYbaogcxBg"
+  },
+  {
+    "manifest": {
+      "schemaVersion": 1,
+      "id": "steam-600760",
+      "version": "1.0.0",
+      "displayName": "Stationeers · dedicated",
+      "architecture": "x64",
+      "image": "ghcr.io/troainc/bifrost-survival-native@sha256:b14bd57d6d087abc87669b2b61c632e95a8d0e7c4f590c490cdc8892a5cf65f3",
+      "imageId": "sha256:14ec895b30f12e93ce51dc2ba404412e4b1e76a3c81c36293f185b973cec91dc",
+      "imageArchive": {
+        "url": "https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/v0.1.0-runtime.55/bifrost-runtime-survival-native-380f226ad53f.oci.tar",
+        "sha256": "380f226ad53f0a0d1d3f4f8b8e131f4e9dbee7df9f4ef5f15255265b65b43924",
+        "sizeBytes": 143081984,
+        "unpackedBytes": 572586200
+      },
+      "executable": "/usr/local/bin/bifrost-survival-server",
+      "args": [
+        "stationeers",
+        "{{port:game}}",
+        "{{port:query}}"
+      ],
+      "uid": 1000,
+      "gid": 1000,
+      "ports": [
+        {
+          "id": "game",
+          "protocol": "udp",
+          "containerPort": 27016,
+          "defaultHostPort": 27016,
+          "containerPortFromHost": true
+        },
+        {
+          "id": "query",
+          "protocol": "udp",
+          "containerPort": 27015,
+          "defaultHostPort": 27015,
+          "containerPortFromHost": true
+        }
+      ],
+      "minimumMemoryBytes": 12884901888,
+      "maximumMemoryBytes": 68719476736,
+      "minimumDiskBytes": 22190504664,
+      "maximumNanoCpus": 16000000000,
+      "readiness": {
+        "mode": "log",
+        "marker": "RakNet successfully hosted with Address:",
+        "timeoutSeconds": 900
+      },
+      "gameSettings": {
+        "adapter": "stationeers",
+        "path": "stationeers/server.json"
+      },
+      "initialFiles": [
+        {
+          "path": "stationeers/server.json",
+          "content": "{\n  \"ServerName\": \"Bifrost Stationeers\",\n  \"ServerPassword\": \"\",\n  \"ServerMaxPlayers\": 10,\n  \"ServerVisible\": true,\n  \"StationName\": \"BifrostStation\",\n  \"WorldType\": \"Mars2\",\n  \"Difficulty\": \"Normal\",\n  \"StartCondition\": \"DefaultStart\",\n  \"AutoSave\": true,\n  \"SaveInterval\": 300,\n  \"MaxAutoSaves\": 5,\n  \"AutoPauseServer\": true\n}\n"
+        }
+      ],
+      "download": {
+        "gameId": "steam-600760",
+        "gameVersion": "steam-26146998",
+        "steam": {
+          "appId": 600760,
+          "platform": "linux",
+          "buildId": "26146998",
+          "executable": "/usr/local/bin/bifrost-steamcmd"
+        },
+        "artifacts": [],
+        "requiredFiles": [
+          "rocketstation_DedicatedServer.x86_64"
+        ],
+        "maximumBytes": 10737418240,
+        "maximumFiles": 40000,
+        "timeoutSeconds": 3600
+      },
+      "dataMounts": [
+        {
+          "path": "stationeers-worlds",
+          "destination": "/bifrost/server/rocketstation_DedicatedServer_Data/StreamingAssets/Worlds",
+          "seed": "move"
+        }
+      ]
+    },
+    "digest": "sha256:dd2a4343dbe3fd9f3e6544b59e27fb3b02010136eb08be50ad3e07dad673918e",
+    "keyId": "ed25519-sha256:0c0369412260010ab125acf2f77a922a59aefbdb06d83d21b817bcf2ece8abfd",
+    "signature": "0RUeAZ7fURs9TNqeE5IMFvV6yvesfrGch0T-AsaevxUyvgxQRD1msqGcP0fm2jtjn9odH7FutR7NQC1sm0reAA"
+  },
+  {
+    "manifest": {
+      "schemaVersion": 1,
+      "id": "palworld-dedicated",
+      "version": "1.0.0",
+      "displayName": "Palworld · dedicated",
+      "architecture": "x64",
+      "image": "ghcr.io/troainc/bifrost-survival-native@sha256:b14bd57d6d087abc87669b2b61c632e95a8d0e7c4f590c490cdc8892a5cf65f3",
+      "imageId": "sha256:14ec895b30f12e93ce51dc2ba404412e4b1e76a3c81c36293f185b973cec91dc",
+      "imageArchive": {
+        "url": "https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/v0.1.0-runtime.55/bifrost-runtime-survival-native-380f226ad53f.oci.tar",
+        "sha256": "380f226ad53f0a0d1d3f4f8b8e131f4e9dbee7df9f4ef5f15255265b65b43924",
+        "sizeBytes": 143081984,
+        "unpackedBytes": 572586200
+      },
+      "executable": "/usr/local/bin/bifrost-survival-server",
+      "args": [
+        "palworld",
+        "{{port:game}}"
+      ],
+      "uid": 1000,
+      "gid": 1000,
+      "ports": [
+        {
+          "id": "game",
+          "protocol": "udp",
+          "containerPort": 8211,
+          "defaultHostPort": 8211,
+          "containerPortFromHost": true
+        }
+      ],
+      "minimumMemoryBytes": 17179869184,
+      "maximumMemoryBytes": 68719476736,
+      "minimumDiskBytes": 43665341144,
+      "maximumNanoCpus": 16000000000,
+      "readiness": {
+        "mode": "log",
+        "marker": "Running Palworld dedicated server on :",
+        "timeoutSeconds": 900
+      },
+      "gameSettings": {
+        "adapter": "palworld",
+        "path": "pal-saved/Config/LinuxServer/PalWorldSettings.ini"
+      },
+      "initialFiles": [
+        {
+          "path": "pal-saved/Config/LinuxServer/PalWorldSettings.ini",
+          "content": "[/Script/Pal.PalGameWorldSettings]\nOptionSettings=(ServerName=\"Bifrost Palworld\",ServerDescription=\"\",ServerPlayerMaxNum=16,PublicPort={{port:game}},RCONEnabled=False,RESTAPIEnabled=False)\n"
+        }
+      ],
+      "download": {
+        "gameId": "palworld-dedicated",
+        "gameVersion": "steam-25247047",
+        "steam": {
+          "appId": 2394010,
+          "platform": "linux",
+          "buildId": "25247047",
+          "executable": "/usr/local/bin/bifrost-steamcmd"
+        },
+        "artifacts": [],
+        "requiredFiles": [
+          "PalServer.sh",
+          "Pal/Binaries/Linux/PalServer-Linux-Shipping",
+          "linux64/steamclient.so"
+        ],
+        "maximumBytes": 21474836480,
+        "maximumFiles": 40000,
+        "timeoutSeconds": 3600
+      },
+      "dataMounts": [
+        {
+          "path": "pal-saved",
+          "destination": "/bifrost/server/Pal/Saved"
+        }
+      ]
+    },
+    "digest": "sha256:0001666368b7af9453df447deeb0096bce2002389e77315768b19a35574dd015",
+    "keyId": "ed25519-sha256:0c0369412260010ab125acf2f77a922a59aefbdb06d83d21b817bcf2ece8abfd",
+    "signature": "y-U9SQd46gsvVCnB9-uuKLPsSSZ8E7Al5AVLGZiJleAcK3U_udYVADdm-NV-IQKo2gKDP-dHMWhIJUC27z_1Cg"
+  }
+]
