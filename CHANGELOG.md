@@ -1,3 +1,9 @@
+## Unreleased — native Linux survival game candidates
+
+- Added portable Stationeers, Valheim and Palworld Lab preparation templates and operator documentation.
+- Recorded actual rootless Podman SteamCMD, settings, saved-world and stop/start verification.
+- Runtime URLs are reserved and unpublished; normal signing, matched-build and Host approval gates remain. Existing signed releases are unchanged.
+
 ## 2026-11-25 — Alpha 55: UI Overhaul and Bifrost Forge
 
 Candidate version: `v0.1.0-alpha.55`. Application source and distribution inputs are committed to main. The existing signed Test 54 release remains unchanged; these notes do not announce a signed Alpha 55 download or certify every game.

@@ -88,3 +88,7 @@ Use [AGENTS.md](AGENTS.md), [CONTEXT.md](CONTEXT.md) and [LOGS.md](LOGS.md) for 
 Host prerequisite approval is an open release gate. Missing Docker/Compose are no longer downloaded automatically; see [prerequisite security review](Docs/Prerequisite-Security-Review.md). Existing host runtimes/data are preserved.
 
 Use the [manual acceptance checklist](Docs/Manual-Acceptance-Checklist.md) to record the exact candidate's OS, upgrade, game/player, recovery, accessibility and approval evidence. It is also included in the compiled bundle alongside the read-only prerequisite inventory script.
+
+### Additional native Linux game candidates
+
+Stationeers, Valheim and Palworld have tested rootless Podman preparation templates. See [candidate status and requirements](Docs/Native-Linux-Game-Candidates.md). These do not change the current signed release or activate automatic installation.

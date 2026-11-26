@@ -1,0 +1,86 @@
+{
+  "format": "bifrost-forge-package",
+  "schemaVersion": 1,
+  "manifest": {
+    "schemaVersion": 1,
+    "id": "steam-600760",
+    "version": "1.0.0",
+    "displayName": "Stationeers · dedicated",
+    "architecture": "x64",
+    "image": "ghcr.io/troainc/bifrost-survival-native@sha256:b14bd57d6d087abc87669b2b61c632e95a8d0e7c4f590c490cdc8892a5cf65f3",
+    "imageId": "sha256:14ec895b30f12e93ce51dc2ba404412e4b1e76a3c81c36293f185b973cec91dc",
+    "imageArchive": {
+      "url": "https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/v0.1.0-alpha.55/bifrost-runtime-survival-native-380f226ad53f.oci.tar",
+      "sha256": "380f226ad53f0a0d1d3f4f8b8e131f4e9dbee7df9f4ef5f15255265b65b43924",
+      "sizeBytes": 143081984,
+      "unpackedBytes": 572586200
+    },
+    "executable": "/usr/local/bin/bifrost-survival-server",
+    "args": [
+      "stationeers",
+      "{{port:game}}",
+      "{{port:query}}"
+    ],
+    "uid": 1000,
+    "gid": 1000,
+    "ports": [
+      {
+        "id": "game",
+        "protocol": "udp",
+        "containerPort": 27016,
+        "defaultHostPort": 27016,
+        "containerPortFromHost": true
+      },
+      {
+        "id": "query",
+        "protocol": "udp",
+        "containerPort": 27015,
+        "defaultHostPort": 27015,
+        "containerPortFromHost": true
+      }
+    ],
+    "minimumMemoryBytes": 12884901888,
+    "maximumMemoryBytes": 68719476736,
+    "minimumDiskBytes": 22190504664,
+    "maximumNanoCpus": 16000000000,
+    "readiness": {
+      "mode": "log",
+      "marker": "RakNet successfully hosted with Address:",
+      "timeoutSeconds": 900
+    },
+    "gameSettings": {
+      "adapter": "stationeers",
+      "path": "stationeers/server.json"
+    },
+    "initialFiles": [
+      {
+        "path": "stationeers/server.json",
+        "content": "{\n  \"ServerName\": \"Bifrost Stationeers\",\n  \"ServerPassword\": \"\",\n  \"ServerMaxPlayers\": 10,\n  \"ServerVisible\": true,\n  \"StationName\": \"BifrostStation\",\n  \"WorldType\": \"Mars2\",\n  \"Difficulty\": \"Normal\",\n  \"StartCondition\": \"DefaultStart\",\n  \"AutoSave\": true,\n  \"SaveInterval\": 300,\n  \"MaxAutoSaves\": 5,\n  \"AutoPauseServer\": true\n}\n"
+      }
+    ],
+    "download": {
+      "gameId": "steam-600760",
+      "gameVersion": "steam-26146998",
+      "steam": {
+        "appId": 600760,
+        "platform": "linux",
+        "buildId": "26146998",
+        "executable": "/usr/local/bin/bifrost-steamcmd"
+      },
+      "artifacts": [],
+      "requiredFiles": [
+        "rocketstation_DedicatedServer.x86_64"
+      ],
+      "maximumBytes": 10737418240,
+      "maximumFiles": 40000,
+      "timeoutSeconds": 3600
+    },
+    "dataMounts": [
+      {
+        "path": "stationeers-worlds",
+        "destination": "/bifrost/server/rocketstation_DedicatedServer_Data/StreamingAssets/Worlds"
+      }
+    ]
+  },
+  "instructions": "Import in Forge > Build package. Local candidate; record actual target tests and publish its runtime asset before distributing. Existing games and worlds are unchanged."
+}

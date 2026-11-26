@@ -30,3 +30,7 @@ Lab is for internal experiments. Pilot is for selected test installations. Stabl
 
 ## Current limits
 Test orchestration, new executable/settings adapters, signed artwork bundles, scheduled publishing, customer pin policies and long-offline full-snapshot recovery are not automated yet. Releases expire after 90 days; an expired assigned release blocks unsafe catch-up. This guide describes the Alpha 55 candidate. Customer Controllers receive catalogs; publishing controls are master-only.
+
+## Native Linux game templates
+
+Stationeers, Valheim and Palworld Lab candidate templates are now included in deployment/forge-templates. Read [Native Linux game candidates](Native-Linux-Game-Candidates.md) before use. Their reserved runtime URL remains unpublished, and normal matched-build, test, signing and Host approval gates still apply.

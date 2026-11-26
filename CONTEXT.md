@@ -1,3 +1,7 @@
+## 2026-11-25 — Native Linux game package source delivery
+
+Owner authorizes pushing both main branches for the Stationeers, Valheim and Palworld delivery. This public update contains documentation and portable metadata only; private application source, binaries, worlds, credentials and signing keys remain excluded. Actual rootless Podman install/settings/save/stop-start checks passed for all three; 29 focused automated checks passed. Runtime publication, matched customer/Host release, catalog signing/activation and remaining acceptance gates are separate. Existing immutable releases and all customer data remain unchanged. Normal main builds may run.
+
 ## 2026-11-24 — Owner requests fresh main builds
 
 The owner explicitly requests pushing both main branches with builds enabled. This supersedes the previous documentation-only skip-ci/skip-cd delivery for this build request. Include the SE2 preparation guide in new candidate packages and retain the current Test 54 runtime/version and exact signed recipe inputs. Push this update without skip flags. A candidate build does not replace immutable Test 54 release assets or prove actual SE2 startup; report its exact run/result separately. bfsm preparation remains deferred, with no new SSH, account, pairing or game changes authorized by this build request.
