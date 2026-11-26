@@ -10,7 +10,7 @@
     "image": "ghcr.io/troainc/bifrost-survival-native@sha256:b14bd57d6d087abc87669b2b61c632e95a8d0e7c4f590c490cdc8892a5cf65f3",
     "imageId": "sha256:14ec895b30f12e93ce51dc2ba404412e4b1e76a3c81c36293f185b973cec91dc",
     "imageArchive": {
-      "url": "https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/v0.1.0-alpha.55/bifrost-runtime-survival-native-380f226ad53f.oci.tar",
+      "url": "https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/v0.1.0-runtime.55/bifrost-runtime-survival-native-380f226ad53f.oci.tar",
       "sha256": "380f226ad53f0a0d1d3f4f8b8e131f4e9dbee7df9f4ef5f15255265b65b43924",
       "sizeBytes": 143081984,
       "unpackedBytes": 572586200

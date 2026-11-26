@@ -1,3 +1,9 @@
+## 2026-11-25 — Published native Linux runtime
+
+- Published the immutable runtime-only prerelease [v0.1.0-runtime.55](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/tag/v0.1.0-runtime.55), with verified anonymous download and a clean HIGH/CRITICAL vulnerability and secret scan.
+- Corrected managed JSON settings read/save for Valheim and Stationeers. Added independent signed supplemental catalog loading and an operator approval helper that preserves existing identity and trust.
+- Signed game catalog activation and the matched Host package are still being prepared; runtime publication alone does not activate an install recipe. Existing signed application releases remain unchanged.
+
 ## Unreleased — native Linux survival game candidates
 
 - Added portable Stationeers, Valheim and Palworld Lab preparation templates and operator documentation.
