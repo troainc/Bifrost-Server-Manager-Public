@@ -14,7 +14,7 @@ Native-drop compatibility handles missing metadata and non-bubbling events, mode
 
 ## Delivery status
 
-This is a local candidate, not a signed downloadable release. No push, deployment, customer update or live Host upgrade has been performed for Alpha 56. Public distribution remains compiled artifacts plus installer metadata/documentation; private application source, vendor files and keys remain excluded. Existing signed Test54 assets remain immutable and its in-app installer pin stays unchanged until a new release passes publication gates.
+This is a source candidate for main delivery, not a signed downloadable release. Normal builds may run after the authorized push; their outcomes must be checked separately. No customer update or live Host upgrade is part of this source delivery. Public distribution remains compiled artifacts plus installer metadata/documentation; private application source, vendor files and keys remain excluded. Existing signed Test54 assets remain immutable and its in-app installer pin stays unchanged until a new release passes publication gates.
 
 ## Version discipline
 

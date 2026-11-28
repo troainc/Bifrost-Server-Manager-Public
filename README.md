@@ -1,6 +1,6 @@
 ## 2026-11-28 — v0.1.0-alpha.56 - Settings & Access Overhaul
 
-Prepared the local Alpha 56 source candidate: flat Settings workspace, granular file permissions, Agent-enforced upload settings and consistent build identity. Private/public source metadata and changelog checks are matched. This is source preparation, not a pushed/deployed build or a signed public download. Test54 assets/pins, accounts, pairing and existing servers remain unchanged. See Docs/Alpha-56-Settings-Access.md.
+Prepared the local Alpha 56 source candidate: flat Settings workspace, granular file permissions, Agent-enforced upload settings and consistent build identity. Private/public source metadata and changelog checks are matched. Main delivery enables normal builds; actual build/deployment outcomes and signed public publication remain separate. Test54 assets/pins, accounts, pairing and existing servers remain unchanged. See Docs/Alpha-56-Settings-Access.md.
 
 ## Native Linux game install test package
 

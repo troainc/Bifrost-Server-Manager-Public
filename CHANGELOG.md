@@ -1,6 +1,6 @@
 ## v0.1.0-alpha.56 - Settings & Access Overhaul (2026-11-28)
 
-Local candidate. This version has not been pushed, deployed, signed or published as a downloadable release. Existing signed Test54 assets and installer pins remain unchanged.
+Alpha 56 source candidate for main delivery. Normal main-branch builds are enabled; a source push is not a signed downloadable release or a completed deployment. Existing signed Test54 assets and installer pins remain unchanged.
 
 - Replace the busy Settings tab bar and stacked panels with one flat workspace, grouped navigation, compact form rows and a mobile section picker. Separate Installation, Email delivery, License and Privacy.
 - Add a searchable account permission matrix, file-access presets and twelve granular file/game-settings permissions. Preserve existing full-access grants, automatic audit reasons, session revocation and last-administrator protections.
