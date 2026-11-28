@@ -1,3 +1,13 @@
+## v0.1.0-alpha.56 - Settings & Access Overhaul (2026-11-28)
+
+Local candidate. This version has not been pushed, deployed, signed or published as a downloadable release. Existing signed Test54 assets and installer pins remain unchanged.
+
+- Replace the busy Settings tab bar and stacked panels with one flat workspace, grouped navigation, compact form rows and a mobile section picker. Separate Installation, Email delivery, License and Privacy.
+- Add a searchable account permission matrix, file-access presets and twelve granular file/game-settings permissions. Preserve existing full-access grants, automatic audit reasons, session revocation and last-administrator protections.
+- Add per-server File uploads settings with autosave/toasts, editable Host-approved extensions and a per-file limit up to 32 MiB. Matched Agents enforce the saved private policy; older Agents show an update notice.
+- Include native mixed file/folder drop compatibility, nested/empty folder support, visible errors and responsive transfer percentages. The native Windows drop gesture on live Bifrost remains pending; isolated browser checks and prior live picker/hash verification are separate evidence.
+- Share the Alpha 56 build identity between Controller and web, match private/public candidate inputs, and enforce version/changelog consistency before builds. No accounts, pairing or existing servers are changed by source preparation.
+
 ## 2026-11-25 — Signed native games test add-on published
 
 [Download the Stationeers, Valheim and Palworld package](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/v0.1.0-runtime.55/bifrost-native-games.55.1.zip). Includes three master-signed native Linux blueprints, the matched compiled Agent candidate, a guarded Test54 updater and installation instructions. All nine new release assets were downloaded anonymously and hash-verified. Signed catalog handoff and all three signatures independently verify against approved publisher 0c0369412260010ab125acf2f77a922a59aefbdb06d83d21b817bcf2ece8abfd. Exact owner shipping image loads 26 recipes: all 23 existing plus three new, without replacing existing authorities. Actual cold/runtime/SteamCMD/settings/restart/clean-stop checks pass; 23 guarded-updater checks pass using real archives and simulated systemd only. User will perform bfsm tests; bfsm Agent, accounts, pairing, disks and servers remain untouched. Restore/rollback, player joins and longer gameplay remain open. Whole application Test54 assets remain immutable; this controlled add-on is not a new full signed app installer. Private CI billing blockage remains external, with no security checks disabled. Live GUI deployment verification is pending this final catalog commit.

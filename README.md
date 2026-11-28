@@ -1,10 +1,14 @@
+## 2026-11-28 — v0.1.0-alpha.56 - Settings & Access Overhaul
+
+Prepared the local Alpha 56 source candidate: flat Settings workspace, granular file permissions, Agent-enforced upload settings and consistent build identity. Private/public source metadata and changelog checks are matched. This is source preparation, not a pushed/deployed build or a signed public download. Test54 assets/pins, accounts, pairing and existing servers remain unchanged. See Docs/Alpha-56-Settings-Access.md.
+
 ## Native Linux game install test package
 
 [Download Stationeers, Valheim and Palworld](https://github.com/troainc/Bifrost-Server-Manager-Public/releases/download/v0.1.0-runtime.55/bifrost-native-games.55.1.zip) · [Install guide](Docs/Native-Survival-Install-Test-Package.md). Three signed blueprints, matched compiled Host candidate and guarded upgrade path; runtime and official SteamCMD downloads are automatic during game installation. This controlled test add-on preserves the current full signed application release. Existing Hosts need the included reviewed update and catalog approval before GUI installation.
 
-## Alpha 55 — UI Overhaul (candidate)
+## Previous candidate: Alpha 55 — UI Overhaul
 
-Main now prepares `v0.1.0-alpha.55`. [Changes and limits](Docs/Alpha-55-UI-Overhaul.md) · [Forge operator guide](Docs/Bifrost-Forge-Operator-Guide.md). The signed Test 54 download remains unchanged until Alpha 55 is independently built, signed and verified.
+Alpha 55 introduced the UI overhaul and Forge. [Changes and limits](Docs/Alpha-55-UI-Overhaul.md) · [Forge operator guide](Docs/Bifrost-Forge-Operator-Guide.md). The signed Test 54 download remains unchanged until a newer Alpha release is independently built, signed and verified.
 
 Test54 replaces the storage waiver with installation disk-space recommendations. [Behavior, verification and limits](Docs/Test-54-Storage-Recommendations-2026-11-23.md). Disk estimates are advisory; signatures, resource policy and fleet isolation remain enforced. Prior releases remain immutable.
 
